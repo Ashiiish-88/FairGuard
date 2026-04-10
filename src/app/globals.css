@@ -125,6 +125,47 @@
     @apply bg-background text-foreground;
   }
   html {
-    @apply font-sans;
+    @apply font-sans scroll-smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 }
+
+/* ─── FairGuard Custom Utilities ─── */
+@layer utilities {
+  .gradient-text {
+    @apply bg-gradient-to-r from-purple-400 via-blue-400 to-cyan-400 bg-clip-text text-transparent;
+  }
+  .gradient-bg {
+    @apply bg-gradient-to-r from-purple-600 via-blue-600 to-cyan-500;
+  }
+  .glass {
+    @apply bg-background/60 backdrop-blur-xl border border-border;
+  }
+  .glow-purple {
+    box-shadow: 0 0 24px oklch(0.488 0.243 264.376 / 15%);
+  }
+}
+
+/* ─── Animated Background Mesh ─── */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0; left: 0; width: 100%; height: 100%;
+  background:
+    radial-gradient(ellipse at 20% 20%, oklch(0.5 0.2 270 / 6%) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 80%, oklch(0.5 0.2 230 / 4%) 0%, transparent 50%);
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* ─── Custom Scrollbar ─── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: oklch(0.3 0 0); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: oklch(0.4 0 0); }
+
+/* ─── Recharts Dark Theme Overrides ─── */
+.recharts-cartesian-axis-tick-value { fill: oklch(0.556 0 0) !important; font-size: 0.75rem !important; }
+.recharts-legend-item-text { color: oklch(0.708 0 0) !important; font-size: 0.8125rem !important; }
+.recharts-tooltip-wrapper { outline: none !important; }
