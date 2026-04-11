@@ -13,21 +13,25 @@ export default function CsvDropzone({ onFileLoaded, file = null }) {
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
-    accept: { "text/csv": [".csv"] },
+    accept: {
+      "text/csv": [".csv"],
+      "application/json": [".json"],
+    },
     maxFiles: 1,
     multiple: false,
   });
 
   if (file) {
+    const isJson = file.name?.endsWith(".json");
     return (
       <Card className="p-6 bg-card/50 border-border/50 border-dashed">
         <div className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center">
-            <FileText className="w-6 h-6 text-emerald-400" />
+          <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${isJson ? "bg-blue-500/10" : "bg-emerald-500/10"}`}>
+            <FileText className={`w-6 h-6 ${isJson ? "text-blue-400" : "text-emerald-400"}`} />
           </div>
           <div className="flex-1 min-w-0">
             <p className="font-semibold truncate">{file.name}</p>
-            <p className="text-sm text-muted-foreground">{(file.size / 1024).toFixed(1)} KB</p>
+            <p className="text-sm text-muted-foreground">{(file.size / 1024).toFixed(1)} KB • {isJson ? "JSON" : "CSV"}</p>
           </div>
           <button
             onClick={(e) => { e.stopPropagation(); onFileLoaded(null); }}
@@ -56,9 +60,9 @@ export default function CsvDropzone({ onFileLoaded, file = null }) {
         </div>
         <div>
           <p className="font-semibold text-lg">
-            {isDragActive ? "Drop your CSV here" : "Drag & drop a CSV file, or click to browse"}
+            {isDragActive ? "Drop your file here" : "Drag & drop a CSV or JSON file, or click to browse"}
           </p>
-          <p className="text-sm text-muted-foreground mt-1">Supports datasets up to 100,000 rows • Your data stays in your browser</p>
+          <p className="text-sm text-muted-foreground mt-1">Supports CSV and JSON (array of objects) • Up to 100,000 rows • Your data stays in your browser</p>
         </div>
       </div>
     </Card>

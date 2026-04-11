@@ -10,6 +10,7 @@ const modes = [
   { href: "/audit", label: "Audit Mode", icon: "🔍" },
   { href: "/shield", label: "Shield Mode", icon: "🛡️" },
   { href: "/stress", label: "Stress Test", icon: "🧪" },
+  { href: "/history", label: "History", icon: "📜" },
 ];
 
 export default function Navbar() {

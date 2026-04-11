@@ -10,13 +10,18 @@ import { Progress } from "@/components/ui/progress";
 import CsvDropzone from "@/components/csv-dropzone";
 import ScoreGauge from "@/components/score-gauge";
 import BiasChart from "@/components/bias-chart";
+import BiasFingerprint from "@/components/bias-fingerprint";
+import FairnessDebtCard from "@/components/fairness-debt-card";
 import MetricCard from "@/components/metric-card";
 import { Loader2, ArrowRight, RotateCcw } from "lucide-react";
 
 const STEPS = ["Upload", "Configure", "Analyzing", "Results"];
 
 const DEMO_DATASETS = [
-  { label: "Hiring Bias (Gender/Age)", file: "/demo_hiring_data.csv" },
+  { label: "💼 Hiring Bias (CSV)", file: "/demo_hiring_data.csv", type: "csv" },
+  { label: "💼 Hiring Bias (JSON)", file: "/demo_hiring_data.json", type: "json" },
+  { label: "📱 Content Moderation", file: "/demo_content_moderation.csv", type: "csv" },
+  { label: "💰 Algorithmic Pricing", file: "/demo_pricing_data.csv", type: "csv" },
 ];
 
 export default function AuditPage() {
@@ -24,54 +29,81 @@ export default function AuditPage() {
   const [file, setFile] = useState(null);
   const [data, setData] = useState(null);
   const [detected, setDetected] = useState(null);
+  const [domainInfo, setDomainInfo] = useState(null);
   const [config, setConfig] = useState({ outcome: "", protected: [], positiveOutcome: "1", qualColumn: "" });
   const [results, setResults] = useState(null);
   const [explanation, setExplanation] = useState(null);
+  const [compliance, setCompliance] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
+  const processData = useCallback(async (parsedData) => {
+    setData(parsedData);
+    try {
+      const res = await fetch("/api/audit/detect", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ data: parsedData.slice(0, 100) }),
+      });
+      const det = await res.json();
+      setDetected(det.detected);
+      if (det.domain) setDomainInfo(det.domain);
+
+      // Auto-fill config
+      const autoOutcome = det.detected?.decision_columns?.[0]?.column || "";
+      const autoProtected = (det.detected?.protected_columns || []).map(c => c.column);
+      setConfig(prev => ({
+        ...prev,
+        outcome: autoOutcome,
+        protected: autoProtected,
+      }));
+      setStep(1);
+    } catch (e) {
+      setError(`Column detection failed: ${e.message}`);
+    }
+  }, []);
+
   const handleFile = useCallback(async (f) => {
-    if (!f) { setFile(null); setData(null); return; }
+    if (!f) { setFile(null); setData(null); setDomainInfo(null); return; }
     setFile(f);
     setError(null);
 
-    Papa.parse(f, {
-      header: true,
-      skipEmptyLines: true,
-      complete: async (result) => {
-        setData(result.data);
-        try {
-          const res = await fetch("/api/audit/detect", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ data: result.data.slice(0, 100) }),
-          });
-          const det = await res.json();
-          setDetected(det.detected);
+    const isJson = f.name?.toLowerCase().endsWith(".json");
 
-          // Auto-fill config
-          const autoOutcome = det.detected?.decision_columns?.[0]?.column || "";
-          const autoProtected = (det.detected?.protected_columns || []).map(c => c.column);
-          setConfig(prev => ({
-            ...prev,
-            outcome: autoOutcome,
-            protected: autoProtected,
-          }));
-          setStep(1);
-        } catch (e) {
-          setError(`Column detection failed: ${e.message}`);
+    if (isJson) {
+      // Parse JSON
+      try {
+        const text = await f.text();
+        const parsed = JSON.parse(text);
+        if (!Array.isArray(parsed) || parsed.length === 0) {
+          setError("JSON file must contain an array of objects (rows).");
+          return;
         }
-      },
-      error: (e) => setError(`CSV parsing failed: ${e.message}`),
-    });
-  }, []);
+        await processData(parsed);
+      } catch (e) {
+        setError(`JSON parsing failed: ${e.message}`);
+      }
+    } else {
+      // Parse CSV
+      Papa.parse(f, {
+        header: true,
+        skipEmptyLines: true,
+        complete: async (result) => {
+          await processData(result.data);
+        },
+        error: (e) => setError(`CSV parsing failed: ${e.message}`),
+      });
+    }
+  }, [processData]);
 
-  const loadDemo = async (url) => {
+  const loadDemo = async (url, type) => {
     setError(null);
     try {
       const res = await fetch(url);
       const text = await res.text();
-      const f = new File([text], url.split("/").pop(), { type: "text/csv" });
+      const ext = type === "json" ? ".json" : ".csv";
+      const mimeType = type === "json" ? "application/json" : "text/csv";
+      const f = new File([text], url.split("/").pop(), { type: mimeType });
       handleFile(f);
     } catch (e) {
       setError(`Failed to load demo: ${e.message}`);
@@ -113,6 +145,23 @@ export default function AuditPage() {
         .then(r => r.json())
         .then(r => setExplanation(r.explanation))
         .catch(() => {});
+
+      // Fire and forget: get compliance check
+      fetch("/api/audit/compliance", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ metrics: json.results }),
+      })
+        .then(r => r.json())
+        .then(r => setCompliance(r.compliance))
+        .catch(() => {});
+
+      // Fire and forget: save to audit history
+      fetch("/api/history/save", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ results: json.results }),
+      }).catch(() => {});
     } catch (e) {
       setError(`Analysis failed: ${e.message}`);
       setStep(1);
@@ -123,7 +172,8 @@ export default function AuditPage() {
 
   const reset = () => {
     setStep(0); setFile(null); setData(null); setDetected(null);
-    setResults(null); setExplanation(null); setError(null);
+    setResults(null); setExplanation(null); setCompliance(null);
+    setError(null); setDomainInfo(null);
     setConfig({ outcome: "", protected: [], positiveOutcome: "1", qualColumn: "" });
   };
 
@@ -141,8 +191,15 @@ export default function AuditPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-3xl font-bold flex items-center gap-3">🔍 Audit Mode</h1>
-          <p className="text-muted-foreground mt-1">Upload a dataset → detect bias → get plain English explanations → fix it</p>
+          <h1 className="text-3xl font-bold flex items-center gap-3">
+            🔍 Audit Mode
+            {domainInfo && (
+              <Badge variant="outline" className="text-sm bg-muted/30 font-normal gap-1.5">
+                {domainInfo.icon} {domainInfo.label}
+              </Badge>
+            )}
+          </h1>
+          <p className="text-muted-foreground mt-1">Upload any dataset (CSV or JSON) → detect bias → get plain English explanations → understand legal risk</p>
         </div>
         {step > 0 && (
           <Button variant="outline" size="sm" onClick={reset} className="gap-2">
@@ -179,7 +236,7 @@ export default function AuditPage() {
               <p className="text-sm text-muted-foreground mb-3">Try with a demo dataset:</p>
               <div className="flex justify-center gap-3 flex-wrap">
                 {DEMO_DATASETS.map((d) => (
-                  <Button key={d.file} variant="outline" size="sm" onClick={() => loadDemo(d.file)}>
+                  <Button key={d.file + d.type} variant="outline" size="sm" onClick={() => loadDemo(d.file, d.type)}>
                     {d.label}
                   </Button>
                 ))}
@@ -191,6 +248,19 @@ export default function AuditPage() {
         {/* STEP 1: Configure */}
         {step === 1 && (
           <motion.div key="configure" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="space-y-6">
+            {/* Domain detection badge */}
+            {domainInfo && (
+              <Card className="bg-blue-500/5 border-blue-500/20">
+                <CardContent className="py-4 flex items-center gap-3">
+                  <span className="text-2xl">{domainInfo.icon}</span>
+                  <div>
+                    <p className="font-medium">Detected domain: <span className="text-blue-400">{domainInfo.label}</span></p>
+                    <p className="text-xs text-muted-foreground">Compliance checks will reference: {domainInfo.compliance?.join(", ")}</p>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             <Card className="bg-card/50 border-border/50">
               <CardHeader><CardTitle className="text-lg">📊 Outcome Column (the decision)</CardTitle></CardHeader>
               <CardContent>
@@ -261,6 +331,16 @@ export default function AuditPage() {
         {/* STEP 3: Results */}
         {step === 3 && results && (
           <motion.div key="results" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-8">
+            {/* Domain Badge */}
+            {results.domain && (
+              <div className="flex items-center gap-2">
+                <Badge variant="outline" className="text-sm px-3 py-1 bg-muted/30">
+                  {results.domain.icon} {results.domain.label}
+                </Badge>
+                <span className="text-xs text-muted-foreground">Domain auto-detected from column names</span>
+              </div>
+            )}
+
             {/* Score + Overview */}
             <div className="grid md:grid-cols-3 gap-6">
               <Card className="bg-card/50 border-border/50 flex items-center justify-center p-8">
@@ -278,8 +358,9 @@ export default function AuditPage() {
               </div>
             </div>
 
-            {/* Per-attribute charts */}
+            {/* Bias Fingerprint + Per-attribute charts */}
             <div className="grid md:grid-cols-2 gap-6">
+              <BiasFingerprint fingerprint={results.fingerprint} />
               {Object.entries(results.per_attribute || {}).map(([attr, metrics]) => (
                 <BiasChart
                   key={attr}
@@ -288,6 +369,9 @@ export default function AuditPage() {
                 />
               ))}
             </div>
+
+            {/* Fairness Debt Score */}
+            <FairnessDebtCard debt={results.fairness_debt} />
 
             {/* Proxy warnings */}
             {results.proxies?.length > 0 && (
