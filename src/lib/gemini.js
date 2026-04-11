@@ -21,7 +21,7 @@ function getModel() {
       return null; // No API key configured
     }
     genAI = new GoogleGenerativeAI(apiKey);
-    model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
   }
   return model;
 }
