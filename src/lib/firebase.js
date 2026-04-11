@@ -33,6 +33,10 @@ async function getDb() {
       apiKey,
       authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || `${projectId}.firebaseapp.com`,
       projectId,
+      storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || `${projectId}.firebasestorage.app`,
+      messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || "",
+      appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || "",
+      measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID || "",
     });
 
     db = getFirestore(app);
