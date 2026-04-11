@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import MetricCard from "@/components/metric-card";
 import AlertFeed from "@/components/alert-feed";
-import { Play, Square, Shield } from "lucide-react";
+import { Play, Square, Shield, Activity } from "lucide-react";
 
 export default function ShieldPage() {
   const [isStreaming, setIsStreaming] = useState(false);
@@ -89,30 +89,52 @@ export default function ShieldPage() {
     <div className="max-w-6xl mx-auto px-6 py-12">
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-3xl font-bold flex items-center gap-3">🛡️ Shield Mode</h1>
-          <p className="text-muted-foreground mt-1">Real-time bias monitoring — watch AI decisions stream in and catch bias as it happens</p>
+          <h1 className="text-3xl font-bold flex items-center gap-3 text-[#0A1628]">
+            <Shield className="w-8 h-8 text-[#00C853]" />
+            Shield Mode
+            {isStreaming && (
+              <Badge className="bg-[#00C853]/10 text-[#00C853] border-[#00C853]/20 gap-1 font-normal">
+                <span className="inline-block w-2 h-2 rounded-full bg-[#00C853] animate-pulse" />
+                LIVE
+              </Badge>
+            )}
+          </h1>
+          <p className="text-[#5A6A85] mt-1">Real-time bias monitoring — watch AI decisions stream in and catch bias as it happens</p>
         </div>
         <Button
           size="lg"
           onClick={isStreaming ? stopStream : startStream}
-          className={isStreaming ? "bg-red-500 hover:bg-red-600 text-white" : "gradient-bg text-white"}
+          className={isStreaming
+            ? "bg-[#FF2D55] hover:bg-[#E0002B] text-white gap-2 font-semibold"
+            : "bg-[#00C853] hover:bg-[#00E676] text-white gap-2 font-semibold shadow-lg shadow-[#00C853]/20"
+          }
         >
-          {isStreaming ? <><Square className="w-4 h-4 mr-2" /> Stop</> : <><Play className="w-4 h-4 mr-2" /> Start Monitoring</>}
+          {isStreaming
+            ? <><Square className="w-4 h-4" /> Stop</>
+            : <><Play className="w-4 h-4" /> Start Monitoring</>
+          }
         </Button>
       </div>
 
       {/* Not started state */}
       {!isStreaming && !currentMetrics && (
-        <Card className="bg-card/50 border-border/50 py-20">
-          <CardContent className="flex flex-col items-center text-center gap-4">
-            <div className="w-20 h-20 rounded-2xl gradient-bg flex items-center justify-center opacity-30">
-              <Shield className="w-10 h-10 text-white" />
+        <Card className="bg-white border-[#E2E6ED] py-20">
+          <CardContent className="flex flex-col items-center text-center gap-5">
+            <motion.div
+              className="w-20 h-20 bg-[#00C853]/10 flex items-center justify-center"
+              style={{ borderRadius: '16px' }}
+              animate={{ scale: [1, 1.05, 1] }}
+              transition={{ repeat: Infinity, duration: 3, ease: "easeInOut" }}
+            >
+              <Shield className="w-10 h-10 text-[#00C853] opacity-60" />
+            </motion.div>
+            <div>
+              <h3 className="text-xl font-bold text-[#0A1628]">Ready to Monitor</h3>
+              <p className="text-[#5A6A85] max-w-md mt-2">
+                Shield Mode connects to an AI decision pipeline and monitors fairness metrics in real-time.
+                Click &quot;Start Monitoring&quot; to begin the simulated stream.
+              </p>
             </div>
-            <h3 className="text-xl font-semibold">Ready to Monitor</h3>
-            <p className="text-muted-foreground max-w-md">
-              Shield Mode connects to an AI decision pipeline and monitors fairness metrics in real-time.
-              Click &quot;Start Monitoring&quot; to begin the simulated stream.
-            </p>
           </CardContent>
         </Card>
       )}
@@ -131,33 +153,40 @@ export default function ShieldPage() {
 
           <div className="grid md:grid-cols-2 gap-6">
             {/* Fairness Trend */}
-            <Card className="bg-card/50 border-border/50">
-              <CardHeader className="pb-2"><CardTitle className="text-base">Fairness Score Trend</CardTitle></CardHeader>
+            <Card className="bg-white border-[#E2E6ED]">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base text-[#0A1628] flex items-center gap-2">
+                  <Activity className="w-4 h-4 text-[#00C853]" />
+                  Fairness Score Trend
+                </CardTitle>
+              </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={250}>
                   <LineChart data={fairnessHistory}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.25 0 0)" />
-                    <XAxis dataKey="batch" tick={{ fill: "oklch(0.5 0 0)", fontSize: 11 }} axisLine={false} tickLine={false} />
-                    <YAxis domain={[0, 100]} tick={{ fill: "oklch(0.5 0 0)", fontSize: 11 }} axisLine={false} tickLine={false} />
-                    <ReferenceLine y={70} stroke="#eab308" strokeDasharray="6 4" label={{ value: "Threshold", fill: "#eab308", fontSize: 10 }} />
-                    <Line type="monotone" dataKey="score" stroke="#8b5cf6" strokeWidth={2} dot={false} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="#E2E6ED" />
+                    <XAxis dataKey="batch" tick={{ fill: "#5A6A85", fontSize: 11 }} axisLine={false} tickLine={false} />
+                    <YAxis domain={[0, 100]} tick={{ fill: "#5A6A85", fontSize: 11 }} axisLine={false} tickLine={false} />
+                    <ReferenceLine y={70} stroke="#FFAA00" strokeDasharray="6 4" label={{ value: "Threshold", fill: "#FFAA00", fontSize: 10 }} />
+                    <Line type="monotone" dataKey="score" stroke="#00C853" strokeWidth={2.5} dot={false} />
                   </LineChart>
                 </ResponsiveContainer>
               </CardContent>
             </Card>
 
             {/* Gender Rate Comparison */}
-            <Card className="bg-card/50 border-border/50">
-              <CardHeader className="pb-2"><CardTitle className="text-base">Gender Approval Rates</CardTitle></CardHeader>
+            <Card className="bg-white border-[#E2E6ED]">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base text-[#0A1628]">Gender Approval Rates</CardTitle>
+              </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={250}>
                   <LineChart data={genderHistory}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.25 0 0)" />
-                    <XAxis dataKey="batch" tick={{ fill: "oklch(0.5 0 0)", fontSize: 11 }} axisLine={false} tickLine={false} />
-                    <YAxis domain={[0, 100]} tick={{ fill: "oklch(0.5 0 0)", fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={v => `${v}%`} />
-                    <Tooltip contentStyle={{ background: "oklch(0.18 0 0)", border: "1px solid oklch(0.3 0 0)", borderRadius: "8px" }} />
-                    <Line type="monotone" dataKey="male" stroke="#3b82f6" strokeWidth={2} dot={false} name="Male" />
-                    <Line type="monotone" dataKey="female" stroke="#ec4899" strokeWidth={2} dot={false} name="Female" />
+                    <CartesianGrid strokeDasharray="3 3" stroke="#E2E6ED" />
+                    <XAxis dataKey="batch" tick={{ fill: "#5A6A85", fontSize: 11 }} axisLine={false} tickLine={false} />
+                    <YAxis domain={[0, 100]} tick={{ fill: "#5A6A85", fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={v => `${v}%`} />
+                    <Tooltip contentStyle={{ background: "#fff", border: "1px solid #E2E6ED", borderRadius: "8px", boxShadow: "0 4px 12px rgba(0,0,0,0.08)" }} />
+                    <Line type="monotone" dataKey="male" stroke="#007AFF" strokeWidth={2} dot={false} name="Male" />
+                    <Line type="monotone" dataKey="female" stroke="#FF2D55" strokeWidth={2} dot={false} name="Female" />
                   </LineChart>
                 </ResponsiveContainer>
               </CardContent>
@@ -165,11 +194,15 @@ export default function ShieldPage() {
           </div>
 
           {/* Alerts */}
-          <Card className="bg-card/50 border-border/50">
+          <Card className="bg-white border-[#E2E6ED]">
             <CardHeader className="pb-2">
-              <CardTitle className="text-base flex items-center gap-2">
+              <CardTitle className="text-base flex items-center gap-2 text-[#0A1628]">
                 🚨 Alert Feed
-                {alerts.length > 0 && <Badge variant="destructive" className="text-xs">{alerts.length}</Badge>}
+                {alerts.length > 0 && (
+                  <Badge className="text-xs bg-[#FF2D55] text-white border-0">
+                    {alerts.length}
+                  </Badge>
+                )}
               </CardTitle>
             </CardHeader>
             <CardContent>

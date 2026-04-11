@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import BiasChart from "@/components/bias-chart";
 import MetricCard from "@/components/metric-card";
-import { Loader2, Zap } from "lucide-react";
+import { Loader2, Zap, FlaskConical, RotateCcw } from "lucide-react";
 
 const DECISION_TYPES = [
   { id: "hiring", label: "Hiring / Resume Screening", icon: "💼" },
@@ -64,8 +64,11 @@ export default function StressTestPage() {
   return (
     <div className="max-w-6xl mx-auto px-6 py-12">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold flex items-center gap-3">🧪 Stress Test</h1>
-        <p className="text-muted-foreground mt-1">AI penetration testing — generate diverse synthetic candidates and expose how models discriminate</p>
+        <h1 className="text-3xl font-bold flex items-center gap-3 text-[#0A1628]">
+          <FlaskConical className="w-8 h-8 text-[#FF2D55]" />
+          Stress Test
+        </h1>
+        <p className="text-[#5A6A85] mt-1">AI penetration testing — generate diverse synthetic candidates and expose how models discriminate</p>
       </div>
 
       {/* Config */}
@@ -73,22 +76,23 @@ export default function StressTestPage() {
         {!results && (
           <motion.div key="config" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="space-y-6">
             {/* Decision Type */}
-            <Card className="bg-card/50 border-border/50">
-              <CardHeader><CardTitle className="text-lg">🎯 What are you testing?</CardTitle></CardHeader>
+            <Card className="bg-white border-[#E2E6ED]">
+              <CardHeader><CardTitle className="text-lg text-[#0A1628]">🎯 What are you testing?</CardTitle></CardHeader>
               <CardContent>
                 <div className="grid sm:grid-cols-3 gap-3">
                   {DECISION_TYPES.map((t) => (
                     <button
                       key={t.id}
                       onClick={() => setDecisionType(t.id)}
-                      className={`p-5 rounded-xl border-2 text-center transition-all ${
+                      className={`p-5 border-2 text-center transition-all duration-200 ${
                         decisionType === t.id
-                          ? "border-purple-500/60 bg-purple-500/10 shadow-lg shadow-purple-500/10"
-                          : "border-border/50 bg-card/30 hover:border-border"
+                          ? "border-[#00C853] bg-[#00C853]/5 shadow-md"
+                          : "border-[#E2E6ED] bg-white hover:border-[#0D2045]/20 hover:shadow-sm"
                       }`}
+                      style={{ borderRadius: '8px' }}
                     >
                       <span className="text-3xl block mb-2">{t.icon}</span>
-                      <span className="text-sm font-medium">{t.label}</span>
+                      <span className="text-sm font-medium text-[#0A1628]">{t.label}</span>
                     </button>
                   ))}
                 </div>
@@ -96,13 +100,17 @@ export default function StressTestPage() {
             </Card>
 
             {/* Demo Axes */}
-            <Card className="bg-card/50 border-border/50">
-              <CardHeader><CardTitle className="text-lg">👤 Demographics to Vary</CardTitle></CardHeader>
+            <Card className="bg-white border-[#E2E6ED]">
+              <CardHeader><CardTitle className="text-lg text-[#0A1628]">👤 Demographics to Vary</CardTitle></CardHeader>
               <CardContent>
                 <div className="flex flex-wrap gap-3">
                   {DEMOGRAPHIC_AXES.map((a) => (
-                    <Button key={a.id} size="sm" variant={axes.includes(a.id) ? "default" : "outline"}
-                      className={axes.includes(a.id) ? "gradient-bg text-white" : ""}
+                    <Button key={a.id} size="sm"
+                      variant={axes.includes(a.id) ? "default" : "outline"}
+                      className={axes.includes(a.id)
+                        ? "bg-[#0D2045] text-white hover:bg-[#1A3A6E]"
+                        : "bg-white border-[#E2E6ED] text-[#0A1628] hover:border-[#0D2045]/30"
+                      }
                       onClick={() => toggleAxis(a.id)}>
                       {a.label}
                     </Button>
@@ -112,13 +120,17 @@ export default function StressTestPage() {
             </Card>
 
             {/* Candidate Count */}
-            <Card className="bg-card/50 border-border/50">
-              <CardHeader><CardTitle className="text-lg">📊 Number of Test Candidates</CardTitle></CardHeader>
+            <Card className="bg-white border-[#E2E6ED]">
+              <CardHeader><CardTitle className="text-lg text-[#0A1628]">📊 Number of Test Candidates</CardTitle></CardHeader>
               <CardContent>
                 <div className="flex flex-wrap gap-3">
                   {CANDIDATE_COUNTS.map((c) => (
-                    <Button key={c} size="sm" variant={candidateCount === c ? "default" : "outline"}
-                      className={candidateCount === c ? "gradient-bg text-white" : ""}
+                    <Button key={c} size="sm"
+                      variant={candidateCount === c ? "default" : "outline"}
+                      className={candidateCount === c
+                        ? "bg-[#0D2045] text-white hover:bg-[#1A3A6E]"
+                        : "bg-white border-[#E2E6ED] text-[#0A1628] hover:border-[#0D2045]/30"
+                      }
                       onClick={() => setCandidateCount(c)}>
                       {c} candidates
                     </Button>
@@ -127,13 +139,25 @@ export default function StressTestPage() {
               </CardContent>
             </Card>
 
-            {error && <div className="p-4 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-sm">{error}</div>}
+            {error && (
+              <div className="p-4 bg-[#FF2D55]/5 border border-[#FF2D55]/20 text-[#FF2D55] text-sm font-medium" style={{ borderRadius: '8px' }}>
+                {error}
+              </div>
+            )}
 
             <div className="text-center">
-              <Button size="lg" className="gradient-bg text-white gap-2 px-10" onClick={runTest} disabled={loading}>
-                {loading ? <><Loader2 className="w-4 h-4 animate-spin" /> Running...</> : <><Zap className="w-4 h-4" /> Run Penetration Test</>}
+              <Button
+                size="lg"
+                className="bg-[#00C853] hover:bg-[#00E676] text-white gap-2 px-10 font-semibold shadow-lg shadow-[#00C853]/20"
+                onClick={runTest}
+                disabled={loading}
+              >
+                {loading
+                  ? <><Loader2 className="w-4 h-4 animate-spin" /> Running...</>
+                  : <><Zap className="w-4 h-4" /> Run Penetration Test</>
+                }
               </Button>
-              <p className="text-xs text-muted-foreground mt-3">Generates synthetic candidates via Gemini AI, then runs them through a simulated AI model</p>
+              <p className="text-xs text-[#5A6A85] mt-3">Generates synthetic candidates via Gemini AI, then runs them through a simulated AI model</p>
             </div>
           </motion.div>
         )}
@@ -142,8 +166,14 @@ export default function StressTestPage() {
         {results && (
           <motion.div key="results" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
             <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-bold">Test Results</h2>
-              <Button variant="outline" onClick={() => setResults(null)}>Run New Test</Button>
+              <h2 className="text-2xl font-bold text-[#0A1628]">Test Results</h2>
+              <Button
+                variant="outline"
+                onClick={() => setResults(null)}
+                className="gap-2 bg-white border-[#E2E6ED] text-[#0A1628] hover:bg-[#F5F7FA]"
+              >
+                <RotateCcw className="w-4 h-4" /> Run New Test
+              </Button>
             </div>
 
             {/* Summary Cards */}
@@ -170,11 +200,16 @@ export default function StressTestPage() {
 
             {/* AI Explanation */}
             {results.explanation && (
-              <Card className="bg-purple-500/5 border-purple-500/20">
-                <CardHeader><CardTitle className="text-lg gradient-text">🤖 AI Analysis</CardTitle></CardHeader>
+              <Card className="bg-white border-[#E2E6ED] border-l-4 border-l-[#007AFF]">
+                <CardHeader>
+                  <CardTitle className="text-lg text-[#0A1628] flex items-center gap-2">
+                    <span>🤖</span> AI Analysis
+                    <Badge className="text-xs bg-[#007AFF]/10 text-[#007AFF] border-0 font-normal">Powered by Gemini</Badge>
+                  </CardTitle>
+                </CardHeader>
                 <CardContent>
-                  <p className="font-semibold text-lg mb-3">{results.explanation.summary}</p>
-                  <p className="text-muted-foreground leading-relaxed">{results.explanation.explanation}</p>
+                  <p className="font-semibold text-lg mb-3 text-[#0A1628]">{results.explanation.summary}</p>
+                  <p className="text-[#5A6A85] leading-relaxed">{results.explanation.explanation}</p>
                 </CardContent>
               </Card>
             )}

@@ -1,12 +1,13 @@
 "use client";
 
+import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
 const statusColors = {
-  "NON-COMPLIANT": "bg-red-500/20 text-red-400 border-red-500/30",
-  "WARNING": "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
-  "COMPLIANT": "bg-emerald-500/20 text-emerald-400 border-emerald-500/30",
+  "NON-COMPLIANT": "bg-[#FF2D55]/10 text-[#FF2D55] border-[#FF2D55]/20",
+  "WARNING": "bg-[#FFAA00]/10 text-[#FFAA00] border-[#FFAA00]/20",
+  "COMPLIANT": "bg-[#00C853]/10 text-[#00C853] border-[#00C853]/20",
 };
 
 const statusIcons = {
@@ -42,35 +43,40 @@ export default function FairnessDebtCard({ debt }) {
     debt.total_exposure.eur > 0;
 
   return (
-    <Card className="bg-red-500/5 border-red-500/20">
+    <Card className="bg-[#FF2D55]/5 border-[#FF2D55]/15 border-l-4 border-l-[#FF2D55]">
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-lg flex items-center gap-2">
+          <CardTitle className="text-lg flex items-center gap-2 text-[#0A1628]">
             🚨 Fairness Debt Report
           </CardTitle>
-          <Badge
-            variant="outline"
-            className={
-              debt.risk_level === "CRITICAL"
-                ? "bg-red-500/20 text-red-400 border-red-500/30"
-                : debt.risk_level === "HIGH"
-                ? "bg-orange-500/20 text-orange-400 border-orange-500/30"
-                : "bg-yellow-500/20 text-yellow-400 border-yellow-500/30"
-            }
+          <motion.div
+            animate={debt.risk_level === "CRITICAL" ? { scale: [1, 1.05, 1] } : {}}
+            transition={{ repeat: Infinity, duration: 2 }}
           >
-            {debt.risk_level} RISK
-          </Badge>
+            <Badge
+              variant="outline"
+              className={`font-semibold ${
+                debt.risk_level === "CRITICAL"
+                  ? "bg-[#FF2D55]/15 text-[#FF2D55] border-[#FF2D55]/30"
+                  : debt.risk_level === "HIGH"
+                  ? "bg-[#FFAA00]/15 text-[#FFAA00] border-[#FFAA00]/30"
+                  : "bg-[#FFAA00]/15 text-[#FFAA00] border-[#FFAA00]/30"
+              }`}
+            >
+              {debt.risk_level} RISK
+            </Badge>
+          </motion.div>
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Top-line exposure */}
         {hasExposure && (
-          <div className="p-4 bg-background/50 rounded-lg border border-border/50">
-            <p className="text-sm text-muted-foreground mb-1">Estimated Legal Exposure</p>
-            <p className="text-2xl font-bold font-mono text-red-400">
+          <div className="p-4 bg-white border border-[#E2E6ED]" style={{ borderRadius: '6px' }}>
+            <p className="text-sm text-[#5A6A85] mb-1">Estimated Legal Exposure</p>
+            <p className="text-2xl font-bold font-mono text-[#FF2D55]">
               {formatTopExposure(debt.total_exposure)}
             </p>
-            <div className="flex gap-6 mt-2 text-sm text-muted-foreground">
+            <div className="flex gap-6 mt-2 text-sm text-[#5A6A85]">
               <span>👥 ~{debt.affected_people_estimate.toLocaleString()} people affected</span>
               <span>⏱️ Remediation: {debt.remediation_time}</span>
             </div>
@@ -79,24 +85,25 @@ export default function FairnessDebtCard({ debt }) {
 
         {/* Per-regulation breakdown */}
         <div className="space-y-2">
-          <p className="text-sm font-medium text-muted-foreground">Regulatory Compliance</p>
+          <p className="text-sm font-medium text-[#5A6A85]">Regulatory Compliance</p>
           {debt.regulations.map((reg, i) => (
             <div
               key={i}
-              className="flex items-center justify-between p-3 bg-background/50 rounded-lg border border-border/30"
+              className="flex items-center justify-between p-3 bg-white border border-[#E2E6ED]"
+              style={{ borderRadius: '6px' }}
             >
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
                   <span className="text-sm">{statusIcons[reg.status] || "⚪"}</span>
-                  <span className="font-medium text-sm truncate">{reg.name}</span>
+                  <span className="font-medium text-sm text-[#0A1628] truncate">{reg.name}</span>
                 </div>
                 {reg.description && (
-                  <p className="text-xs text-muted-foreground ml-6 mt-0.5">{reg.description}</p>
+                  <p className="text-xs text-[#5A6A85] ml-6 mt-0.5">{reg.description}</p>
                 )}
               </div>
               <div className="flex items-center gap-3 shrink-0">
                 {reg.exposure !== "—" && reg.exposure !== "Check local regulations" && (
-                  <span className="text-sm font-mono font-semibold text-red-400">{reg.exposure}</span>
+                  <span className="text-sm font-mono font-semibold text-[#FF2D55]">{reg.exposure}</span>
                 )}
                 <Badge variant="outline" className={`text-xs ${statusColors[reg.status] || ""}`}>
                   {reg.status}
@@ -107,7 +114,7 @@ export default function FairnessDebtCard({ debt }) {
         </div>
 
         {/* Bottom note */}
-        <p className="text-xs text-muted-foreground italic px-1">
+        <p className="text-xs text-[#5A6A85] italic px-1">
           💡 The cost of fixing fairness is typically {"<"}0.1% of the legal exposure. Remediation is always cheaper than litigation.
         </p>
       </CardContent>
