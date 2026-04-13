@@ -25,10 +25,10 @@ const STEP_ICONS = [
 ];
 
 const DEMO_DATASETS = [
-  { label: "💼 Hiring Bias (CSV)", file: "/demo_hiring_data.csv", type: "csv" },
-  { label: "💼 Hiring Bias (JSON)", file: "/demo_hiring_data.json", type: "json" },
-  { label: "📱 Content Moderation", file: "/demo_content_moderation.csv", type: "csv" },
-  { label: "💰 Algorithmic Pricing", file: "/demo_pricing_data.csv", type: "csv" },
+  { label: "Hiring Bias (CSV)", file: "/demo_hiring_data.csv", type: "csv" },
+  { label: "Hiring Bias (JSON)", file: "/demo_hiring_data.json", type: "json" },
+  { label: "Content Moderation", file: "/demo_content_moderation.csv", type: "csv" },
+  { label: "Algorithmic Pricing", file: "/demo_pricing_data.csv", type: "csv" },
 ];
 
 export default function AuditPage() {
@@ -56,7 +56,6 @@ export default function AuditPage() {
       setDetected(det.detected);
       if (det.domain) setDomainInfo(det.domain);
 
-      // Auto-fill config
       const autoOutcome = det.detected?.decision_columns?.[0]?.column || "";
       const autoProtected = (det.detected?.protected_columns || []).map(c => c.column);
       setConfig(prev => ({
@@ -78,7 +77,6 @@ export default function AuditPage() {
     const isJson = f.name?.toLowerCase().endsWith(".json");
 
     if (isJson) {
-      // Parse JSON
       try {
         const text = await f.text();
         const parsed = JSON.parse(text);
@@ -91,7 +89,6 @@ export default function AuditPage() {
         setError(`JSON parsing failed: ${e.message}`);
       }
     } else {
-      // Parse CSV
       Papa.parse(f, {
         header: true,
         skipEmptyLines: true,
@@ -108,7 +105,6 @@ export default function AuditPage() {
     try {
       const res = await fetch(url);
       const text = await res.text();
-      const ext = type === "json" ? ".json" : ".csv";
       const mimeType = type === "json" ? "application/json" : "text/csv";
       const f = new File([text], url.split("/").pop(), { type: mimeType });
       handleFile(f);
@@ -143,7 +139,6 @@ export default function AuditPage() {
       setResults(json.results);
       setStep(3);
 
-      // Fire and forget: get Gemini explanation
       fetch("/api/audit/explain", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -153,7 +148,6 @@ export default function AuditPage() {
         .then(r => setExplanation(r.explanation))
         .catch(() => {});
 
-      // Fire and forget: get compliance check
       fetch("/api/audit/compliance", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -163,7 +157,6 @@ export default function AuditPage() {
         .then(r => setCompliance(r.compliance))
         .catch(() => {});
 
-      // Fire and forget: save to audit history
       fetch("/api/history/save", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -193,31 +186,24 @@ export default function AuditPage() {
     }));
   };
 
-  const getSeverityBorderColor = (severity) => {
-    if (severity === "CRITICAL") return "border-l-[#FF2D55]";
-    if (severity === "HIGH" || severity === "WARNING") return "border-l-[#FFAA00]";
-    if (severity === "OK") return "border-l-[#00C853]";
-    return "border-l-[#E2E6ED]";
-  };
-
   return (
     <div className="max-w-6xl mx-auto px-6 py-12">
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-3xl font-bold flex items-center gap-3 text-[#0A1628]">
-            <FileSearch className="w-8 h-8 text-[#007AFF]" />
+          <h1 className="text-3xl font-bold flex items-center gap-3 text-[#0A0A0A]">
+            <FileSearch className="w-8 h-8 text-[#F59E0B]" />
             Audit Mode
             {domainInfo && (
-              <Badge className="text-sm bg-[#0D2045] text-white font-normal gap-1.5 px-3 py-1">
-                {domainInfo.icon} {domainInfo.label}
+              <Badge className="text-sm bg-[#0A0A0A] text-white font-normal gap-1.5 px-3 py-1">
+                {domainInfo.label}
               </Badge>
             )}
           </h1>
-          <p className="text-[#5A6A85] mt-1">Upload any dataset (CSV or JSON) → detect bias → get plain English explanations → understand legal risk</p>
+          <p className="text-[#6B7280] mt-1">Upload any dataset (CSV or JSON) &rarr; detect bias &rarr; get plain English explanations &rarr; understand legal risk</p>
         </div>
         {step > 0 && (
-          <Button variant="outline" size="sm" onClick={reset} className="gap-2 bg-white border-[#E2E6ED] text-[#0A1628] hover:bg-[#F5F7FA]">
+          <Button variant="outline" size="sm" onClick={reset} className="gap-2 bg-white border-[#E5E7EB] text-[#0A0A0A] hover:bg-[#F9FAFB]">
             <RotateCcw className="w-4 h-4" /> Start Over
           </Button>
         )}
@@ -229,23 +215,23 @@ export default function AuditPage() {
           <div key={s} className="flex items-center gap-2">
             <div className={`w-9 h-9 flex items-center justify-center text-sm font-bold transition-all duration-300 ${
               i < step
-                ? "bg-[#00C853] text-white"
+                ? "bg-[#0D9488] text-white"
                 : i === step
-                  ? "bg-[#0D2045] text-white shadow-md"
-                  : "bg-[#F0F2F5] text-[#5A6A85]"
+                  ? "bg-[#0A0A0A] text-white shadow-md"
+                  : "bg-[#F3F4F6] text-[#6B7280]"
             }`} style={{ borderRadius: '8px' }}>
               {i < step ? <CheckCircle2 className="w-4 h-4" /> : STEP_ICONS[i]}
             </div>
-            <span className={`text-sm font-medium ${i <= step ? "text-[#0A1628]" : "text-[#5A6A85]"}`}>{s}</span>
+            <span className={`text-sm font-medium ${i <= step ? "text-[#0A0A0A]" : "text-[#6B7280]"}`}>{s}</span>
             {i < STEPS.length - 1 && (
-              <div className={`w-12 h-0.5 mx-1 transition-colors ${i < step ? "bg-[#00C853]" : "bg-[#E2E6ED]"}`} />
+              <div className={`w-12 h-0.5 mx-1 transition-colors ${i < step ? "bg-[#0D9488]" : "bg-[#E5E7EB]"}`} />
             )}
           </div>
         ))}
       </div>
 
       {error && (
-        <div className="mb-6 p-4 bg-[#FF2D55]/5 border border-[#FF2D55]/20 text-[#FF2D55] text-sm font-medium" style={{ borderRadius: '8px' }}>
+        <div className="mb-6 p-4 bg-[#EF4444]/5 border border-[#EF4444]/20 text-[#EF4444] text-sm font-medium" style={{ borderRadius: '8px' }}>
           {error}
         </div>
       )}
@@ -256,7 +242,7 @@ export default function AuditPage() {
           <motion.div key="upload" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}>
             <CsvDropzone onFileLoaded={handleFile} file={file} />
             <div className="mt-8 text-center">
-              <p className="text-sm text-[#5A6A85] mb-4 font-medium">Or try with a demo dataset:</p>
+              <p className="text-sm text-[#6B7280] mb-4 font-medium">Or try with a demo dataset:</p>
               <div className="flex justify-center gap-3 flex-wrap">
                 {DEMO_DATASETS.map((d) => (
                   <Button
@@ -264,7 +250,7 @@ export default function AuditPage() {
                     variant="outline"
                     size="sm"
                     onClick={() => loadDemo(d.file, d.type)}
-                    className="bg-white border-[#E2E6ED] text-[#0A1628] hover:border-[#00C853]/40 hover:bg-[#00C853]/5 transition-all"
+                    className="bg-white border-[#E5E7EB] text-[#0A0A0A] hover:border-[#F59E0B]/40 hover:bg-[#FEF3C7]/30 transition-all"
                   >
                     {d.label}
                   </Button>
@@ -277,21 +263,19 @@ export default function AuditPage() {
         {/* STEP 1: Configure */}
         {step === 1 && (
           <motion.div key="configure" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="space-y-6">
-            {/* Domain detection badge */}
             {domainInfo && (
-              <Card className="bg-[#0D2045] border-0 text-white">
+              <Card className="bg-[#0C0E12] border-[#252932] text-white">
                 <CardContent className="py-4 flex items-center gap-3">
-                  <span className="text-2xl">{domainInfo.icon}</span>
                   <div>
-                    <p className="font-semibold">Detected domain: <span className="text-[#00E676]">{domainInfo.label}</span></p>
-                    <p className="text-xs text-[#8BA3C7]">Compliance checks will reference: {domainInfo.compliance?.join(", ")}</p>
+                    <p className="font-semibold">Detected domain: <span className="text-[#F59E0B]">{domainInfo.label}</span></p>
+                    <p className="text-xs text-[#94A3B8]">Compliance checks will reference: {domainInfo.compliance?.join(", ")}</p>
                   </div>
                 </CardContent>
               </Card>
             )}
 
-            <Card className="bg-white border-[#E2E6ED]">
-              <CardHeader><CardTitle className="text-lg text-[#0A1628]">📊 Outcome Column (the decision)</CardTitle></CardHeader>
+            <Card className="bg-white border-[#E5E7EB]">
+              <CardHeader><CardTitle className="text-lg text-[#0A0A0A]">Outcome Column (the decision)</CardTitle></CardHeader>
               <CardContent>
                 <div className="flex flex-wrap gap-2">
                   {(detected?.decision_columns || []).map(c => (
@@ -299,10 +283,10 @@ export default function AuditPage() {
                       key={c.column}
                       size="sm"
                       variant={config.outcome === c.column ? "default" : "outline"}
-                      className={config.outcome === c.column ? "bg-[#0D2045] text-white hover:bg-[#1A3A6E]" : "bg-white border-[#E2E6ED] text-[#0A1628] hover:border-[#0D2045]/30"}
+                      className={config.outcome === c.column ? "bg-[#0A0A0A] text-white hover:bg-[#1a1a1a]" : "bg-white border-[#E5E7EB] text-[#0A0A0A] hover:border-[#0A0A0A]/30"}
                       onClick={() => setConfig(prev => ({ ...prev, outcome: c.column }))}
                     >
-                      {c.column} <Badge className="ml-1 text-xs bg-[#00C853]/15 text-[#00C853] border-0">auto</Badge>
+                      {c.column} <Badge className="ml-1 text-xs bg-[#0D9488]/15 text-[#0D9488] border-0">auto</Badge>
                     </Button>
                   ))}
                   {(detected?.feature_columns || []).filter(c => c.unique_count <= 10).map(c => (
@@ -310,7 +294,7 @@ export default function AuditPage() {
                       key={c.column}
                       size="sm"
                       variant={config.outcome === c.column ? "default" : "outline"}
-                      className={config.outcome === c.column ? "bg-[#0D2045] text-white hover:bg-[#1A3A6E]" : "bg-white border-[#E2E6ED] text-[#0A1628]"}
+                      className={config.outcome === c.column ? "bg-[#0A0A0A] text-white hover:bg-[#1a1a1a]" : "bg-white border-[#E5E7EB] text-[#0A0A0A]"}
                       onClick={() => setConfig(prev => ({ ...prev, outcome: c.column }))}
                     >
                       {c.column}
@@ -318,9 +302,9 @@ export default function AuditPage() {
                   ))}
                 </div>
                 <div className="mt-4 flex items-center gap-2">
-                  <span className="text-sm text-[#5A6A85]">Positive outcome value:</span>
+                  <span className="text-sm text-[#6B7280]">Positive outcome value:</span>
                   <input
-                    className="w-20 px-3 py-1.5 bg-[#F5F7FA] border border-[#E2E6ED] text-sm text-[#0A1628] font-mono focus:outline-none focus:border-[#00C853] focus:ring-1 focus:ring-[#00C853]/30 transition-colors"
+                    className="w-20 px-3 py-1.5 bg-[#F9FAFB] border border-[#E5E7EB] text-sm text-[#0A0A0A] font-mono focus:outline-none focus:border-[#F59E0B] focus:ring-1 focus:ring-[#F59E0B]/30 transition-colors"
                     value={config.positiveOutcome}
                     onChange={e => setConfig(prev => ({ ...prev, positiveOutcome: e.target.value }))}
                   />
@@ -328,20 +312,20 @@ export default function AuditPage() {
               </CardContent>
             </Card>
 
-            <Card className="bg-white border-[#E2E6ED]">
-              <CardHeader><CardTitle className="text-lg text-[#0A1628]">👥 Protected Attributes</CardTitle></CardHeader>
+            <Card className="bg-white border-[#E5E7EB]">
+              <CardHeader><CardTitle className="text-lg text-[#0A0A0A]">Protected Attributes</CardTitle></CardHeader>
               <CardContent>
                 <div className="flex flex-wrap gap-2">
                   {(data ? Object.keys(data[0] || {}) : []).filter(c => c !== config.outcome).map(col => (
                     <Button
                       key={col} size="sm"
                       variant={config.protected.includes(col) ? "default" : "outline"}
-                      className={config.protected.includes(col) ? "bg-[#0D2045] text-white hover:bg-[#1A3A6E]" : "bg-white border-[#E2E6ED] text-[#0A1628] hover:border-[#0D2045]/30"}
+                      className={config.protected.includes(col) ? "bg-[#0A0A0A] text-white hover:bg-[#1a1a1a]" : "bg-white border-[#E5E7EB] text-[#0A0A0A] hover:border-[#0A0A0A]/30"}
                       onClick={() => toggleProtected(col)}
                     >
                       {col}
                       {detected?.protected_columns?.some(p => p.column === col) && (
-                        <Badge className="ml-1 text-xs bg-[#007AFF]/15 text-[#007AFF] border-0">suggested</Badge>
+                        <Badge className="ml-1 text-xs bg-[#F59E0B]/15 text-[#D97706] border-0">suggested</Badge>
                       )}
                     </Button>
                   ))}
@@ -350,14 +334,18 @@ export default function AuditPage() {
             </Card>
 
             <div className="flex justify-end">
-              <Button
-                size="lg"
-                className="bg-[#00C853] hover:bg-[#00E676] text-white gap-2 font-semibold shadow-lg shadow-[#00C853]/20 transition-all"
+              <button
+                className="group inline-flex items-stretch rounded-md overflow-hidden transition-all duration-150 hover:-translate-y-px hover:shadow-[0_6px_20px_rgba(0,0,0,0.15)] disabled:opacity-50 disabled:cursor-not-allowed"
                 onClick={runAnalysis}
                 disabled={!config.outcome || !config.protected.length}
               >
-                Analyze for Bias <ArrowRight className="w-4 h-4" />
-              </Button>
+                <span className="bg-[#F59E0B] px-4 py-3 flex items-center justify-center text-black group-hover:bg-[#D97706] transition-colors">
+                  <BarChart3 className="w-4 h-4" />
+                </span>
+                <span className="bg-[#0A0A0A] text-white text-[12px] font-bold tracking-[0.12em] uppercase px-6 py-3 flex items-center group-hover:bg-[#1a1a1a] transition-colors">
+                  Analyze for Bias <ArrowRight className="w-3.5 h-3.5 ml-2" />
+                </span>
+              </button>
             </div>
           </motion.div>
         )}
@@ -365,12 +353,12 @@ export default function AuditPage() {
         {/* STEP 2: Analyzing */}
         {step === 2 && (
           <motion.div key="analyzing" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col items-center justify-center py-24 gap-6">
-            <div className="w-16 h-16 flex items-center justify-center bg-[#00C853]/10 animate-pulse-green" style={{ borderRadius: '16px' }}>
-              <Loader2 className="w-8 h-8 text-[#00C853] animate-spin" />
+            <div className="w-16 h-16 flex items-center justify-center bg-[#F59E0B]/10 animate-pulse-amber" style={{ borderRadius: '16px' }}>
+              <Loader2 className="w-8 h-8 text-[#F59E0B] animate-spin" />
             </div>
             <div className="text-center">
-              <p className="text-xl font-semibold text-[#0A1628]">Analyzing {data?.length?.toLocaleString()} rows...</p>
-              <p className="text-[#5A6A85] mt-2">Running 5 fairness metrics across {config.protected.length} protected attributes</p>
+              <p className="text-xl font-semibold text-[#0A0A0A]">Analyzing {data?.length?.toLocaleString()} rows...</p>
+              <p className="text-[#6B7280] mt-2">Running 5 fairness metrics across {config.protected.length} protected attributes</p>
             </div>
             <Progress value={66} className="w-64 h-2" />
           </motion.div>
@@ -386,52 +374,52 @@ export default function AuditPage() {
                 animate={{ opacity: 1, x: 0 }}
                 className="flex items-center gap-3"
               >
-                <Badge className="text-sm px-4 py-1.5 bg-[#0D2045] text-white font-medium">
-                  {results.domain.icon} {results.domain.label}
+                <Badge className="text-sm px-4 py-1.5 bg-[#0A0A0A] text-white font-medium">
+                  {results.domain.label}
                 </Badge>
-                <span className="text-xs text-[#5A6A85]">Domain auto-detected from column names</span>
+                <span className="text-xs text-[#6B7280]">Domain auto-detected from column names</span>
               </motion.div>
             )}
 
             {/* Score + Overview */}
             <div className="grid md:grid-cols-3 gap-6">
               <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.1 }}>
-                <Card className="bg-white border-[#E2E6ED] flex items-center justify-center p-8">
+                <Card className="bg-white border-[#E5E7EB] flex items-center justify-center p-8">
                   <ScoreGauge score={results.fairness_score?.score || 0} label={results.fairness_score?.label} />
                 </Card>
               </motion.div>
               <div className="md:col-span-2 grid grid-cols-2 gap-4">
                 {[
                   {
-                    icon: "📊", title: "Dataset Size",
+                    title: "Dataset Size",
                     value: `${results.dataset_info?.total_rows} rows`,
-                    subtitle: `${results.dataset_info?.total_columns} columns`,
+                    description: `${results.dataset_info?.total_columns} columns`,
                     delay: 0.15
                   },
                   {
-                    icon: "🎯", title: "Disparate Impact",
+                    title: "Disparate Impact",
                     value: Object.values(results.per_attribute || {})[0]?.disparate_impact?.ratio?.toFixed(4) || "N/A",
-                    severity: Object.values(results.per_attribute || {})[0]?.disparate_impact?.severity,
-                    subtitle: "EEOC 80% Rule",
+                    severity: (Object.values(results.per_attribute || {})[0]?.disparate_impact?.severity || "ok").toLowerCase(),
+                    description: "EEOC 80% Rule",
                     delay: 0.2
                   },
                   {
-                    icon: "⚖️", title: "Demographic Parity",
+                    title: "Demographic Parity",
                     value: ((Object.values(results.per_attribute || {})[0]?.demographic_parity?.difference || 0) * 100).toFixed(1) + "%",
-                    severity: Object.values(results.per_attribute || {})[0]?.demographic_parity?.severity,
-                    subtitle: "Gap between groups",
+                    severity: (Object.values(results.per_attribute || {})[0]?.demographic_parity?.severity || "ok").toLowerCase(),
+                    description: "Gap between groups",
                     delay: 0.25
                   },
                   {
-                    icon: "🔗", title: "Proxy Features",
+                    title: "Proxy Features",
                     value: results.proxies?.length || 0,
-                    severity: results.proxies?.length > 0 ? "WARNING" : "OK",
-                    subtitle: "Correlated with protected attrs",
+                    severity: results.proxies?.length > 0 ? "warning" : "ok",
+                    description: "Correlated with protected attrs",
                     delay: 0.3
                   },
-                ].map((metric, i) => (
+                ].map((metric) => (
                   <motion.div key={metric.title} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: metric.delay }}>
-                    <MetricCard icon={metric.icon} title={metric.title} value={metric.value} severity={metric.severity} subtitle={metric.subtitle} />
+                    <MetricCard title={metric.title} value={metric.value} severity={metric.severity} description={metric.description} />
                   </motion.div>
                 ))}
               </div>
@@ -454,24 +442,24 @@ export default function AuditPage() {
 
             {/* Fairness Debt Score */}
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.45 }}>
-              <FairnessDebtCard debt={results.fairness_debt} />
+              <FairnessDebtCard debtData={results.fairness_debt} />
             </motion.div>
 
             {/* Proxy warnings */}
             {results.proxies?.length > 0 && (
               <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}>
-                <Card className="bg-[#FFAA00]/5 border-[#FFAA00]/20 border-l-4 border-l-[#FFAA00]">
-                  <CardHeader><CardTitle className="text-lg text-[#0A1628]">⚠️ Proxy Features Detected</CardTitle></CardHeader>
+                <Card className="bg-[#F59E0B]/5 border-[#F59E0B]/20 border-l-4 border-l-[#F59E0B]">
+                  <CardHeader><CardTitle className="text-lg text-[#0A0A0A]">Proxy Features Detected</CardTitle></CardHeader>
                   <CardContent>
                     <div className="space-y-2">
                       {results.proxies.map((p, i) => (
-                        <div key={i} className="flex items-center justify-between p-3 bg-white border border-[#E2E6ED]" style={{ borderRadius: '6px' }}>
+                        <div key={i} className="flex items-center justify-between p-3 bg-white border border-[#E5E7EB]" style={{ borderRadius: '6px' }}>
                           <div>
-                            <span className="font-mono font-semibold text-[#0A1628]">{p.feature}</span>
-                            <span className="text-[#5A6A85] mx-2">→</span>
-                            <span className="text-[#FFAA00] font-medium">{p.protected_attribute}</span>
+                            <span className="font-mono font-semibold text-[#0A0A0A]">{p.feature}</span>
+                            <span className="text-[#6B7280] mx-2">&rarr;</span>
+                            <span className="text-[#D97706] font-medium">{p.protected_attribute}</span>
                           </div>
-                          <Badge variant="outline" className={`font-mono ${p.score > 0.6 ? "text-[#FF2D55] border-[#FF2D55]/30 bg-[#FF2D55]/5" : "text-[#FFAA00] border-[#FFAA00]/30 bg-[#FFAA00]/5"}`}>
+                          <Badge variant="outline" className={`font-mono ${p.score > 0.6 ? "text-[#EF4444] border-[#EF4444]/30 bg-[#EF4444]/5" : "text-[#F59E0B] border-[#F59E0B]/30 bg-[#F59E0B]/5"}`}>
                             {p.severity} ({p.score.toFixed(2)})
                           </Badge>
                         </div>
@@ -484,29 +472,29 @@ export default function AuditPage() {
 
             {/* AI Explanation */}
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.55 }}>
-              <Card className="bg-white border-[#E2E6ED] border-l-4 border-l-[#007AFF]">
+              <Card className="bg-white border-[#E5E7EB] border-l-4 border-l-[#0D9488]">
                 <CardHeader>
-                  <CardTitle className="text-lg text-[#0A1628] flex items-center gap-2">
-                    <span className="text-xl">🤖</span> AI Explanation
-                    <Badge className="text-xs bg-[#007AFF]/10 text-[#007AFF] border-0 font-normal">Powered by Gemini</Badge>
+                  <CardTitle className="text-lg text-[#0A0A0A] flex items-center gap-2">
+                    AI Explanation
+                    <Badge className="text-xs bg-[#0D9488]/10 text-[#0D9488] border-0 font-normal">Powered by Gemini</Badge>
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   {explanation ? (
                     <div className="space-y-4">
-                      <p className="font-semibold text-lg text-[#0A1628]">{explanation.summary}</p>
-                      <p className="text-[#5A6A85] leading-relaxed">{explanation.explanation}</p>
+                      <p className="font-semibold text-lg text-[#0A0A0A]">{explanation.summary}</p>
+                      <p className="text-[#6B7280] leading-relaxed">{explanation.explanation}</p>
                       {explanation.legal_references?.length > 0 && (
-                        <div className="flex flex-wrap gap-2 mt-3 pt-3 border-t border-[#E2E6ED]">
+                        <div className="flex flex-wrap gap-2 mt-3 pt-3 border-t border-[#E5E7EB]">
                           {explanation.legal_references.map((r, i) => (
-                            <Badge key={i} variant="outline" className="text-xs bg-[#F5F7FA] border-[#E2E6ED] text-[#5A6A85]">{r}</Badge>
+                            <Badge key={i} variant="outline" className="text-xs bg-[#F9FAFB] border-[#E5E7EB] text-[#6B7280]">{r}</Badge>
                           ))}
                         </div>
                       )}
                     </div>
                   ) : (
-                    <div className="flex items-center gap-3 text-[#5A6A85]">
-                      <Loader2 className="w-4 h-4 animate-spin text-[#007AFF]" />
+                    <div className="flex items-center gap-3 text-[#6B7280]">
+                      <Loader2 className="w-4 h-4 animate-spin text-[#0D9488]" />
                       <span>Getting AI explanation...</span>
                     </div>
                   )}

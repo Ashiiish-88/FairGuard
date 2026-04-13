@@ -49,114 +49,141 @@
 }
 
 /* ═══════════════════════════════════════════════════════════════════
-   FAIRGUARD DESIGN SYSTEM — Light Mode
-   Inspired by: refold.ai × todesktop.com
-   Palette: Signal Green × Deep Navy × Off-White
+   FAIRGUARD DESIGN SYSTEM v2 — Amber + Teal
+   Fusion: refold.ai structure × todesktop.com panels
    ═══════════════════════════════════════════════════════════════════ */
 
 :root {
-  /* ─── Base Surfaces ─── */
-  --background: #F5F7FA;
-  --foreground: #0A1628;
+  /* ─── Base Surfaces (Refold-inspired white base) ─── */
+  --background: #FFFFFF;
+  --foreground: #0A0A0A;
   --card: #FFFFFF;
-  --card-foreground: #0A1628;
+  --card-foreground: #0A0A0A;
   --popover: #FFFFFF;
-  --popover-foreground: #0A1628;
+  --popover-foreground: #0A0A0A;
 
-  /* ─── Primary: Signal Green ─── */
-  --primary: #00C853;
-  --primary-foreground: #FFFFFF;
+  /* ─── Primary: Amber — "The Warning" ─── */
+  --primary: #F59E0B;
+  --primary-foreground: #000000;
 
-  /* ─── Secondary: Navy ─── */
-  --secondary: #F0F2F5;
-  --secondary-foreground: #0A1628;
+  /* ─── Secondary ─── */
+  --secondary: #F3F4F6;
+  --secondary-foreground: #0A0A0A;
 
   /* ─── Muted ─── */
-  --muted: #F0F2F5;
-  --muted-foreground: #5A6A85;
+  --muted: #F3F4F6;
+  --muted-foreground: #6B7280;
 
-  /* ─── Accent: Green tint ─── */
-  --accent: #E8FAF0;
-  --accent-foreground: #0A1628;
+  /* ─── Accent: Teal tint ─── */
+  --accent: #CCFBF1;
+  --accent-foreground: #0A0A0A;
 
   /* ─── Destructive ─── */
-  --destructive: #FF2D55;
+  --destructive: #EF4444;
 
   /* ─── Borders & Inputs ─── */
-  --border: #E2E6ED;
-  --input: #E2E6ED;
-  --ring: #00C853;
+  --border: #E5E7EB;
+  --input: #E5E7EB;
+  --ring: #F59E0B;
 
-  /* ─── Chart Colors — Captain's Palette ─── */
-  --chart-1: #00C853;
-  --chart-2: #007AFF;
-  --chart-3: #FFAA00;
-  --chart-4: #FF2D55;
-  --chart-5: #1A3A6E;
+  /* ─── Chart Colors ─── */
+  --chart-1: #F59E0B;
+  --chart-2: #0D9488;
+  --chart-3: #3B82F6;
+  --chart-4: #EF4444;
+  --chart-5: #8B5CF6;
 
   /* ─── Radius ─── */
   --radius: 0.5rem;
 
   /* ─── Sidebar ─── */
   --sidebar: #FFFFFF;
-  --sidebar-foreground: #0A1628;
-  --sidebar-primary: #00C853;
-  --sidebar-primary-foreground: #FFFFFF;
-  --sidebar-accent: #F0F2F5;
-  --sidebar-accent-foreground: #0A1628;
-  --sidebar-border: #E2E6ED;
-  --sidebar-ring: #00C853;
+  --sidebar-foreground: #0A0A0A;
+  --sidebar-primary: #F59E0B;
+  --sidebar-primary-foreground: #000000;
+  --sidebar-accent: #F3F4F6;
+  --sidebar-accent-foreground: #0A0A0A;
+  --sidebar-border: #E5E7EB;
+  --sidebar-ring: #F59E0B;
 
-  /* ─── FairGuard Custom Tokens ─── */
-  --fg-navy-900: #0A1628;
-  --fg-navy-800: #0D2045;
-  --fg-navy-600: #1A3A6E;
-  --fg-navy-300: #3B6CB7;
-  --fg-green-500: #00C853;
-  --fg-green-400: #00E676;
-  --fg-green-900: #003D1A;
-  --fg-red-alert: #FF2D55;
-  --fg-amber-warn: #FFAA00;
-  --fg-blue-info: #007AFF;
-  --fg-text-primary: #0A1628;
-  --fg-text-secondary: #5A6A85;
-  --fg-bg-primary: #F5F7FA;
-  --fg-bg-secondary: #EAECF0;
+  /* ─── FairGuard Signature Tokens ─── */
+
+  /* Amber — "The Warning" */
+  --fg-amber-vivid: #F59E0B;
+  --fg-amber-deep: #D97706;
+  --fg-amber-light: #FEF3C7;
+  --fg-amber-glow: rgba(245, 158, 11, 0.15);
+
+  /* Deep Teal — "The Analysis" */
+  --fg-teal-vivid: #0D9488;
+  --fg-teal-deep: #0F766E;
+  --fg-teal-light: #CCFBF1;
+  --fg-teal-glow: rgba(13, 148, 136, 0.12);
+
+  /* Fairness Score Colors */
+  --fg-score-critical: #EF4444;
+  --fg-score-moderate: #F59E0B;
+  --fg-score-good: #10B981;
+  --fg-score-excellent: #0D9488;
+
+  /* Dark Surfaces (ToDesktop-inspired) */
+  --fg-dark-bg: #0C0E12;
+  --fg-dark-surface: #13161C;
+  --fg-dark-elevated: #1C2029;
+  --fg-dark-border: #252932;
+
+  /* Typography */
+  --fg-text-heading: #0A0A0A;
+  --fg-text-body: #374151;
+  --fg-text-muted: #6B7280;
+  --fg-text-subtle: #9CA3AF;
+  --fg-text-on-dark: #F1F5F9;
+  --fg-text-muted-dark: #94A3B8;
+
+  /* Borders */
+  --fg-border: #E5E7EB;
+  --fg-border-strong: #D1D5DB;
+  --fg-border-amber: rgba(245, 158, 11, 0.3);
+
+  /* Transitions */
+  --fg-transition-fast: 150ms ease;
+  --fg-transition-base: 220ms ease;
+  --fg-transition-slow: 400ms ease;
 }
 
-/* ─── Dark mode fallback (keep for shadcn compatibility) ─── */
+/* ─── Dark mode fallback (shadcn compat — keep as light) ─── */
 .dark {
-  --background: #F5F7FA;
-  --foreground: #0A1628;
+  --background: #FFFFFF;
+  --foreground: #0A0A0A;
   --card: #FFFFFF;
-  --card-foreground: #0A1628;
+  --card-foreground: #0A0A0A;
   --popover: #FFFFFF;
-  --popover-foreground: #0A1628;
-  --primary: #00C853;
-  --primary-foreground: #FFFFFF;
-  --secondary: #F0F2F5;
-  --secondary-foreground: #0A1628;
-  --muted: #F0F2F5;
-  --muted-foreground: #5A6A85;
-  --accent: #E8FAF0;
-  --accent-foreground: #0A1628;
-  --destructive: #FF2D55;
-  --border: #E2E6ED;
-  --input: #E2E6ED;
-  --ring: #00C853;
-  --chart-1: #00C853;
-  --chart-2: #007AFF;
-  --chart-3: #FFAA00;
-  --chart-4: #FF2D55;
-  --chart-5: #1A3A6E;
+  --popover-foreground: #0A0A0A;
+  --primary: #F59E0B;
+  --primary-foreground: #000000;
+  --secondary: #F3F4F6;
+  --secondary-foreground: #0A0A0A;
+  --muted: #F3F4F6;
+  --muted-foreground: #6B7280;
+  --accent: #CCFBF1;
+  --accent-foreground: #0A0A0A;
+  --destructive: #EF4444;
+  --border: #E5E7EB;
+  --input: #E5E7EB;
+  --ring: #F59E0B;
+  --chart-1: #F59E0B;
+  --chart-2: #0D9488;
+  --chart-3: #3B82F6;
+  --chart-4: #EF4444;
+  --chart-5: #8B5CF6;
   --sidebar: #FFFFFF;
-  --sidebar-foreground: #0A1628;
-  --sidebar-primary: #00C853;
-  --sidebar-primary-foreground: #FFFFFF;
-  --sidebar-accent: #F0F2F5;
-  --sidebar-accent-foreground: #0A1628;
-  --sidebar-border: #E2E6ED;
-  --sidebar-ring: #00C853;
+  --sidebar-foreground: #0A0A0A;
+  --sidebar-primary: #F59E0B;
+  --sidebar-primary-foreground: #000000;
+  --sidebar-accent: #F3F4F6;
+  --sidebar-accent-foreground: #0A0A0A;
+  --sidebar-border: #E5E7EB;
+  --sidebar-ring: #F59E0B;
 }
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -169,17 +196,19 @@
   }
   body {
     @apply bg-background text-foreground;
+    font-family: var(--font-sans), system-ui, sans-serif;
+    color: var(--fg-text-body);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
   html {
     @apply font-sans scroll-smooth;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
   }
 
   /* ─── Heading Font ─── */
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-heading), var(--font-sans), system-ui, sans-serif;
-    color: var(--fg-navy-900);
+    color: var(--fg-text-heading);
     letter-spacing: -0.02em;
   }
 
@@ -197,28 +226,30 @@
    CUSTOM UTILITIES
    ═══════════════════════════════════════════════════════════════════ */
 @layer utilities {
-  /* ─── Gradient text: Green → Blue ─── */
+  /* ─── Gradient text: Amber → Teal ─── */
   .gradient-text {
-    background: linear-gradient(135deg, #00C853 0%, #007AFF 100%);
+    background: linear-gradient(135deg, #F59E0B 0%, #0D9488 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
 
-  /* ─── Gradient background: Navy → Navy-600 ─── */
-  .gradient-bg {
-    background: linear-gradient(135deg, #0D2045 0%, #1A3A6E 100%);
-  }
-
-  /* ─── Glass morphism → Clean frosted panel for light mode ─── */
+  /* ─── Glass morphism (nav on scroll) ─── */
   .glass {
     background: rgba(255, 255, 255, 0.85);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border-bottom: 1px solid var(--border);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--fg-border);
   }
 
-  /* ─── Premium card shadow (todesktop-inspired layered shadows) ─── */
+  .glass-scrolled {
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    box-shadow: 0 1px 12px rgba(0, 0, 0, 0.06);
+  }
+
+  /* ─── Premium shadows (ToDesktop-inspired) ─── */
   .shadow-premium {
     box-shadow:
       0 0 0 1px rgba(0, 0, 0, 0.03),
@@ -235,16 +266,28 @@
       0 16px 32px -8px rgba(0, 0, 0, 0.05);
   }
 
-  /* ─── Navy section ─── */
-  .bg-navy {
-    background: var(--fg-navy-800);
-    color: #F5F7FA;
+  /* ─── Section label (Refold-style uppercase) ─── */
+  .section-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--fg-amber-vivid);
+  }
+
+  .section-label-dark {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--fg-amber-vivid);
   }
 
   /* ─── Score colors ─── */
-  .score-good { color: var(--fg-green-500); }
-  .score-warn { color: var(--fg-amber-warn); }
-  .score-bad { color: var(--fg-red-alert); }
+  .score-excellent { color: var(--fg-teal-vivid); }
+  .score-good { color: #10B981; }
+  .score-moderate { color: var(--fg-amber-vivid); }
+  .score-critical { color: #EF4444; }
 
   /* ─── Monospace numbers ─── */
   .font-mono-num {
@@ -254,7 +297,7 @@
 }
 
 /* ═══════════════════════════════════════════════════════════════════
-   SUBTLE BACKGROUND PATTERN (refold-inspired grid)
+   BACKGROUND PATTERN (subtle dot grid + amber/teal glow)
    ═══════════════════════════════════════════════════════════════════ */
 body::before {
   content: '';
@@ -264,29 +307,29 @@ body::before {
   width: 100%;
   height: 100%;
   background:
-    radial-gradient(ellipse at 20% 10%, rgba(0, 200, 83, 0.04) 0%, transparent 50%),
-    radial-gradient(ellipse at 80% 90%, rgba(0, 122, 255, 0.03) 0%, transparent 50%);
+    radial-gradient(ellipse at 20% 10%, rgba(245, 158, 11, 0.04) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 90%, rgba(13, 148, 136, 0.03) 0%, transparent 50%);
   pointer-events: none;
   z-index: -1;
 }
 
 /* ═══════════════════════════════════════════════════════════════════
-   CUSTOM SCROLLBAR — Light mode
+   SCROLLBAR
    ═══════════════════════════════════════════════════════════════════ */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #CBD2DE; border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: #A0AAB8; }
+::-webkit-scrollbar-thumb { background: #D1D5DB; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #9CA3AF; }
 
 /* ═══════════════════════════════════════════════════════════════════
-   RECHARTS THEME OVERRIDES — Light mode
+   RECHARTS OVERRIDES — Light mode
    ═══════════════════════════════════════════════════════════════════ */
 .recharts-cartesian-axis-tick-value {
-  fill: var(--fg-text-secondary) !important;
+  fill: var(--fg-text-muted) !important;
   font-size: 0.75rem !important;
 }
 .recharts-legend-item-text {
-  color: var(--fg-text-secondary) !important;
+  color: var(--fg-text-muted) !important;
   font-size: 0.8125rem !important;
 }
 .recharts-tooltip-wrapper {
@@ -294,29 +337,27 @@ body::before {
 }
 .recharts-default-tooltip {
   background: #FFFFFF !important;
-  border: 1px solid var(--border) !important;
+  border: 1px solid var(--fg-border) !important;
   border-radius: 8px !important;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
 }
 .recharts-cartesian-grid line {
-  stroke: #E2E6ED !important;
+  stroke: #E5E7EB !important;
 }
 .recharts-polar-grid .recharts-polar-grid-concentric path {
-  stroke: #E2E6ED !important;
+  stroke: #E5E7EB !important;
 }
 
 /* ═══════════════════════════════════════════════════════════════════
    CARD & COMPONENT OVERRIDES
    ═══════════════════════════════════════════════════════════════════ */
-
-/* Cards get subtle shadow + border */
 [data-slot="card"] {
   box-shadow:
     0 0 0 1px rgba(0, 0, 0, 0.03),
     0 1px 3px rgba(0, 0, 0, 0.04),
     0 4px 8px -2px rgba(0, 0, 0, 0.03);
-  border: 1px solid var(--border);
-  transition: box-shadow 0.2s ease, transform 0.2s ease;
+  border: 1px solid var(--fg-border);
+  transition: box-shadow 0.22s ease, transform 0.22s ease;
 }
 
 [data-slot="card"]:hover {
@@ -326,7 +367,6 @@ body::before {
     0 8px 16px -4px rgba(0, 0, 0, 0.05);
 }
 
-/* Badge refinements */
 [data-slot="badge"] {
   border-radius: 4px !important;
   font-weight: 500;
@@ -335,22 +375,36 @@ body::before {
 /* ═══════════════════════════════════════════════════════════════════
    ANIMATIONS
    ═══════════════════════════════════════════════════════════════════ */
+@keyframes pulse-amber {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4); }
+  50% { box-shadow: 0 0 0 8px rgba(245, 158, 11, 0); }
+}
+
+@keyframes float1 {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-8px); }
+}
+
+@keyframes float2 {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(6px); }
+}
+
 @keyframes pulse-green {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(0, 200, 83, 0.4); }
-  50% { box-shadow: 0 0 0 8px rgba(0, 200, 83, 0); }
+  0%, 100% { opacity: 1; box-shadow: 0 0 4px #10B981; }
+  50% { opacity: 0.6; box-shadow: none; }
 }
 
-@keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-4px); }
+.animate-pulse-amber {
+  animation: pulse-amber 2s ease-in-out infinite;
 }
 
-.animate-pulse-green {
-  animation: pulse-green 2s ease-in-out infinite;
+.animate-float-1 {
+  animation: float1 4s ease-in-out infinite;
 }
 
-.animate-float {
-  animation: float 3s ease-in-out infinite;
+.animate-float-2 {
+  animation: float2 5s ease-in-out infinite;
 }
 
 /* ─── Smooth page transitions ─── */

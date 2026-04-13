@@ -1,122 +1,94 @@
 "use client";
 
-import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
-const statusColors = {
-  "NON-COMPLIANT": "bg-[#FF2D55]/10 text-[#FF2D55] border-[#FF2D55]/20",
-  "WARNING": "bg-[#FFAA00]/10 text-[#FFAA00] border-[#FFAA00]/20",
-  "COMPLIANT": "bg-[#00C853]/10 text-[#00C853] border-[#00C853]/20",
-};
+export default function FairnessDebtCard({ debtData }) {
+  if (!debtData) return null;
 
-const statusIcons = {
-  "NON-COMPLIANT": "🔴",
-  "WARNING": "🟡",
-  "COMPLIANT": "🟢",
-};
+  const { overallScore = 0, grade = "?", totalPeopleAffected = 0, regulations = [], unfairFeatures = [] } = debtData;
 
-function formatTopExposure(exposure) {
-  const parts = [];
-  if (exposure.inr > 0) {
-    if (exposure.inr >= 10000000) parts.push(`₹${(exposure.inr / 10000000).toFixed(1)} Cr`);
-    else if (exposure.inr >= 100000) parts.push(`₹${(exposure.inr / 100000).toFixed(1)} L`);
-    else parts.push(`₹${exposure.inr.toLocaleString()}`);
-  }
-  if (exposure.eur > 0) {
-    if (exposure.eur >= 1000000) parts.push(`€${(exposure.eur / 1000000).toFixed(1)}M`);
-    else parts.push(`€${exposure.eur.toLocaleString()}`);
-  }
-  if (exposure.usd > 0) {
-    if (exposure.usd >= 1000000) parts.push(`$${(exposure.usd / 1000000).toFixed(1)}M`);
-    else parts.push(`$${exposure.usd.toLocaleString()}`);
-  }
-  return parts.length > 0 ? parts.join(" + ") : "—";
-}
+  const gradeColor = grade === "A" ? "bg-[#CCFBF1] text-[#0F766E] border-[#0D9488]/20"
+    : grade === "B" ? "bg-[#CCFBF1] text-[#0F766E] border-[#0D9488]/20"
+    : grade === "C" ? "bg-[#FEF3C7] text-[#D97706] border-[#F59E0B]/20"
+    : "bg-[#FEE2E2] text-[#DC2626] border-[#EF4444]/20";
 
-export default function FairnessDebtCard({ debt }) {
-  if (!debt || debt.risk_level === "LOW") return null;
-
-  const hasExposure =
-    debt.total_exposure.inr > 0 ||
-    debt.total_exposure.usd > 0 ||
-    debt.total_exposure.eur > 0;
+  const riskLevel = overallScore >= 70 ? "LOW" : overallScore >= 50 ? "MODERATE" : "CRITICAL";
+  const riskColor = riskLevel === "LOW" ? "bg-[#0D9488]/10 text-[#0D9488] border-[#0D9488]/20"
+    : riskLevel === "MODERATE" ? "bg-[#F59E0B]/10 text-[#D97706] border-[#F59E0B]/20"
+    : "bg-[#EF4444]/10 text-[#EF4444] border-[#EF4444]/20";
 
   return (
-    <Card className="bg-[#FF2D55]/5 border-[#FF2D55]/15 border-l-4 border-l-[#FF2D55]">
+    <Card className={`bg-white border-[#E5E7EB] border-l-4 ${overallScore < 50 ? "border-l-[#EF4444]" : overallScore < 70 ? "border-l-[#F59E0B]" : "border-l-[#0D9488]"}`}>
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-lg flex items-center gap-2 text-[#0A1628]">
-            🚨 Fairness Debt Report
+          <CardTitle className="text-lg font-bold text-[#0A0A0A] flex items-center gap-2">
+            Fairness Debt Report
           </CardTitle>
-          <motion.div
-            animate={debt.risk_level === "CRITICAL" ? { scale: [1, 1.05, 1] } : {}}
-            transition={{ repeat: Infinity, duration: 2 }}
-          >
-            <Badge
-              variant="outline"
-              className={`font-semibold ${
-                debt.risk_level === "CRITICAL"
-                  ? "bg-[#FF2D55]/15 text-[#FF2D55] border-[#FF2D55]/30"
-                  : debt.risk_level === "HIGH"
-                  ? "bg-[#FFAA00]/15 text-[#FFAA00] border-[#FFAA00]/30"
-                  : "bg-[#FFAA00]/15 text-[#FFAA00] border-[#FFAA00]/30"
-              }`}
-            >
-              {debt.risk_level} RISK
-            </Badge>
-          </motion.div>
+          <Badge className={`text-xs font-bold px-2 py-0.5 border ${riskColor} ${riskLevel === "CRITICAL" ? "animate-pulse" : ""}`}>
+            {riskLevel} RISK
+          </Badge>
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
-        {/* Top-line exposure */}
-        {hasExposure && (
-          <div className="p-4 bg-white border border-[#E2E6ED]" style={{ borderRadius: '6px' }}>
-            <p className="text-sm text-[#5A6A85] mb-1">Estimated Legal Exposure</p>
-            <p className="text-2xl font-bold font-mono text-[#FF2D55]">
-              {formatTopExposure(debt.total_exposure)}
-            </p>
-            <div className="flex gap-6 mt-2 text-sm text-[#5A6A85]">
-              <span>👥 ~{debt.affected_people_estimate.toLocaleString()} people affected</span>
-              <span>⏱️ Remediation: {debt.remediation_time}</span>
+        {/* Score section */}
+        <div className="flex items-center gap-4 pb-4 border-b border-[#E5E7EB]">
+          <div>
+            <span className="text-xs text-[#6B7280] font-semibold tracking-wide">FAIRNESS SCORE</span>
+            <div className="flex items-baseline gap-1">
+              <span className={`text-3xl font-extrabold ${overallScore >= 70 ? "text-[#0D9488]" : overallScore >= 50 ? "text-[#F59E0B]" : "text-[#EF4444]"}`}
+                style={{ fontFamily: "var(--font-geist-mono)" }}>
+                {overallScore}
+              </span>
+              <span className="text-sm text-[#9CA3AF]">/100</span>
+            </div>
+          </div>
+          <Badge className={`text-sm font-bold px-3 py-1 border ${gradeColor}`}>
+            Grade: {grade}
+          </Badge>
+        </div>
+
+        {/* People affected */}
+        {totalPeopleAffected > 0 && (
+          <div className="flex justify-between items-center text-sm">
+            <span className="text-[#6B7280]">People Affected</span>
+            <span className="font-semibold text-[#0A0A0A]" style={{ fontFamily: "var(--font-geist-mono)" }}>
+              ~{totalPeopleAffected.toLocaleString()}
+            </span>
+          </div>
+        )}
+
+        {/* Legal exposure */}
+        {regulations.length > 0 && (
+          <div className="pt-3 border-t border-[#E5E7EB]">
+            <span className="text-[10px] font-bold tracking-[0.12em] text-[#D97706] mb-3 block">LEGAL EXPOSURE</span>
+            <div className="space-y-2">
+              {regulations.map((r, i) => (
+                <div key={i} className="flex justify-between items-center py-1.5 border-b border-[#F3F4F6] last:border-0">
+                  <span className="text-sm text-[#6B7280]">{r.name}</span>
+                  <span className={`text-sm font-bold ${r.risk === "high" ? "text-[#EF4444]" : "text-[#F59E0B]"}`}
+                    style={{ fontFamily: "var(--font-geist-mono)" }}>
+                    {r.maxPenalty}
+                  </span>
+                </div>
+              ))}
             </div>
           </div>
         )}
 
-        {/* Per-regulation breakdown */}
-        <div className="space-y-2">
-          <p className="text-sm font-medium text-[#5A6A85]">Regulatory Compliance</p>
-          {debt.regulations.map((reg, i) => (
-            <div
-              key={i}
-              className="flex items-center justify-between p-3 bg-white border border-[#E2E6ED]"
-              style={{ borderRadius: '6px' }}
-            >
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                  <span className="text-sm">{statusIcons[reg.status] || "⚪"}</span>
-                  <span className="font-medium text-sm text-[#0A1628] truncate">{reg.name}</span>
-                </div>
-                {reg.description && (
-                  <p className="text-xs text-[#5A6A85] ml-6 mt-0.5">{reg.description}</p>
-                )}
-              </div>
-              <div className="flex items-center gap-3 shrink-0">
-                {reg.exposure !== "—" && reg.exposure !== "Check local regulations" && (
-                  <span className="text-sm font-mono font-semibold text-[#FF2D55]">{reg.exposure}</span>
-                )}
-                <Badge variant="outline" className={`text-xs ${statusColors[reg.status] || ""}`}>
-                  {reg.status}
+        {/* Unfair features */}
+        {unfairFeatures.length > 0 && (
+          <div className="pt-3 border-t border-[#E5E7EB]">
+            <span className="text-[10px] font-bold tracking-[0.12em] text-[#6B7280] mb-3 block">FEATURES DRIVING UNFAIRNESS</span>
+            <div className="flex flex-wrap gap-2">
+              {unfairFeatures.map((f, i) => (
+                <Badge key={i} variant="outline" className="text-xs bg-[#FEF3C7] border-[#F59E0B]/20 text-[#D97706] font-medium">
+                  {f}
                 </Badge>
-              </div>
+              ))}
             </div>
-          ))}
-        </div>
-
-        {/* Bottom note */}
-        <p className="text-xs text-[#5A6A85] italic px-1">
-          💡 The cost of fixing fairness is typically {"<"}0.1% of the legal exposure. Remediation is always cheaper than litigation.
-        </p>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

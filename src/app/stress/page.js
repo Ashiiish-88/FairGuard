@@ -7,12 +7,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import BiasChart from "@/components/bias-chart";
 import MetricCard from "@/components/metric-card";
-import { Loader2, Zap, FlaskConical, RotateCcw } from "lucide-react";
+import { Loader2, Zap, FlaskConical, RotateCcw, FileSearch, Users, BarChart3 } from "lucide-react";
 
 const DECISION_TYPES = [
-  { id: "hiring", label: "Hiring / Resume Screening", icon: "💼" },
-  { id: "lending", label: "Loan / Credit Approval", icon: "🏦" },
-  { id: "insurance", label: "Insurance Underwriting", icon: "🏥" },
+  { id: "hiring", label: "Hiring / Resume Screening", icon: <FileSearch className="w-6 h-6" /> },
+  { id: "lending", label: "Loan / Credit Approval", icon: <BarChart3 className="w-6 h-6" /> },
+  { id: "insurance", label: "Insurance Underwriting", icon: <Users className="w-6 h-6" /> },
 ];
 
 const DEMOGRAPHIC_AXES = [
@@ -64,11 +64,11 @@ export default function StressTestPage() {
   return (
     <div className="max-w-6xl mx-auto px-6 py-12">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold flex items-center gap-3 text-[#0A1628]">
-          <FlaskConical className="w-8 h-8 text-[#FF2D55]" />
+        <h1 className="text-3xl font-bold flex items-center gap-3 text-[#0A0A0A]">
+          <FlaskConical className="w-8 h-8 text-[#F59E0B]" />
           Stress Test
         </h1>
-        <p className="text-[#5A6A85] mt-1">AI penetration testing — generate diverse synthetic candidates and expose how models discriminate</p>
+        <p className="text-[#6B7280] mt-1">AI penetration testing &mdash; generate diverse synthetic candidates and expose how models discriminate</p>
       </div>
 
       {/* Config */}
@@ -76,23 +76,23 @@ export default function StressTestPage() {
         {!results && (
           <motion.div key="config" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="space-y-6">
             {/* Decision Type */}
-            <Card className="bg-white border-[#E2E6ED]">
-              <CardHeader><CardTitle className="text-lg text-[#0A1628]">🎯 What are you testing?</CardTitle></CardHeader>
+            <Card className="bg-white border-[#E5E7EB]">
+              <CardHeader><CardTitle className="text-lg text-[#0A0A0A]">What are you testing?</CardTitle></CardHeader>
               <CardContent>
                 <div className="grid sm:grid-cols-3 gap-3">
                   {DECISION_TYPES.map((t) => (
                     <button
                       key={t.id}
                       onClick={() => setDecisionType(t.id)}
-                      className={`p-5 border-2 text-center transition-all duration-200 ${
+                      className={`p-5 border-2 text-center transition-all duration-200 flex flex-col items-center gap-3 ${
                         decisionType === t.id
-                          ? "border-[#00C853] bg-[#00C853]/5 shadow-md"
-                          : "border-[#E2E6ED] bg-white hover:border-[#0D2045]/20 hover:shadow-sm"
+                          ? "border-[#F59E0B] bg-[#FEF3C7]/30 shadow-md"
+                          : "border-[#E5E7EB] bg-white hover:border-[#F59E0B]/30 hover:shadow-sm"
                       }`}
                       style={{ borderRadius: '8px' }}
                     >
-                      <span className="text-3xl block mb-2">{t.icon}</span>
-                      <span className="text-sm font-medium text-[#0A1628]">{t.label}</span>
+                      <div className={`${decisionType === t.id ? "text-[#D97706]" : "text-[#6B7280]"}`}>{t.icon}</div>
+                      <span className="text-sm font-medium text-[#0A0A0A]">{t.label}</span>
                     </button>
                   ))}
                 </div>
@@ -100,16 +100,16 @@ export default function StressTestPage() {
             </Card>
 
             {/* Demo Axes */}
-            <Card className="bg-white border-[#E2E6ED]">
-              <CardHeader><CardTitle className="text-lg text-[#0A1628]">👤 Demographics to Vary</CardTitle></CardHeader>
+            <Card className="bg-white border-[#E5E7EB]">
+              <CardHeader><CardTitle className="text-lg text-[#0A0A0A]">Demographics to Vary</CardTitle></CardHeader>
               <CardContent>
                 <div className="flex flex-wrap gap-3">
                   {DEMOGRAPHIC_AXES.map((a) => (
                     <Button key={a.id} size="sm"
                       variant={axes.includes(a.id) ? "default" : "outline"}
                       className={axes.includes(a.id)
-                        ? "bg-[#0D2045] text-white hover:bg-[#1A3A6E]"
-                        : "bg-white border-[#E2E6ED] text-[#0A1628] hover:border-[#0D2045]/30"
+                        ? "bg-[#0A0A0A] text-white hover:bg-[#1a1a1a]"
+                        : "bg-white border-[#E5E7EB] text-[#0A0A0A] hover:border-[#0A0A0A]/30"
                       }
                       onClick={() => toggleAxis(a.id)}>
                       {a.label}
@@ -120,16 +120,16 @@ export default function StressTestPage() {
             </Card>
 
             {/* Candidate Count */}
-            <Card className="bg-white border-[#E2E6ED]">
-              <CardHeader><CardTitle className="text-lg text-[#0A1628]">📊 Number of Test Candidates</CardTitle></CardHeader>
+            <Card className="bg-white border-[#E5E7EB]">
+              <CardHeader><CardTitle className="text-lg text-[#0A0A0A]">Number of Test Candidates</CardTitle></CardHeader>
               <CardContent>
                 <div className="flex flex-wrap gap-3">
                   {CANDIDATE_COUNTS.map((c) => (
                     <Button key={c} size="sm"
                       variant={candidateCount === c ? "default" : "outline"}
                       className={candidateCount === c
-                        ? "bg-[#0D2045] text-white hover:bg-[#1A3A6E]"
-                        : "bg-white border-[#E2E6ED] text-[#0A1628] hover:border-[#0D2045]/30"
+                        ? "bg-[#0A0A0A] text-white hover:bg-[#1a1a1a]"
+                        : "bg-white border-[#E5E7EB] text-[#0A0A0A] hover:border-[#0A0A0A]/30"
                       }
                       onClick={() => setCandidateCount(c)}>
                       {c} candidates
@@ -140,24 +140,25 @@ export default function StressTestPage() {
             </Card>
 
             {error && (
-              <div className="p-4 bg-[#FF2D55]/5 border border-[#FF2D55]/20 text-[#FF2D55] text-sm font-medium" style={{ borderRadius: '8px' }}>
+              <div className="p-4 bg-[#EF4444]/5 border border-[#EF4444]/20 text-[#EF4444] text-sm font-medium" style={{ borderRadius: '8px' }}>
                 {error}
               </div>
             )}
 
             <div className="text-center">
-              <Button
-                size="lg"
-                className="bg-[#00C853] hover:bg-[#00E676] text-white gap-2 px-10 font-semibold shadow-lg shadow-[#00C853]/20"
+              <button
+                className="group inline-flex items-stretch rounded-md overflow-hidden transition-all duration-150 hover:-translate-y-px hover:shadow-[0_6px_20px_rgba(0,0,0,0.15)] disabled:opacity-50 disabled:cursor-not-allowed"
                 onClick={runTest}
                 disabled={loading}
               >
-                {loading
-                  ? <><Loader2 className="w-4 h-4 animate-spin" /> Running...</>
-                  : <><Zap className="w-4 h-4" /> Run Penetration Test</>
-                }
-              </Button>
-              <p className="text-xs text-[#5A6A85] mt-3">Generates synthetic candidates via Gemini AI, then runs them through a simulated AI model</p>
+                <span className="bg-[#F59E0B] px-4 py-3.5 flex items-center justify-center text-black group-hover:bg-[#D97706] transition-colors">
+                  {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4" />}
+                </span>
+                <span className="bg-[#0A0A0A] text-white text-[12px] font-bold tracking-[0.12em] uppercase px-6 py-3.5 flex items-center group-hover:bg-[#1a1a1a] transition-colors">
+                  {loading ? "Running..." : "Run Penetration Test"}
+                </span>
+              </button>
+              <p className="text-xs text-[#6B7280] mt-3">Generates synthetic candidates via Gemini AI, then runs them through a simulated AI model</p>
             </div>
           </motion.div>
         )}
@@ -166,11 +167,11 @@ export default function StressTestPage() {
         {results && (
           <motion.div key="results" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
             <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-bold text-[#0A1628]">Test Results</h2>
+              <h2 className="text-2xl font-bold text-[#0A0A0A]">Test Results</h2>
               <Button
                 variant="outline"
                 onClick={() => setResults(null)}
-                className="gap-2 bg-white border-[#E2E6ED] text-[#0A1628] hover:bg-[#F5F7FA]"
+                className="gap-2 bg-white border-[#E5E7EB] text-[#0A0A0A] hover:bg-[#F9FAFB]"
               >
                 <RotateCcw className="w-4 h-4" /> Run New Test
               </Button>
@@ -178,13 +179,13 @@ export default function StressTestPage() {
 
             {/* Summary Cards */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <MetricCard icon="👥" title="Candidates Tested" value={results.analysis?.summary?.total_candidates || 0} />
-              <MetricCard icon="✅" title="Overall Approval" value={`${((results.analysis?.summary?.overall_approval_rate || 0) * 100).toFixed(1)}%`} />
-              <MetricCard icon="🔴" title="Status" value={results.analysis?.summary?.bias_detected ? "BIASED" : "FAIR"}
-                severity={results.analysis?.summary?.bias_detected ? "CRITICAL" : "OK"} />
-              <MetricCard icon="📏" title="Disparate Impact" value={
+              <MetricCard title="Candidates Tested" value={results.analysis?.summary?.total_candidates || 0} />
+              <MetricCard title="Overall Approval" value={`${((results.analysis?.summary?.overall_approval_rate || 0) * 100).toFixed(1)}%`} />
+              <MetricCard title="Status" value={results.analysis?.summary?.bias_detected ? "BIASED" : "FAIR"}
+                severity={results.analysis?.summary?.bias_detected ? "critical" : "ok"} />
+              <MetricCard title="Disparate Impact" value={
                 Object.values(results.analysis?.per_demographic || {})[0]?.disparate_impact?.ratio?.toFixed(4) || "N/A"
-              } severity={Object.values(results.analysis?.per_demographic || {})[0]?.disparate_impact?.severity} />
+              } severity={(Object.values(results.analysis?.per_demographic || {})[0]?.disparate_impact?.severity || "ok").toLowerCase()} />
             </div>
 
             {/* Per-demographic charts */}
@@ -200,16 +201,16 @@ export default function StressTestPage() {
 
             {/* AI Explanation */}
             {results.explanation && (
-              <Card className="bg-white border-[#E2E6ED] border-l-4 border-l-[#007AFF]">
+              <Card className="bg-white border-[#E5E7EB] border-l-4 border-l-[#0D9488]">
                 <CardHeader>
-                  <CardTitle className="text-lg text-[#0A1628] flex items-center gap-2">
-                    <span>🤖</span> AI Analysis
-                    <Badge className="text-xs bg-[#007AFF]/10 text-[#007AFF] border-0 font-normal">Powered by Gemini</Badge>
+                  <CardTitle className="text-lg text-[#0A0A0A] flex items-center gap-2">
+                    AI Analysis
+                    <Badge className="text-xs bg-[#0D9488]/10 text-[#0D9488] border-0 font-normal">Powered by Gemini</Badge>
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="font-semibold text-lg mb-3 text-[#0A1628]">{results.explanation.summary}</p>
-                  <p className="text-[#5A6A85] leading-relaxed">{results.explanation.explanation}</p>
+                  <p className="font-semibold text-lg mb-3 text-[#0A0A0A]">{results.explanation.summary}</p>
+                  <p className="text-[#6B7280] leading-relaxed">{results.explanation.explanation}</p>
                 </CardContent>
               </Card>
             )}

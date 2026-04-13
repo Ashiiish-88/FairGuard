@@ -1,63 +1,48 @@
 "use client";
 
-import { motion, AnimatePresence } from "framer-motion";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertTriangle, AlertCircle, Info } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { AlertTriangle, Info, AlertCircle } from "lucide-react";
 
-const icons = {
-  CRITICAL: <AlertCircle className="w-4 h-4 text-[#FF2D55]" />,
-  HIGH: <AlertTriangle className="w-4 h-4 text-[#FFAA00]" />,
-  WARNING: <AlertTriangle className="w-4 h-4 text-[#FFAA00]" />,
-  INFO: <Info className="w-4 h-4 text-[#007AFF]" />,
+const severityConfig = {
+  high: { icon: AlertTriangle, border: "border-l-[#EF4444]", bg: "bg-[#FEE2E2]/50", iconColor: "text-[#EF4444]" },
+  medium: { icon: AlertCircle, border: "border-l-[#F59E0B]", bg: "bg-[#FEF3C7]/50", iconColor: "text-[#F59E0B]" },
+  low: { icon: Info, border: "border-l-[#0D9488]", bg: "bg-[#CCFBF1]/50", iconColor: "text-[#0D9488]" },
 };
 
-const borderColors = {
-  CRITICAL: "border-l-[#FF2D55]",
-  HIGH: "border-l-[#FFAA00]",
-  WARNING: "border-l-[#FFAA00]",
-  INFO: "border-l-[#007AFF]",
-};
-
-const bgTints = {
-  CRITICAL: "bg-[#FF2D55]/3",
-  HIGH: "bg-[#FFAA00]/3",
-  WARNING: "bg-[#FFAA00]/3",
-  INFO: "bg-[#007AFF]/3",
-};
-
-export default function AlertFeed({ alerts = [], maxItems = 8 }) {
-  const displayAlerts = alerts.slice(-maxItems).reverse();
+export default function AlertFeed({ alerts = [] }) {
+  if (alerts.length === 0) return null;
 
   return (
-    <div className="space-y-2 max-h-[400px] overflow-y-auto pr-1">
-      <AnimatePresence initial={false}>
-        {displayAlerts.length === 0 && (
-          <p className="text-sm text-[#5A6A85] text-center py-6">No alerts yet</p>
-        )}
-        {displayAlerts.map((alert, i) => (
-          <motion.div
-            key={alert.id || `alert-${i}-${alert.message}`}
-            initial={{ opacity: 0, x: -20, height: 0 }}
-            animate={{ opacity: 1, x: 0, height: "auto" }}
-            exit={{ opacity: 0, x: 20, height: 0 }}
-            transition={{ duration: 0.3 }}
-          >
-            <Alert className={`bg-white border border-[#E2E6ED] border-l-4 ${borderColors[alert.severity] || borderColors.INFO} ${bgTints[alert.severity] || ""} py-2.5`}>
-              <div className="flex items-start gap-2">
-                {icons[alert.severity] || icons.INFO}
-                <AlertDescription className="text-sm text-[#0A1628] leading-snug">
-                  {alert.message}
-                  {alert.timestamp && (
-                    <span className="text-xs text-[#5A6A85] ml-2 font-mono">
-                      {new Date(alert.timestamp).toLocaleTimeString()}
-                    </span>
-                  )}
-                </AlertDescription>
+    <Card className="bg-white border-[#E5E7EB]">
+      <CardHeader className="pb-2">
+        <CardTitle className="text-base font-semibold text-[#0A0A0A] flex items-center gap-2">
+          <AlertTriangle className="w-4 h-4 text-[#F59E0B]" />
+          Alert Feed
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-2">
+        {alerts.map((alert, i) => {
+          const sev = severityConfig[alert.severity] || severityConfig.low;
+          const Icon = sev.icon;
+          return (
+            <div
+              key={i}
+              className={`flex items-start gap-3 p-3 rounded-md border-l-[3px] ${sev.border} ${sev.bg}`}
+            >
+              <Icon className={`w-4 h-4 mt-0.5 shrink-0 ${sev.iconColor}`} />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-[#0A0A0A]">{alert.title}</p>
+                <p className="text-xs text-[#6B7280] mt-0.5">{alert.message}</p>
               </div>
-            </Alert>
-          </motion.div>
-        ))}
-      </AnimatePresence>
-    </div>
+              {alert.timestamp && (
+                <span className="text-[10px] text-[#9CA3AF] whitespace-nowrap" style={{ fontFamily: "var(--font-geist-mono)" }}>
+                  {alert.timestamp}
+                </span>
+              )}
+            </div>
+          );
+        })}
+      </CardContent>
+    </Card>
   );
 }
