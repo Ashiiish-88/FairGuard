@@ -13,6 +13,12 @@ import { Play, Square, Shield } from "lucide-react";
 // Dynamic line colors for groups
 const GROUP_COLORS = ["#00E676", "#FF2D55", "#007AFF", "#FFAA00", "#A855F7", "#06B6D4"];
 
+const AI_MODELS = [
+  { id: "gemini",    label: "Gemini 2.5 Flash",  badge: "Google",  color: "#007AFF" },
+  { id: "llama-8b",  label: "Llama 3.1 8B",      badge: "Groq ⚡", color: "#FFAA00" },
+  { id: "llama-70b", label: "Llama 3.3 70B",      badge: "Groq ⚡", color: "#A855F7" },
+];
+
 export default function ShieldPage() {
   const [isStreaming, setIsStreaming] = useState(false);
   const [fairnessHistory, setFairnessHistory] = useState([]);
@@ -22,6 +28,7 @@ export default function ShieldPage() {
   const [alerts, setAlerts] = useState([]);
   const [totalAnalyzed, setTotalAnalyzed] = useState(0);
   const [latestDecisions, setLatestDecisions] = useState([]);
+  const [selectedModel, setSelectedModel] = useState("gemini");
   const eventSourceRef = useRef(null);
 
   const startStream = useCallback(() => {
@@ -35,7 +42,7 @@ export default function ShieldPage() {
     setTotalAnalyzed(0);
     setLatestDecisions([]);
 
-    const es = new EventSource("/api/shield/stream");
+    const es = new EventSource(`/api/shield/stream?model=${selectedModel}`);
     eventSourceRef.current = es;
 
     es.onmessage = (event) => {
@@ -114,9 +121,9 @@ export default function ShieldPage() {
           <p className="text-muted-foreground mt-1">Real-time bias monitoring — AI decisions stream in and bias is caught as it happens</p>
         </div>
         <div className="flex items-center gap-3">
-          {currentMetrics?.is_real_gemini && (
+          {currentMetrics?.is_real_model && (
             <Badge className="bg-green-500/20 text-green-400 border-green-500/30">
-              ✨ Live Gemini API
+              ✨ {currentMetrics?.model_label || "Live AI"}
             </Badge>
           )}
           <Button
@@ -128,6 +135,26 @@ export default function ShieldPage() {
           </Button>
         </div>
       </div>
+
+      {/* AI Model Selector */}
+      {!isStreaming && !currentMetrics && (
+        <div className="flex flex-wrap gap-2 mb-6">
+          {AI_MODELS.map((m) => (
+            <button
+              key={m.id}
+              onClick={() => setSelectedModel(m.id)}
+              className={`px-4 py-2 text-sm font-medium border-2 transition-all ${
+                selectedModel === m.id
+                  ? "border-[#00E676]/60 bg-[#00E676]/10 text-foreground"
+                  : "border-border/50 bg-card/30 text-muted-foreground hover:border-border"
+              }`}
+            >
+              {m.label}
+              <span className="ml-2 text-xs opacity-60">{m.badge}</span>
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* Not started state */}
       {!isStreaming && !currentMetrics && (

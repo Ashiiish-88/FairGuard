@@ -24,6 +24,12 @@ const DEMOGRAPHIC_AXES = [
 
 const CANDIDATE_COUNTS = [30, 60, 100];
 
+const AI_MODELS = [
+  { id: "gemini",    label: "Gemini 2.5 Flash",  badge: "Google",  color: "#007AFF" },
+  { id: "llama-8b",  label: "Llama 3.1 8B",      badge: "Groq ⚡", color: "#FFAA00" },
+  { id: "llama-70b", label: "Llama 3.3 70B",      badge: "Groq ⚡", color: "#A855F7" },
+];
+
 export default function StressTestPage() {
   const [decisionType, setDecisionType] = useState("hiring");
   const [axes, setAxes] = useState(["gender"]);
@@ -31,6 +37,7 @@ export default function StressTestPage() {
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState(null);
   const [error, setError] = useState(null);
+  const [selectedModel, setSelectedModel] = useState("gemini");
 
   const toggleAxis = (id) => {
     setAxes(prev => prev.includes(id) ? prev.filter(a => a !== id) : [...prev, id]);
@@ -50,6 +57,7 @@ export default function StressTestPage() {
           decision_type: decisionType,
           candidate_count: candidateCount,
           demographic_axes: axes,
+          ai_model: selectedModel,
         }),
       });
       const json = await res.json();
@@ -62,7 +70,8 @@ export default function StressTestPage() {
     }
   };
 
-  const usedRealGemini = results?.analysis?.summary?.used_real_gemini;
+  const usedRealModel = results?.analysis?.summary?.used_real_model;
+  const modelLabel = results?.analysis?.summary?.model_label || selectedModel;
 
   return (
     <div className="max-w-6xl mx-auto px-6 py-12">
@@ -135,14 +144,37 @@ export default function StressTestPage() {
               </CardContent>
             </Card>
 
+            {/* AI Model Selector */}
+            <Card className="bg-card/50 border-border/50">
+              <CardHeader><CardTitle className="text-lg">🤖 AI Model to Probe</CardTitle></CardHeader>
+              <CardContent>
+                <div className="flex flex-wrap gap-3">
+                  {AI_MODELS.map((m) => (
+                    <button
+                      key={m.id}
+                      onClick={() => setSelectedModel(m.id)}
+                      className={`px-4 py-3 border-2 text-center transition-all ${
+                        selectedModel === m.id
+                          ? "border-[#00E676]/60 bg-[#00E676]/10 text-foreground"
+                          : "border-border/50 bg-card/30 text-muted-foreground hover:border-border"
+                      }`}
+                    >
+                      <span className="text-sm font-medium block">{m.label}</span>
+                      <span className="text-xs opacity-60">{m.badge}</span>
+                    </button>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
             {error && <div className="p-4 bg-red-500/10 border border-red-500/30 text-red-400 text-sm">{error}</div>}
 
             <div className="text-center">
               <Button size="lg" className="bg-[#00E676] text-[#0A1628] hover:bg-[#39FF6E] gap-2 px-10" onClick={runTest} disabled={loading}>
-                {loading ? <><Loader2 className="w-4 h-4 animate-spin" /> Probing Gemini...</> : <><Zap className="w-4 h-4" /> Run Counterfactual Probe</>}
+                {loading ? <><Loader2 className="w-4 h-4 animate-spin" /> Probing {AI_MODELS.find(m => m.id === selectedModel)?.label || "AI"}...</> : <><Zap className="w-4 h-4" /> Run Counterfactual Probe</>}
               </Button>
               <p className="text-xs text-muted-foreground mt-3">
-                Clones identical profiles with different names and demographics, then sends each to Gemini for a real APPROVE/REJECT decision
+                Clones identical profiles with different names, then sends each to {AI_MODELS.find(m => m.id === selectedModel)?.label || "the AI"} for a real APPROVE/REJECT decision
               </p>
             </div>
           </motion.div>
@@ -154,12 +186,12 @@ export default function StressTestPage() {
             <div className="flex items-center justify-between flex-wrap gap-3">
               <div className="flex items-center gap-3">
                 <h2 className="text-2xl font-bold">Probe Results</h2>
-                {usedRealGemini && (
+                {usedRealModel && (
                   <Badge className="bg-green-500/20 text-green-400 border-green-500/30">
-                    ✨ Real Gemini API Responses
+                    ✨ {modelLabel}
                   </Badge>
                 )}
-                {!usedRealGemini && (
+                {!usedRealModel && (
                   <Badge className="bg-amber-500/20 text-amber-400 border-amber-500/30">
                     ⚠️ Simulated Model (no API key)
                   </Badge>

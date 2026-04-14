@@ -758,7 +758,7 @@ export async function GET(request) {
 **Also update the SSE payload** to include which model is running:
 ```javascript
 ai_model: aiModel,
-model_label: { gemini: "Gemini 1.5 Flash", "llama-8b": "Llama 3.1 8B", "llama-70b": "Llama 3.3 70B" }[aiModel],
+model_label: { gemini: "Gemini 2.5 Flash", "llama-8b": "Llama 3.1 8B", "llama-70b": "Llama 3.3 70B" }[aiModel],
 ```
 
 **Test:** Run Stress Test with `ai_model: "llama-8b"` in request body. Verify Groq responses come back.

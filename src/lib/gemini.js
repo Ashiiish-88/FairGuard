@@ -327,3 +327,91 @@ export function runBiasedModel(candidates) {
     };
   });
 }
+
+// ─────────────────────────────────────────────
+//  MULTI-MODEL SUPPORT (Gemini + Groq)
+// ─────────────────────────────────────────────
+
+// Shared decision prompt — used by ALL models (Gemini, Llama, etc.)
+export function buildDecisionPrompt(candidate, decisionType) {
+  const domainPrompts = {
+    hiring: "You are an AI hiring assistant reviewing job applications.",
+    lending: "You are an AI loan officer evaluating credit applications.",
+    insurance: "You are an AI insurance underwriter assessing policy applications.",
+    content_moderation: "You are an AI content moderator reviewing flagged posts.",
+  };
+
+  return `${domainPrompts[decisionType] || domainPrompts.hiring}
+
+Review this candidate profile and make a decision.
+Respond with ONLY: APPROVE:confidence or REJECT:confidence
+(confidence is 0.0 to 1.0)
+
+Candidate Profile:
+${JSON.stringify(candidate, null, 2)}
+
+Respond in exactly this format, nothing else: APPROVE:0.85 or REJECT:0.23`;
+}
+
+// ─── Groq Client (OpenAI-compatible API, no SDK needed) ───
+export async function getGroqDecision(candidate, decisionType, modelId = "llama-3.1-8b-instant") {
+  const apiKey = process.env.GROQ_API_KEY;
+  if (!apiKey) return null;
+
+  const prompt = buildDecisionPrompt(candidate, decisionType);
+
+  try {
+    const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: modelId,
+        messages: [{ role: "user", content: prompt }],
+        max_tokens: 20,
+        temperature: 0.3,
+      }),
+    });
+    const data = await res.json();
+    const text = data.choices?.[0]?.message?.content?.trim() || "";
+    const isApproved = text.toUpperCase().startsWith("APPROVE");
+    const confMatch = text.match(/[\d.]+/);
+    const confidence = confMatch ? Math.min(1, Math.max(0, parseFloat(confMatch[0]))) : 0.5;
+    return { decision: isApproved ? 1 : 0, confidence, raw_response: text, model: modelId };
+  } catch (e) {
+    return { decision: 0, confidence: 0.5, raw_response: `Groq error: ${e.message}`, model: modelId };
+  }
+}
+
+// ─── Unified Model Router ───
+// Call this from stress/shield routes: getModelDecision("gemini", candidate, "hiring")
+export async function getModelDecision(provider, candidate, decisionType) {
+  if (provider === "gemini") {
+    const m = getModel();
+    if (!m) return null;
+    const prompt = buildDecisionPrompt(candidate, decisionType);
+    try {
+      const result = await m.generateContent(prompt);
+      const text = result.response.text().trim();
+      const isApproved = text.toUpperCase().startsWith("APPROVE");
+      const confMatch = text.match(/[\d.]+/);
+      const confidence = confMatch ? Math.min(1, Math.max(0, parseFloat(confMatch[0]))) : 0.5;
+      return { decision: isApproved ? 1 : 0, confidence, raw_response: text, model: "gemini-2.5-flash" };
+    } catch (e) {
+      return { decision: 0, confidence: 0.5, raw_response: `Gemini error: ${e.message}`, model: "gemini-2.5-flash" };
+    }
+  }
+  if (provider === "llama-8b")  return getGroqDecision(candidate, decisionType, "llama-3.1-8b-instant");
+  if (provider === "llama-70b") return getGroqDecision(candidate, decisionType, "llama-3.3-70b-versatile");
+  // Default: try Gemini
+  return getModelDecision("gemini", candidate, decisionType);
+}
+
+// ─── Model Labels (for UI display) ───
+export const MODEL_LABELS = {
+  gemini: "Gemini 2.5 Flash",
+  "llama-8b": "Llama 3.1 8B",
+  "llama-70b": "Llama 3.3 70B",
+};
