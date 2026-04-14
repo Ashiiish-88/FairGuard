@@ -50,7 +50,7 @@ export function disparateImpactRatio(data, outcomeCol, groupCol, positiveOutcome
   const rates = {};
 
   for (const [g, rows] of Object.entries(groups)) {
-    if (rows.length === 0) continue;
+    if (rows.length < 5) continue; // Skip groups too small to be statistically meaningful
     const positiveCount = rows.filter(r => String(r[outcomeCol]) === String(positiveOutcome)).length;
     rates[g] = positiveCount / rows.length;
   }
@@ -145,7 +145,7 @@ export function equalizedOddsDiff(data, outcomeCol, groupCol, qualCol = null, po
     difference: result.difference,
     qualified_rates: result.rates,
     severity: result.severity,
-    note: "No qualification score provided — using overall rates as proxy",
+    note: "⚠️ Approximation — no qualification column provided. Showing Demographic Parity as a proxy. For true Equalized Odds, specify which column measures merit/qualification.",
   };
 }
 
