@@ -58,7 +58,11 @@ function fallbackDecision(candidate) {
   return score > 55 ? 1 : 0;
 }
 
-export async function GET(request) {
+export async function POST(request) {
+  let body = {};
+  try { body = await request.json(); } catch(e) {}
+  const source_data = body.source_data || [];
+  const domain_val = body.domain || "hiring";
   const encoder = new TextEncoder();
   let cancelled = false;
 
@@ -81,15 +85,21 @@ export async function GET(request) {
       for (let batch = 0; batch < totalBatches; batch++) {
         if (cancelled) break;
 
-        const candidates = Array.from({ length: batchSize }, (_, i) =>
-          generateCandidate(batch * batchSize + i)
-        );
+        const candidates = [];
+        for (let i = 0; i < batchSize; i++) {
+          const idx = batch * batchSize + i;
+          if (source_data && source_data.length > 0) {
+            candidates.push({ id: idx, ...source_data[idx % source_data.length] });
+          } else {
+             candidates.push(generateCandidate(idx));
+          }
+        }
 
         // Get decisions via unified model router
         const decisions = [];
         const batchResults = await Promise.all(
           candidates.map(async (c) => {
-            const result = await getModelDecision(aiModel, c, "hiring");
+            const result = await getModelDecision(aiModel, c, domain_val);
 
             if (result) {
               usedRealModel = true;
@@ -107,9 +117,14 @@ export async function GET(request) {
         if (window.length > 500) window.splice(0, window.length - 500);
 
         // Compute real bias metrics on rolling window
-        const genderDI = disparateImpactRatio(window, "decision", "gender", 1);
-        const genderDPD = demographicParityDiff(window, "decision", "gender", 1);
-        const ageDI = disparateImpactRatio(window, "decision", "age_group", 1);
+        const config = body.config || {};
+        const protectedKeys = config.protected || [];
+        const feature1 = protectedKeys[0] || (source_data.length > 0 ? (source_data[0].user_demographic ? "user_demographic" : (source_data[0].gender ? "gender" : Object.keys(source_data[0])[1])) : "gender");
+        const feature2 = protectedKeys[1] || (source_data.length > 0 ? (source_data[0].age_group ? "age_group" : null) : "age_group");
+
+        const genderDI = disparateImpactRatio(window, "decision", feature1, 1);
+        const genderDPD = demographicParityDiff(window, "decision", feature1, 1);
+        const ageDI = feature2 ? disparateImpactRatio(window, "decision", feature2, 1) : null;
 
         const fairnessScore = Math.round(
           Math.min(100, Math.max(0, (genderDI.ratio ?? 1) * 100)) * 10
@@ -153,7 +168,7 @@ export async function GET(request) {
           rates: {
             overall_positive_rate: Math.round(window.filter(d => d.decision === 1).length / window.length * 10000) / 10000,
             gender_rates: genderDI.rates || {},
-            age_rates: ageDI.rates || {},
+            age_rates: ageDI?.rates || {},
           },
           alerts,
           window_size: window.length,
@@ -161,11 +176,11 @@ export async function GET(request) {
           ai_model: aiModel,
           model_label: modelLabel,
           latest_decisions: decisions.slice(0, 5).map(d => ({
-            name: d.name,
-            gender: d.gender,
-            age_group: d.age_group,
+            name: d.name || d.customer_id || d.post_id || "User",
+            gender: d[feature1] || d.gender || "N/A",
+            age_group: feature2 ? (d[feature2] || d.age_group || "") : "",
             decision: d.decision === 1 ? "APPROVED" : "REJECTED",
-            qualification: d.qualification_score,
+            qualification: d.qualification_score || d.base_price || d.report_count || "-",
           })),
         };
 

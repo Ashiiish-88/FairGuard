@@ -44,7 +44,7 @@ function getAudienceLabel(domain) {
     content_moderation: "Trust & Safety lead",
     pricing: "pricing director",
     lending: "credit risk officer",
-    education: "admissions director",
+    education: "academic dean",
     insurance: "underwriting manager",
     healthcare: "clinical operations lead",
   };
@@ -185,17 +185,18 @@ export async function checkCompliance(metrics) {
 
   const domainLabel = metrics.domain?.label || "decision-making";
   const domainKey = metrics.domain?.domain || "general";
-  const domainCompliance = metrics.domain?.compliance || [];
-
-  const legalFrameworks = domainCompliance.length > 0
-    ? domainCompliance.map((r, i) => `${i + 1}. ${r}`).join("\n")
-    : `1. India DPDP Act 2023\n2. US EEOC 80% Rule\n3. EU AI Act 2025\n4. India Equal Remuneration Act`;
+  const domainLaws = {
+    hiring: "EEOC 80% Rule, India Equal Remuneration Act, EU AI Act (High-Risk)",
+    content_moderation: "EU Digital Services Act, India IT Act Section 79",
+    pricing: "FTC Act Section 5, EU Consumer Rights Directive",
+    lending: "ECOA, Fair Housing Act, CFPB Regulations, India RBI Guidelines",
+  };
+  const laws = domainLaws[metrics.domain?.domain] || "EEOC 80% Rule, EU AI Act, India DPDP Act 2023";
 
   const prompt = `You are a legal compliance AI specializing in AI fairness regulations.
 The system being audited is in the "${domainLabel}" domain.
 
-Check these bias metrics against the following regulations:
-${legalFrameworks}
+Check these bias metrics against: ${laws}
 
 METRICS:
 ${JSON.stringify(metrics, null, 2)}
@@ -355,7 +356,9 @@ Respond in exactly this format, nothing else: APPROVE:0.85 or REJECT:0.23`;
 
 // ─── Groq Client (OpenAI-compatible API, no SDK needed) ───
 export async function getGroqDecision(candidate, decisionType, modelId = "llama-3.1-8b-instant") {
-  const apiKey = process.env.GROQ_API_KEY;
+  const isLlama33 = modelId.includes("3.3") || modelId.includes("70b");
+  const apiKey = isLlama33 ? process.env.GROQ_API_KEY_3_3 : process.env.GROQ_API_KEY_3_1;
+  
   if (!apiKey) return null;
 
   const prompt = buildDecisionPrompt(candidate, decisionType);

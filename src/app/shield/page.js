@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useRef, useCallback, useEffect } from "react";
+import Papa from "papaparse";
+import CsvDropzone from "@/components/csv-dropzone";
 import { motion, AnimatePresence } from "framer-motion";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from "recharts";
 import { Button } from "@/components/ui/button";
@@ -8,10 +10,17 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import MetricCard from "@/components/metric-card";
 import AlertFeed from "@/components/alert-feed";
-import { Play, Square, Shield } from "lucide-react";
+import { Play, Square, Shield, RotateCcw } from "lucide-react";
 
 // Dynamic line colors for groups
 const GROUP_COLORS = ["#00E676", "#FF2D55", "#007AFF", "#FFAA00", "#A855F7", "#06B6D4"];
+
+const DEMO_DATASETS = [
+  { label: "💼 Hiring Bias (CSV)", file: "/demo_hiring_data.csv", type: "csv" },
+  { label: "💼 Hiring Bias (JSON)", file: "/demo_hiring_data.json", type: "json" },
+  { label: "📱 Content Moderation", file: "/demo_content_moderation.csv", type: "csv" },
+  { label: "💰 Algorithmic Pricing", file: "/demo_pricing_data.csv", type: "csv" },
+];
 
 const AI_MODELS = [
   { id: "gemini",    label: "Gemini 2.5 Flash",  badge: "Google",  color: "#007AFF" },
@@ -29,10 +38,67 @@ export default function ShieldPage() {
   const [totalAnalyzed, setTotalAnalyzed] = useState(0);
   const [latestDecisions, setLatestDecisions] = useState([]);
   const [selectedModel, setSelectedModel] = useState("gemini");
-  const eventSourceRef = useRef(null);
+  const abortControllerRef = useRef(null);
+  const [data, setData] = useState(null);
+  const [file, setFile] = useState(null);
+  const [domainInfo, setDomainInfo] = useState(null);
+  const [detected, setDetected] = useState(null);
+  const [config, setConfig] = useState({ outcome: "", protected: [], positiveOutcome: "1", qualColumn: "" });
+  const [step, setStep] = useState(0);
+  const [error, setError] = useState(null);
 
-  const startStream = useCallback(() => {
-    if (eventSourceRef.current) eventSourceRef.current.close();
+  const handleFile = useCallback(async (f) => {
+    if (!f) { setFile(null); setData(null); setDomainInfo(null); return; }
+    setFile(f);
+    
+    const isJson = f.name?.toLowerCase().endsWith(".json");
+    const processData = async (parsedData) => {
+      setData(parsedData);
+      try {
+        const res = await fetch("/api/audit/detect", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ data: parsedData.slice(0, 100) }),
+        });
+        const det = await res.json();
+        setDetected(det.detected);
+        if (det.domain) setDomainInfo(det.domain);
+        
+        const autoOutcome = det.detected?.decision_columns?.[0]?.column || "";
+        const autoProtected = (det.detected?.protected_columns || []).map(c => c.column);
+        setConfig(prev => ({ ...prev, outcome: autoOutcome, protected: autoProtected }));
+        setStep(1);
+      } catch (e) {}
+    
+    };
+
+    if (isJson) {
+      try {
+        const text = await f.text();
+        const parsed = JSON.parse(text);
+        if (Array.isArray(parsed) && parsed.length > 0) processData(parsed);
+      } catch(e) {}
+    } else {
+      Papa.parse(f, {
+        header: true, skipEmptyLines: true,
+        complete: (res) => processData(res.data)
+      });
+    }
+  }, []);
+
+  const loadDemo = async (url, type) => {
+    try {
+      const res = await fetch(url);
+      const text = await res.text();
+      const ext = type === "json" ? ".json" : ".csv";
+      const mimeType = type === "json" ? "application/json" : "text/csv";
+      const f = new File([text], url.split("/").pop(), { type: mimeType });
+      handleFile(f);
+    } catch (e) {}
+  };
+
+  const startStream = useCallback(async () => {
+    if (abortControllerRef.current) abortControllerRef.current.abort();
 
     setIsStreaming(true);
     setFairnessHistory([]);
@@ -42,75 +108,89 @@ export default function ShieldPage() {
     setTotalAnalyzed(0);
     setLatestDecisions([]);
 
-    const es = new EventSource(`/api/shield/stream?model=${selectedModel}`);
-    eventSourceRef.current = es;
+    const ac = new AbortController();
+    abortControllerRef.current = ac;
 
-    es.onmessage = (event) => {
-      try {
-        const d = JSON.parse(event.data);
+    try {
+      const res = await fetch(`/api/shield/stream?model=${selectedModel}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ source_data: data, domain: domainInfo?.domain || "hiring", config: config }),
+        signal: ac.signal
+      });
 
-        if (d.status === "complete") {
-          setIsStreaming(false);
-          es.close();
-          return;
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        
+        let lines = buffer.split('\n\n');
+        buffer = lines.pop(); // keep remainder
+        
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            try {
+              const d = JSON.parse(line.substring(6));
+
+              if (d.status === "complete") {
+                setIsStreaming(false);
+                return;
+              }
+
+              setCurrentMetrics(d);
+              setTotalAnalyzed(d.total_analyzed);
+
+              setFairnessHistory(prev => [...prev.slice(-100), {
+                batch: d.total_analyzed,
+                score: d.fairness_score,
+              }]);
+
+              const genderRates = d.rates?.gender_rates || {};
+              const point = { batch: d.total_analyzed };
+              for (const [group, rate] of Object.entries(genderRates)) {
+                point[group] = Math.round(rate * 1000) / 10;
+              }
+              setGroupHistory(prev => [...prev.slice(-100), point]);
+
+              setGroupNames(prev => {
+                const newNames = Object.keys(genderRates);
+                return [...new Set([...prev, ...newNames])];
+              });
+
+              if (d.latest_decisions) setLatestDecisions(d.latest_decisions);
+
+              if (d.alerts?.length) {
+                setAlerts(prev => [...prev, ...d.alerts.map((a, i) => ({
+                  ...a,
+                  id: `${d.total_analyzed}-${i}`,
+                  timestamp: new Date().toISOString(),
+                }))]);
+              }
+            } catch (e) {}
+          }
         }
-
-        setCurrentMetrics(d);
-        setTotalAnalyzed(d.total_analyzed);
-
-        // Fairness score history
-        setFairnessHistory(prev => [...prev.slice(-100), {
-          batch: d.total_analyzed,
-          score: d.fairness_score,
-        }]);
-
-        // Dynamic group rates — works with ANY number of groups
-        const genderRates = d.rates?.gender_rates || {};
-        const point = { batch: d.total_analyzed };
-        for (const [group, rate] of Object.entries(genderRates)) {
-          point[group] = Math.round(rate * 1000) / 10;
-        }
-        setGroupHistory(prev => [...prev.slice(-100), point]);
-
-        // Track discovered group names
-        setGroupNames(prev => {
-          const newNames = Object.keys(genderRates);
-          const merged = [...new Set([...prev, ...newNames])];
-          return merged;
-        });
-
-        // Latest individual decisions
-        if (d.latest_decisions) {
-          setLatestDecisions(d.latest_decisions);
-        }
-
-        // Alerts
-        if (d.alerts?.length) {
-          setAlerts(prev => [...prev, ...d.alerts.map((a, i) => ({
-            ...a,
-            id: `${d.total_analyzed}-${i}`,
-            timestamp: new Date().toISOString(),
-          }))]);
-        }
-      } catch { /* ignore parse errors */ }
-    };
-
-    es.onerror = () => {
+      }
+    } catch (e) {
+      if (e.name !== "AbortError") console.error(e);
+    } finally {
       setIsStreaming(false);
-      es.close();
-    };
-  }, []);
+    }
+  }, [selectedModel, data, domainInfo]);
 
   const stopStream = useCallback(() => {
-    if (eventSourceRef.current) {
-      eventSourceRef.current.close();
-      eventSourceRef.current = null;
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
     }
     setIsStreaming(false);
   }, []);
 
   useEffect(() => {
-    return () => { if (eventSourceRef.current) eventSourceRef.current.close(); };
+    return () => { if (abortControllerRef.current) abortControllerRef.current.abort(); };
   }, []);
 
   return (
@@ -129,7 +209,8 @@ export default function ShieldPage() {
           <Button
             size="lg"
             onClick={isStreaming ? stopStream : startStream}
-            className={isStreaming ? "bg-red-500 hover:bg-red-600 text-white" : "gradient-bg text-white"}
+            disabled={!isStreaming && (!currentMetrics && (step === 0 || !config.outcome || config.protected.length === 0))}
+            className={isStreaming ? "bg-red-500 hover:bg-red-600 text-white" : "gradient-bg text-white disabled:opacity-50"}
           >
             {isStreaming ? <><Square className="w-4 h-4 mr-2" /> Stop</> : <><Play className="w-4 h-4 mr-2" /> Start Monitoring</>}
           </Button>
@@ -153,6 +234,91 @@ export default function ShieldPage() {
               <span className="ml-2 text-xs opacity-60">{m.badge}</span>
             </button>
           ))}
+        </div>
+      )}
+
+      
+      
+      {/* Upload CSV UI */}
+      {!isStreaming && !currentMetrics && step === 0 && (
+        <div className="mb-8 bg-card/50 border-border/50 py-8 px-6 rounded-xl">
+          <h2 className="text-xl font-semibold mb-4 text-center">1. Select Data Stream</h2>
+          <CsvDropzone onFileLoaded={handleFile} file={file} />
+          {domainInfo && (
+            <div className="mt-4 flex items-center justify-center">
+              <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30">
+                Detected Domain: {domainInfo.label}
+              </Badge>
+            </div>
+          )}
+          <div className="mt-6 text-center">
+            <p className="text-sm text-muted-foreground mb-3">Or intercept decisions from a demo stream:</p>
+            <div className="flex justify-center gap-3 flex-wrap">
+              {DEMO_DATASETS.map((d) => (
+                <Button key={d.file + d.type} variant="outline" size="sm" onClick={() => loadDemo(d.file, d.type)}>
+                  {d.label}
+                </Button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Configure UI */}
+      {!isStreaming && !currentMetrics && step === 1 && (
+        <div className="mb-8 space-y-6">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-semibold">2. Configure Inputs</h2>
+            <Button variant="ghost" size="sm" onClick={() => setStep(0)}><RotateCcw className="w-4 h-4 mr-2" /> Back</Button>
+          </div>
+
+          <Card className="bg-card/50 border-border/50">
+            <CardHeader><CardTitle className="text-lg">📊 Outcome Column (the decision)</CardTitle></CardHeader>
+            <CardContent>
+              <div className="flex flex-wrap gap-2">
+                {(detected?.decision_columns || []).map(c => (
+                  <Button key={c.column} size="sm" variant={config.outcome === c.column ? "default" : "outline"} onClick={() => setConfig(prev => ({ ...prev, outcome: c.column }))}>
+                    {c.column} <Badge className="ml-1 text-xs" variant="secondary">auto-detected</Badge>
+                  </Button>
+                ))}
+                {(detected?.feature_columns || []).filter(c => c.unique_count <= 10).map(c => (
+                  <Button key={c.column} size="sm" variant={config.outcome === c.column ? "default" : "outline"} onClick={() => setConfig(prev => ({ ...prev, outcome: c.column }))}>
+                    {c.column}
+                  </Button>
+                ))}
+              </div>
+              <div className="mt-3 flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">Positive outcome value:</span>
+                <input
+                  className="w-20 px-2 py-1 bg-muted/50 border border-border rounded text-sm outline-none"
+                  value={config.positiveOutcome}
+                  onChange={e => setConfig(prev => ({ ...prev, positiveOutcome: e.target.value }))}
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-card/50 border-border/50">
+            <CardHeader><CardTitle className="text-lg">👥 Protected Attributes</CardTitle></CardHeader>
+            <CardContent>
+              <div className="flex flex-wrap gap-2">
+                {(data ? Object.keys(data[0] || {}) : []).filter(c => c !== config.outcome).map(col => (
+                  <Button
+                    key={col} size="sm"
+                    variant={config.protected.includes(col) ? "default" : "outline"}
+                    className={config.protected.includes(col) ? "gradient-bg text-white" : ""}
+                    onClick={() => setConfig(prev => ({
+                      ...prev,
+                      protected: prev.protected.includes(col) ? prev.protected.filter(c => c !== col) : [...prev.protected, col]
+                    }))}
+                  >
+                    {col}
+                  </Button>
+                ))}
+              </div>
+              <p className="text-xs text-muted-foreground mt-3">Select the demographic fields (gender, age, location) to intercept in the stream.</p>
+            </CardContent>
+          </Card>
         </div>
       )}
 
