@@ -21,7 +21,6 @@ export default function ShieldPage() {
 
   const startStream = useCallback(() => {
     if (eventSourceRef.current) eventSourceRef.current.close();
-
     setIsStreaming(true);
     setFairnessHistory([]);
     setGenderHistory([]);
@@ -34,56 +33,27 @@ export default function ShieldPage() {
     es.onmessage = (event) => {
       try {
         const d = JSON.parse(event.data);
-
-        if (d.status === "complete") {
-          setIsStreaming(false);
-          es.close();
-          return;
-        }
-
+        if (d.status === "complete") { setIsStreaming(false); es.close(); return; }
         setCurrentMetrics(d);
         setTotalAnalyzed(d.total_analyzed);
-
-        setFairnessHistory(prev => [...prev.slice(-100), {
-          batch: d.total_analyzed,
-          score: d.fairness_score,
-        }]);
-
+        setFairnessHistory(prev => [...prev.slice(-100), { batch: d.total_analyzed, score: d.fairness_score }]);
         const maleRate = d.rates?.gender_rates?.Male ?? 0;
         const femaleRate = d.rates?.gender_rates?.Female ?? 0;
-        setGenderHistory(prev => [...prev.slice(-100), {
-          batch: d.total_analyzed,
-          male: Math.round(maleRate * 1000) / 10,
-          female: Math.round(femaleRate * 1000) / 10,
-        }]);
-
+        setGenderHistory(prev => [...prev.slice(-100), { batch: d.total_analyzed, male: Math.round(maleRate * 1000) / 10, female: Math.round(femaleRate * 1000) / 10 }]);
         if (d.alerts?.length) {
-          setAlerts(prev => [...prev, ...d.alerts.map((a, i) => ({
-            ...a,
-            id: `${d.total_analyzed}-${i}`,
-            timestamp: new Date().toISOString(),
-          }))]);
+          setAlerts(prev => [...prev, ...d.alerts.map((a, i) => ({ ...a, id: `${d.total_analyzed}-${i}`, timestamp: new Date().toISOString() }))]);
         }
-      } catch { /* ignore parse errors */ }
+      } catch { /* ignore */ }
     };
-
-    es.onerror = () => {
-      setIsStreaming(false);
-      es.close();
-    };
+    es.onerror = () => { setIsStreaming(false); es.close(); };
   }, []);
 
   const stopStream = useCallback(() => {
-    if (eventSourceRef.current) {
-      eventSourceRef.current.close();
-      eventSourceRef.current = null;
-    }
+    if (eventSourceRef.current) { eventSourceRef.current.close(); eventSourceRef.current = null; }
     setIsStreaming(false);
   }, []);
 
-  useEffect(() => {
-    return () => { if (eventSourceRef.current) eventSourceRef.current.close(); };
-  }, []);
+  useEffect(() => { return () => { if (eventSourceRef.current) eventSourceRef.current.close(); }; }, []);
 
   return (
     <div className="max-w-6xl mx-auto px-6 py-12">
@@ -103,74 +73,47 @@ export default function ShieldPage() {
         </div>
         <button
           onClick={isStreaming ? stopStream : startStream}
-          className={`group inline-flex items-stretch rounded-md overflow-hidden transition-all duration-150 hover:-translate-y-px hover:shadow-[0_6px_20px_rgba(0,0,0,0.15)] ${isStreaming ? "" : ""}`}
+          className="group inline-flex items-stretch rounded-md overflow-hidden transition-all duration-150 hover:-translate-y-px hover:shadow-[0_6px_20px_rgba(0,0,0,0.15)]"
         >
           {isStreaming ? (
             <>
-              <span className="bg-[#EF4444] px-3.5 py-2.5 flex items-center justify-center text-white">
-                <Square className="w-4 h-4" />
-              </span>
-              <span className="bg-[#0A0A0A] text-white text-[11px] font-bold tracking-[0.12em] uppercase px-5 py-2.5 flex items-center">
-                Stop
-              </span>
+              <span className="bg-[#EF4444] px-3.5 py-2.5 flex items-center justify-center text-white"><Square className="w-4 h-4" /></span>
+              <span className="bg-[#0A0A0A] text-white text-[11px] font-bold tracking-[0.12em] uppercase px-5 py-2.5 flex items-center">Stop</span>
             </>
           ) : (
             <>
-              <span className="bg-[#F59E0B] px-3.5 py-2.5 flex items-center justify-center text-black group-hover:bg-[#D97706] transition-colors">
-                <Play className="w-4 h-4" />
-              </span>
-              <span className="bg-[#0A0A0A] text-white text-[11px] font-bold tracking-[0.12em] uppercase px-5 py-2.5 flex items-center group-hover:bg-[#1a1a1a] transition-colors">
-                Start Monitoring
-              </span>
+              <span className="bg-[#F59E0B] px-3.5 py-2.5 flex items-center justify-center text-black group-hover:bg-[#D97706] transition-colors"><Play className="w-4 h-4" /></span>
+              <span className="bg-[#0A0A0A] text-white text-[11px] font-bold tracking-[0.12em] uppercase px-5 py-2.5 flex items-center group-hover:bg-[#1a1a1a] transition-colors">Start Monitoring</span>
             </>
           )}
         </button>
       </div>
 
-      {/* Not started state */}
       {!isStreaming && !currentMetrics && (
         <Card className="bg-white border-[#E5E7EB] py-20">
           <CardContent className="flex flex-col items-center text-center gap-5">
-            <motion.div
-              className="w-20 h-20 bg-[#0D9488]/10 flex items-center justify-center"
-              style={{ borderRadius: '16px' }}
-              animate={{ scale: [1, 1.05, 1] }}
-              transition={{ repeat: Infinity, duration: 3, ease: "easeInOut" }}
-            >
+            <motion.div className="w-20 h-20 bg-[#0D9488]/10 flex items-center justify-center" style={{ borderRadius: '16px' }} animate={{ scale: [1, 1.05, 1] }} transition={{ repeat: Infinity, duration: 3, ease: "easeInOut" }}>
               <Shield className="w-10 h-10 text-[#0D9488] opacity-60" />
             </motion.div>
             <div>
               <h3 className="text-xl font-bold text-[#0A0A0A]">Ready to Monitor</h3>
-              <p className="text-[#6B7280] max-w-md mt-2">
-                Shield Mode connects to an AI decision pipeline and monitors fairness metrics in real-time.
-                Click &quot;Start Monitoring&quot; to begin the simulated stream.
-              </p>
+              <p className="text-[#6B7280] max-w-md mt-2">Shield Mode connects to an AI decision pipeline and monitors fairness metrics in real-time. Click &quot;Start Monitoring&quot; to begin the simulated stream.</p>
             </div>
           </CardContent>
         </Card>
       )}
 
-      {/* Live Dashboard */}
       {(isStreaming || currentMetrics) && (
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
-          {/* Stat cards */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <MetricCard title="Decisions Analyzed" value={totalAnalyzed.toLocaleString()} />
-            <MetricCard title="Fairness Score" value={`${currentMetrics?.fairness_score ?? "\u2014"}/100`}
-              severity={currentMetrics?.fairness_score < 50 ? "critical" : currentMetrics?.fairness_score < 70 ? "warning" : "ok"} />
+            <MetricCard title="Fairness Score" value={`${currentMetrics?.fairness_score ?? "\u2014"}/100`} severity={currentMetrics?.fairness_score < 50 ? "critical" : currentMetrics?.fairness_score < 70 ? "warning" : "ok"} />
             <MetricCard title="Male Approval" value={`${(((currentMetrics?.rates?.gender_rates?.Male ?? 0)) * 100).toFixed(0)}%`} />
             <MetricCard title="Female Approval" value={`${(((currentMetrics?.rates?.gender_rates?.Female ?? 0)) * 100).toFixed(0)}%`} />
           </div>
-
           <div className="grid md:grid-cols-2 gap-6">
-            {/* Fairness Trend */}
             <Card className="bg-white border-[#E5E7EB]">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-base text-[#0A0A0A] flex items-center gap-2">
-                  <Activity className="w-4 h-4 text-[#0D9488]" />
-                  Fairness Score Trend
-                </CardTitle>
-              </CardHeader>
+              <CardHeader className="pb-2"><CardTitle className="text-base text-[#0A0A0A] flex items-center gap-2"><Activity className="w-4 h-4 text-[#0D9488]" /> Fairness Score Trend</CardTitle></CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={250}>
                   <LineChart data={fairnessHistory}>
@@ -183,12 +126,8 @@ export default function ShieldPage() {
                 </ResponsiveContainer>
               </CardContent>
             </Card>
-
-            {/* Gender Rate Comparison */}
             <Card className="bg-white border-[#E5E7EB]">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-base text-[#0A0A0A]">Gender Approval Rates</CardTitle>
-              </CardHeader>
+              <CardHeader className="pb-2"><CardTitle className="text-base text-[#0A0A0A]">Gender Approval Rates</CardTitle></CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={250}>
                   <LineChart data={genderHistory}>
@@ -203,23 +142,14 @@ export default function ShieldPage() {
               </CardContent>
             </Card>
           </div>
-
-          {/* Alerts */}
           <Card className="bg-white border-[#E5E7EB]">
             <CardHeader className="pb-2">
               <CardTitle className="text-base flex items-center gap-2 text-[#0A0A0A]">
-                <AlertTriangle className="w-4 h-4 text-[#F59E0B]" />
-                Alert Feed
-                {alerts.length > 0 && (
-                  <Badge className="text-xs bg-[#EF4444] text-white border-0">
-                    {alerts.length}
-                  </Badge>
-                )}
+                <AlertTriangle className="w-4 h-4 text-[#F59E0B]" /> Alert Feed
+                {alerts.length > 0 && <Badge className="text-xs bg-[#EF4444] text-white border-0">{alerts.length}</Badge>}
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <AlertFeed alerts={alerts} maxItems={10} />
-            </CardContent>
+            <CardContent><AlertFeed alerts={alerts} maxItems={10} /></CardContent>
           </Card>
         </motion.div>
       )}
