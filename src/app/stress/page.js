@@ -217,7 +217,7 @@ export default function StressTestPage() {
                 <CardHeader>
                   <CardTitle className="text-lg">🔄 Counterfactual Proof — Same CV, Different Name</CardTitle>
                   <p className="text-sm text-muted-foreground">
-                    Each row group shows the SAME qualifications sent to {usedRealGemini ? "Gemini" : "the simulated model"} with only the name changed.
+                    Each row group shows the SAME qualifications sent to {usedRealModel ? modelLabel : "the simulated model"} with only the name changed.
                   </p>
                 </CardHeader>
                 <CardContent className="space-y-4">
