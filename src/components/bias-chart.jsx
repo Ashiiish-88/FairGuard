@@ -4,10 +4,10 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const COLORS = {
-  high: "#22c55e",
-  low: "#ef4444",
-  neutral: "#6366f1",
-  threshold: "#eab308",
+  bar: "#1A3A6E",
+  low: "#FF2D55",
+  grid: "#1A3A6E",
+  threshold: "#007AFF",
 };
 
 function CustomTooltip({ active, payload }) {
@@ -17,7 +17,7 @@ function CustomTooltip({ active, payload }) {
     <div className="bg-popover/95 backdrop-blur-sm border border-border rounded-lg px-3 py-2 shadow-lg">
       <p className="font-medium text-sm">{d.group}</p>
       <p className="text-sm text-muted-foreground">
-        Rate: <span className="text-foreground font-semibold">{(d.rate * 100).toFixed(1)}%</span>
+        Rate: <span className="text-foreground font-mono font-semibold">{(d.rate * 100).toFixed(1)}%</span>
       </p>
     </div>
   );
@@ -42,19 +42,19 @@ export default function BiasChart({ data = [], title = "Approval Rates by Group"
       <CardContent>
         <ResponsiveContainer width="100%" height={220}>
           <BarChart data={chartData} margin={{ top: 5, right: 10, left: -10, bottom: 5 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.25 0 0)" vertical={false} />
-            <XAxis dataKey="group" tick={{ fill: "oklch(0.6 0 0)", fontSize: 12 }} axisLine={false} tickLine={false} />
+            <CartesianGrid strokeDasharray="3 3" stroke={COLORS.grid} vertical={false} />
+            <XAxis dataKey="group" tick={{ fill: "#5A6A85", fontSize: 12 }} axisLine={false} tickLine={false} />
             <YAxis
               domain={[0, 100]}
-              tick={{ fill: "oklch(0.6 0 0)", fontSize: 11 }}
+              tick={{ fill: "#5A6A85", fontSize: 11 }}
               axisLine={false} tickLine={false}
               tickFormatter={v => `${v}%`}
             />
-            <Tooltip content={<CustomTooltip />} cursor={{ fill: "oklch(0.2 0 0 / 30%)" }} />
+            <Tooltip content={<CustomTooltip />} cursor={{ fill: "hsl(217 30% 20% / 30%)" }} />
             <ReferenceLine y={threshold * 100} stroke={COLORS.threshold} strokeDasharray="6 4" label={{ value: `${threshold * 100}% threshold`, fill: COLORS.threshold, fontSize: 10, position: "right" }} />
-            <Bar dataKey="ratePercent" radius={[6, 6, 0, 0]} maxBarSize={60}>
+            <Bar dataKey="ratePercent" radius={[2, 2, 0, 0]} maxBarSize={60}>
               {chartData.map((entry, i) => (
-                <Cell key={i} fill={entry.isDisadvantaged ? COLORS.low : COLORS.neutral} fillOpacity={0.85} />
+                <Cell key={i} fill={entry.isDisadvantaged ? COLORS.low : COLORS.bar} fillOpacity={0.85} />
               ))}
             </Bar>
           </BarChart>

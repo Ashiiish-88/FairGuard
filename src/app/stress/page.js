@@ -25,9 +25,9 @@ const DEMOGRAPHIC_AXES = [
 const CANDIDATE_COUNTS = [30, 60, 100];
 
 const AI_MODELS = [
-  { id: "gemini",    label: "Gemini 2.5 Flash",  badge: "Google",  color: "#007AFF" },
-  { id: "llama-8b",  label: "Llama 3.1 8B",      badge: "Groq ⚡", color: "#FFAA00" },
-  { id: "llama-70b", label: "Llama 3.3 70B",      badge: "Groq ⚡", color: "#A855F7" },
+  { id: "gemini", label: "Gemini 2.5 Flash", badge: "Google", color: "#007AFF" },
+  { id: "llama-8b", label: "Llama 3.1 8B", badge: "Groq ⚡", color: "#FFAA00" },
+  { id: "llama-70b", label: "Llama 3.3 70B", badge: "Groq ⚡", color: "#A855F7" },
 ];
 
 export default function StressTestPage() {
@@ -95,11 +95,10 @@ export default function StressTestPage() {
                     <button
                       key={t.id}
                       onClick={() => setDecisionType(t.id)}
-                      className={`p-5 border-2 text-center transition-all ${
-                        decisionType === t.id
+                      className={`p-5 border-2 text-center transition-all ${decisionType === t.id
                           ? "border-[#00E676]/60 bg-[#00E676]/10 shadow-lg shadow-[#00E676]/10"
                           : "border-border/50 bg-card/30 hover:border-border"
-                      }`}
+                        }`}
                     >
                       <span className="text-3xl block mb-2">{t.icon}</span>
                       <span className="text-sm font-medium">{t.label}</span>
@@ -153,11 +152,10 @@ export default function StressTestPage() {
                     <button
                       key={m.id}
                       onClick={() => setSelectedModel(m.id)}
-                      className={`px-4 py-3 border-2 text-center transition-all ${
-                        selectedModel === m.id
+                      className={`px-4 py-3 border-2 text-center transition-all ${selectedModel === m.id
                           ? "border-[#00E676]/60 bg-[#00E676]/10 text-foreground"
                           : "border-border/50 bg-card/30 text-muted-foreground hover:border-border"
-                      }`}
+                        }`}
                     >
                       <span className="text-sm font-medium block">{m.label}</span>
                       <span className="text-xs opacity-60">{m.badge}</span>
@@ -217,7 +215,7 @@ export default function StressTestPage() {
                 <CardHeader>
                   <CardTitle className="text-lg">🔄 Counterfactual Proof — Same CV, Different Name</CardTitle>
                   <p className="text-sm text-muted-foreground">
-                    Each row group shows the SAME qualifications sent to {usedRealGemini ? "Gemini" : "the simulated model"} with only the name changed.
+                    Each row group shows the SAME qualifications sent to {usedRealModel ? modelLabel : "the simulated model"} with only the name changed.
                   </p>
                 </CardHeader>
                 <CardContent className="space-y-4">

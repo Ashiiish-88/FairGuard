@@ -23,7 +23,7 @@ export default function Navbar() {
         <div className="w-9 h-9 rounded-lg gradient-bg flex items-center justify-center transition-transform group-hover:scale-110 shadow-lg">
           <Shield className="w-5 h-5 text-white" />
         </div>
-        <span className="text-xl font-bold gradient-text">FairGuard</span>
+        <span className="text-xl font-bold text-[#00E676]">FairGuard</span>
       </Link>
 
       {/* Mode Tabs */}
@@ -35,7 +35,7 @@ export default function Navbar() {
               <Button
                 variant={isActive ? "secondary" : "ghost"}
                 size="sm"
-                className={`gap-1.5 text-sm transition-all ${
+                className={`relative gap-1.5 text-sm transition-all ${
                   isActive
                     ? "bg-secondary shadow-sm text-foreground"
                     : "text-muted-foreground hover:text-foreground"
@@ -43,6 +43,9 @@ export default function Navbar() {
               >
                 <span className="text-base">{mode.icon}</span>
                 <span className="hidden sm:inline">{mode.label}</span>
+                {isActive && (
+                  <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-6 h-0.5 bg-[#00E676] rounded-full" />
+                )}
               </Button>
             </Link>
           );

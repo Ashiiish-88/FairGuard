@@ -4,9 +4,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
 const statusColors = {
-  "NON-COMPLIANT": "bg-red-500/20 text-red-400 border-red-500/30",
-  "WARNING": "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
-  "COMPLIANT": "bg-emerald-500/20 text-emerald-400 border-emerald-500/30",
+  "NON-COMPLIANT": "bg-[#FF2D55]/20 text-[#FF2D55] border-[#FF2D55]/30",
+  "WARNING": "bg-[#FFAA00]/20 text-[#FFAA00] border-[#FFAA00]/30",
+  "COMPLIANT": "bg-[#00E676]/20 text-[#00E676] border-[#00E676]/30",
 };
 
 const statusIcons = {
@@ -42,7 +42,7 @@ export default function FairnessDebtCard({ debt }) {
     debt.total_exposure.eur > 0;
 
   return (
-    <Card className="bg-red-500/5 border-red-500/20">
+    <Card className="bg-[#FF2D55]/5 border-[#FF2D55]/20">
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg flex items-center gap-2">
@@ -52,10 +52,10 @@ export default function FairnessDebtCard({ debt }) {
             variant="outline"
             className={
               debt.risk_level === "CRITICAL"
-                ? "bg-red-500/20 text-red-400 border-red-500/30"
+                ? "bg-[#FF2D55]/20 text-[#FF2D55] border-[#FF2D55]/30"
                 : debt.risk_level === "HIGH"
-                ? "bg-orange-500/20 text-orange-400 border-orange-500/30"
-                : "bg-yellow-500/20 text-yellow-400 border-yellow-500/30"
+                ? "bg-[#FFAA00]/20 text-[#FFAA00] border-[#FFAA00]/30"
+                : "bg-[#FFAA00]/20 text-[#FFAA00] border-[#FFAA00]/30"
             }
           >
             {debt.risk_level} RISK
@@ -67,7 +67,7 @@ export default function FairnessDebtCard({ debt }) {
         {hasExposure && (
           <div className="p-4 bg-background/50 rounded-lg border border-border/50">
             <p className="text-sm text-muted-foreground mb-1">Estimated Legal Exposure</p>
-            <p className="text-2xl font-bold font-mono text-red-400">
+            <p className="text-2xl font-bold font-mono text-[#FF2D55]">
               {formatTopExposure(debt.total_exposure)}
             </p>
             <div className="flex gap-6 mt-2 text-sm text-muted-foreground">
@@ -96,7 +96,7 @@ export default function FairnessDebtCard({ debt }) {
               </div>
               <div className="flex items-center gap-3 shrink-0">
                 {reg.exposure !== "—" && reg.exposure !== "Check local regulations" && (
-                  <span className="text-sm font-mono font-semibold text-red-400">{reg.exposure}</span>
+                  <span className="text-sm font-mono font-semibold text-[#FF2D55]">{reg.exposure}</span>
                 )}
                 <Badge variant="outline" className={`text-xs ${statusColors[reg.status] || ""}`}>
                   {reg.status}

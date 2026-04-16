@@ -5,17 +5,17 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertTriangle, AlertCircle, Info } from "lucide-react";
 
 const icons = {
-  CRITICAL: <AlertCircle className="w-4 h-4 text-red-400" />,
-  HIGH: <AlertTriangle className="w-4 h-4 text-orange-400" />,
-  WARNING: <AlertTriangle className="w-4 h-4 text-yellow-400" />,
-  INFO: <Info className="w-4 h-4 text-blue-400" />,
+  CRITICAL: <AlertCircle className="w-4 h-4 text-[#FF2D55]" />,
+  HIGH: <AlertTriangle className="w-4 h-4 text-[#FF2D55]" />,
+  WARNING: <AlertTriangle className="w-4 h-4 text-[#FFAA00]" />,
+  INFO: <Info className="w-4 h-4 text-[#007AFF]" />,
 };
 
 const borderColors = {
-  CRITICAL: "border-l-red-500",
-  HIGH: "border-l-orange-500",
-  WARNING: "border-l-yellow-500",
-  INFO: "border-l-blue-500",
+  CRITICAL: "border-l-[#FF2D55]",
+  HIGH: "border-l-[#FF2D55]",
+  WARNING: "border-l-[#FFAA00]",
+  INFO: "border-l-[#007AFF]",
 };
 
 export default function AlertFeed({ alerts = [], maxItems = 8 }) {

@@ -4,11 +4,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
 const severityColors = {
-  CRITICAL: "bg-red-500/20 text-red-400 border-red-500/30",
-  HIGH: "bg-orange-500/20 text-orange-400 border-orange-500/30",
-  MODERATE: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
-  OK: "bg-emerald-500/20 text-emerald-400 border-emerald-500/30",
-  WARNING: "bg-orange-500/20 text-orange-400 border-orange-500/30",
+  CRITICAL: "bg-[#FF2D55]/20 text-[#FF2D55] border-[#FF2D55]/30",
+  HIGH: "bg-[#FF2D55]/15 text-[#FF2D55] border-[#FF2D55]/25",
+  MODERATE: "bg-[#FFAA00]/20 text-[#FFAA00] border-[#FFAA00]/30",
+  OK: "bg-[#00E676]/20 text-[#00E676] border-[#00E676]/30",
+  WARNING: "bg-[#FFAA00]/20 text-[#FFAA00] border-[#FFAA00]/30",
 };
 
 export default function MetricCard({ icon, title, value, subtitle, severity, className = "" }) {
@@ -21,7 +21,7 @@ export default function MetricCard({ icon, title, value, subtitle, severity, cla
               {icon && <span className="text-lg">{icon}</span>}
               <p className="text-sm text-muted-foreground font-medium truncate">{title}</p>
             </div>
-            <p className="text-2xl font-bold tracking-tight">{value}</p>
+            <p className="text-2xl font-bold font-mono tracking-tight">{value}</p>
             {subtitle && <p className="text-xs text-muted-foreground mt-1">{subtitle}</p>}
           </div>
           {severity && (
