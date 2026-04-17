@@ -42,7 +42,7 @@ import {
 // Your palette colors for group lines
 const GROUP_COLORS = [
   "#caff3d", // lime — primary
-  "#04cfff", // cyan
+  "#0057ff", // blue
   "#9a77f8", // purple
   "#ff8c42", // orange
   "#ff6b7a", // coral
@@ -193,10 +193,10 @@ function ModelBtn({
       <span>{model.label}</span>
       <span
         className={[
-          "text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full",
+          "text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full border",
           active
-            ? "bg-[#caff3d]/20 text-[#caff3d]"
-            : "bg-muted text-muted-foreground",
+            ? (model.id === "gemini" ? "bg-[#0057ff]/8 text-[#0057ff] border-[#0057ff]/15" : "bg-[#caff3d]/20 text-[#caff3d] border-transparent")
+            : "bg-muted text-muted-foreground border-transparent",
         ].join(" ")}
       >
         {model.badge}
@@ -454,7 +454,7 @@ export default function ShieldPage() {
                 {/* Model label when streaming */}
                 {currentMetrics?.is_real_model && (
                   <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md
-                                   bg-muted border border-border text-xs font-medium text-muted-foreground">
+                                   bg-[#0057ff]/8 border border-[#0057ff]/20 text-xs font-medium text-[#0057ff]">
                     <Cpu className="w-3 h-3" />
                     {currentMetrics?.model_label ?? "Live AI"}
                   </span>

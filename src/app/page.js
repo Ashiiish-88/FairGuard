@@ -151,17 +151,26 @@ export default function LandingPage() {
             transition={{ duration: 0.6, delay: 0.3 }}
             className="flex gap-4 w-full justify-center sm:flex-row flex-col px-6"
           >
-            {/* Primary Action */}
+            {/* Primary Action — split block style */}
             <Link href="/audit"
-              className="inline-flex items-center justify-center font-bold px-6 py-3 transition-all duration-300 bg-[#0057ff] text-[#000000] hover:shadow-[0_0_20px_rgba(0,87,255,0.4)] group rounded-md">
-              <span className="text-[12px] tracking-[0.12em] uppercase text-white">RUN FREE AUDIT</span>
-              <ArrowRight className="w-4 h-4 ml-2 transition-transform duration-300 group-hover:translate-x-1 text-white" />
+              className="inline-flex items-stretch rounded-md overflow-hidden font-bold transition-all duration-150 hover:shadow-lg group">
+              <span className="bg-[#caff3d] px-3 flex items-center justify-center group-hover:bg-[#d4ff5c] transition-colors">
+                <ArrowRight className="w-4 h-4 text-black" />
+              </span>
+              <span className="bg-black text-white text-[12px] font-bold tracking-[0.12em] uppercase px-6 py-3 flex items-center gap-2 group-hover:bg-[#1a1a1a] transition-colors">
+                RUN FREE AUDIT
+              </span>
             </Link>
 
             {/* Secondary Action */}
             <Link href="#how-it-works"
-              className="inline-flex items-center justify-center px-6 py-3 transition-all duration-300 bg-white text-[#000000] border border-[#E5E7EB] hover:bg-[#F9FAFB] rounded-md font-mono text-[12px] tracking-[0.1em] uppercase">
-              SEE HOW IT WORKS
+              className="inline-flex items-stretch rounded-md overflow-hidden font-bold transition-all duration-150 hover:shadow-md group">
+              <span className="bg-[#F3F4F6] px-3 flex items-center justify-center group-hover:bg-[#E5E7EB] transition-colors border border-[#E5E7EB] border-r-0">
+                <Search className="w-4 h-4 text-black" />
+              </span>
+              <span className="bg-white text-black text-[12px] font-bold tracking-[0.1em] uppercase px-6 py-3 flex items-center border border-[#E5E7EB] border-l-0 group-hover:bg-[#F9FAFB] transition-colors">
+                SEE HOW IT WORKS
+              </span>
             </Link>
           </motion.div>
         </div>
@@ -208,9 +217,9 @@ export default function LandingPage() {
         <div className="max-w-[1280px] mx-auto">
 
           {/* Label */}
-          <div className="text-center mb-4">
-            <span className="inline-flex items-center gap-2 text-[11px] font-semibold tracking-[0.15em] uppercase text-[#000000]">
-              <Shield className="w-3.5 h-3.5" /> THE PROBLEM
+          <div className="text-center mb-6">
+            <span className="inline-flex items-center gap-2 text-[13px] font-bold tracking-[0.15em] uppercase text-[#000000]">
+              <Shield className="w-4 h-4" /> THE PROBLEM
             </span>
           </div>
 
@@ -226,46 +235,80 @@ export default function LandingPage() {
           <hr className="border-t border-[#E5E7EB] mx-20 mb-0" />
 
           {/* Row 1: First 3 domains */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 relative mx-8 md:mx-20 py-12">
-            {domains.slice(0, 3).map((d) => (
-              <div key={d.title} className="bg-white rounded-2xl p-8 border border-[#E5E7EB] shadow-[0_8px_32px_rgba(0,0,0,0.08)]">
-                <div className="w-12 h-12 bg-gray-50 border border-[#E5E7EB] rounded-lg flex items-center justify-center mb-10 text-[#000000]">
-                  {d.icon}
+          <div className="grid grid-cols-1 md:grid-cols-3 border-t border-b border-[#EAEAEA] mx-8 md:mx-20">
+            {domains.slice(0, 3).map((d, idx) => {
+              const gradients = [
+                { bar: "linear-gradient(180deg,#A6FFE1,#DCFFE2 60.1%)", iconBg: "bg-gray-50", iconColor: "#3DC784" },
+                { bar: "linear-gradient(180deg,#A9DFFF,#E8FBF9 60.1%)", iconBg: "bg-gray-50", iconColor: "#0057ff" },
+                { bar: "linear-gradient(180deg,#FFC8BC 39.9%,#FFEECD)",  iconBg: "bg-red-50",  iconColor: "#F23E11" },
+              ];
+              const g = gradients[idx];
+              return (
+                <div key={d.title} className={`flex w-full h-[250px] lg:h-[300px] pl-8 ${idx < 2 ? "border-r" : ""} border-[#EAEAEA]`}>
+                  <div className="flex flex-col gap-10 w-full py-8">
+                    <div className="flex flex-col gap-4">
+                      <div className="flex items-center gap-2">
+                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${g.iconBg} border border-[#E5E7EB]`}>
+                          <span style={{ color: g.iconColor }}>{d.icon}</span>
+                        </div>
+                        {d.isNew && (
+                          <span className="text-[9px] font-bold tracking-[0.15em] uppercase px-2 py-0.5 rounded-full bg-[#caff3d]/20 text-[#000000] border border-[#caff3d]/40">New</span>
+                        )}
+                      </div>
+                    </div>
+                    <div>
+                      <div className="flex flex-col justify-between font-sans gap-2 w-fit h-fit">
+                        <h3 className="text-[17px] font-bold text-[#000000] leading-tight">{d.title}</h3>
+                        <div className="text-[13px] text-[#4B5563] leading-[1.6] max-w-[240px]">{d.body}</div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex flex-col w-6 h-full flex-shrink-0">
+                    <div className="flex flex-col h-[60%]" style={{ backgroundImage: g.bar }} />
+                    <div className="flex flex-col h-[40%]" style={{ backgroundImage: g.bar, opacity: 0.5 }} />
+                  </div>
                 </div>
-                <h3 className="text-[18px] font-bold text-[#000000] mb-3" style={{ fontFamily: "var(--font-heading)" }}>{d.title}</h3>
-                <p className="text-[14px] leading-[1.65] text-[#4B5563] mb-4">{d.body}</p>
-                <div className="bg-[#F9FAFB] border-l-[3px] border-l-[#ff6b7a] py-2.5 px-3.5 rounded-r mb-4">
-                  <span className="block text-[10px] font-bold tracking-[0.12em] text-[#000000] mb-1">REAL BIAS FOUND</span>
-                  <span className="text-[12px] text-[#4B5563] leading-snug">{d.example}</span>
-                </div>
-                <Link href={d.href} className="text-[13px] font-semibold text-[#0057ff] inline-flex items-center gap-1 hover:gap-2 transition-all">
-                  Audit this model <ChevronRight className="w-3.5 h-3.5" />
-                </Link>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
-          {/* Horizontal rule */}
-          <hr className="border-t border-[#E5E7EB] mx-20 mb-0" />
 
           {/* Row 2: Next 3 domains */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 relative mx-8 md:mx-20 py-12">
-            {domains.slice(3, 6).map((d) => (
-              <div key={d.title} className="bg-white rounded-2xl p-8 border border-[#E5E7EB] shadow-[0_8px_32px_rgba(0,0,0,0.08)]">
-                <div className="w-12 h-12 bg-gray-50 border border-[#E5E7EB] rounded-lg flex items-center justify-center mb-10 text-[#000000]">
-                  {d.icon}
+          <div className="grid grid-cols-1 md:grid-cols-3 border-t border-b border-[#EAEAEA] mx-8 md:mx-20 mt-0">
+            {domains.slice(3, 6).map((d, idx) => {
+              const gradients = [
+                { bar: "linear-gradient(180deg,#F23E11,#FAA4DF)",    iconBg: "bg-red-50",    iconColor: "#F23E11" },
+                { bar: "linear-gradient(180deg,#FEB73E,#FFF9D4)",    iconBg: "bg-amber-50",  iconColor: "#ff8c42" },
+                { bar: "linear-gradient(180deg,#CFB6FF 39.9%,#FFD37F)", iconBg: "bg-purple-50", iconColor: "#9a77f8" },
+              ];
+              const g = gradients[idx];
+              return (
+                <div key={d.title} className={`flex w-full h-[250px] lg:h-[300px] pl-8 ${idx < 2 ? "border-r" : ""} border-[#EAEAEA]`}>
+                  <div className="flex flex-col gap-10 w-full py-8">
+                    <div className="flex flex-col gap-4">
+                      <div className="flex items-center gap-2">
+                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${g.iconBg} border border-[#E5E7EB]`}>
+                          <span style={{ color: g.iconColor }}>{d.icon}</span>
+                        </div>
+                        {d.isNew && (
+                          <span className="text-[9px] font-bold tracking-[0.15em] uppercase px-2 py-0.5 rounded-full bg-[#caff3d]/20 text-[#000000] border border-[#caff3d]/40">New</span>
+                        )}
+                      </div>
+                    </div>
+                    <div>
+                      <div className="flex flex-col justify-between font-sans gap-2 w-fit h-fit">
+                        <h3 className="text-[17px] font-bold text-[#000000] leading-tight">{d.title}</h3>
+                        <div className="text-[13px] text-[#4B5563] leading-[1.6] max-w-[240px]">{d.body}</div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex flex-col w-6 h-full flex-shrink-0">
+                    <div className="flex flex-col h-[60%]" style={{ backgroundImage: g.bar }} />
+                    <div className="flex flex-col h-[40%]" style={{ backgroundImage: g.bar, opacity: 0.5 }} />
+                  </div>
                 </div>
-                <h3 className="text-[18px] font-bold text-[#000000] mb-3" style={{ fontFamily: "var(--font-heading)" }}>{d.title}</h3>
-                <p className="text-[14px] leading-[1.65] text-[#4B5563] mb-4">{d.body}</p>
-                <div className="bg-[#F9FAFB] border-l-[3px] border-l-[#ff6b7a] py-2.5 px-3.5 rounded-r mb-4">
-                  <span className="block text-[10px] font-bold tracking-[0.12em] text-[#000000] mb-1">REAL BIAS FOUND</span>
-                  <span className="text-[12px] text-[#4B5563] leading-snug">{d.example}</span>
-                </div>
-                <Link href={d.href} className="text-[13px] font-semibold text-[#0057ff] inline-flex items-center gap-1 hover:gap-2 transition-all">
-                  Audit this model <ChevronRight className="w-3.5 h-3.5" />
-                </Link>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
         </div>
@@ -536,28 +579,37 @@ bias_result = fairguard.analyze_text(
             </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-6">
+          <div className="grid md:grid-cols-3 border border-[#EAEAEA]">
             {[
-              { icon: <Zap className="w-5 h-5" />, title: "Synthetic Candidates", desc: "Gemini generates diverse profiles with controlled qualifications to isolate bias signals." },
-              { icon: <BarChart3 className="w-5 h-5" />, title: "Disparate Impact Analysis", desc: "Computes the 4/5ths rule across every demographic axis with statistical significance." },
-              { icon: <AlertTriangle className="w-5 h-5" />, title: "Intersectional Testing", desc: "Finds bias at intersections — e.g., older women in rural areas rejected most." },
-            ].map((f) => (
-              <div key={f.title} className="bg-white rounded-2xl p-8 border border-[#E5E7EB] shadow-[0_8px_32px_rgba(0,0,0,0.08)]">
-                <div className="w-12 h-12 bg-gray-50 border border-[#E5E7EB] rounded-lg flex items-center justify-center text-[#000000] mb-6">
-                  {f.icon}
+              { icon: <Zap className="w-5 h-5" />, title: "Synthetic Candidates", desc: "Gemini generates diverse profiles with controlled qualifications to isolate bias signals.", bar: "linear-gradient(180deg,#A9DFFF,#E8FBF9 60.1%)", iconBg: "bg-blue-50", iconColor: "#0057ff" },
+              { icon: <BarChart3 className="w-5 h-5" />, title: "Disparate Impact Analysis", desc: "Computes the 4/5ths rule across every demographic axis with statistical significance.", bar: "linear-gradient(180deg,#A6FFE1,#DCFFE2 60.1%)", iconBg: "bg-green-50", iconColor: "#3DC784" },
+              { icon: <AlertTriangle className="w-5 h-5" />, title: "Intersectional Testing", desc: "Finds bias at intersections — e.g., older women in rural areas rejected most.", bar: "linear-gradient(180deg,#FFC8BC 39.9%,#FFEECD)", iconBg: "bg-red-50", iconColor: "#F23E11" },
+            ].map((f, idx) => (
+              <div key={f.title} className={`flex h-[220px] pl-8 ${idx < 2 ? "border-r" : ""} border-[#EAEAEA]`}>
+                <div className="flex flex-col gap-5 w-full py-8">
+                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${f.iconBg} border border-[#E5E7EB] flex-shrink-0`}>
+                    <span style={{ color: f.iconColor }}>{f.icon}</span>
+                  </div>
+                  <div>
+                    <h3 className="text-[16px] font-bold text-[#000000] mb-1.5" style={{ fontFamily: "var(--font-heading)" }}>{f.title}</h3>
+                    <p className="text-[13px] text-[#4B5563] leading-[1.6] max-w-[240px]">{f.desc}</p>
+                  </div>
                 </div>
-                <h3 className="text-[16px] font-bold text-[#000000] mb-2" style={{ fontFamily: "var(--font-heading)" }}>{f.title}</h3>
-                <p className="text-[14px] text-[#4B5563] leading-[1.65]">{f.desc}</p>
+                <div className="flex flex-col w-5 h-full flex-shrink-0">
+                  <div className="h-[60%]" style={{ backgroundImage: f.bar }} />
+                  <div className="h-[40%]" style={{ backgroundImage: f.bar, opacity: 0.5 }} />
+                </div>
               </div>
             ))}
           </div>
 
           <div className="text-center mt-10">
-            <Link href="/stress" className="inline-flex items-center justify-center font-bold px-6 py-3 transition-all duration-300 bg-[#0057ff] text-[#000000] hover:shadow-[0_0_20px_rgba(0,87,255,0.4)] group rounded-md">
-              <span className="mr-2 text-white">
-                <Zap className="w-4 h-4" />
+            <Link href="/stress"
+              className="inline-flex items-stretch rounded-md overflow-hidden font-bold transition-all duration-150 hover:shadow-lg group">
+              <span className="bg-[#caff3d] px-3 flex items-center justify-center group-hover:bg-[#d4ff5c] transition-colors">
+                <Zap className="w-4 h-4 text-black" />
               </span>
-              <span className="text-[12px] tracking-[0.12em] uppercase text-white">
+              <span className="bg-black text-white text-[12px] font-bold tracking-[0.12em] uppercase px-6 py-3 flex items-center gap-2 group-hover:bg-[#1a1a1a] transition-colors">
                 RUN STRESS TEST
               </span>
             </Link>
@@ -616,16 +668,21 @@ bias_result = fairguard.analyze_text(
               viewport={{ once: true, margin: "-50px" }}
               transition={{ duration: 0.6, delay: 0.2 }}
               className="flex gap-3 flex-wrap">
-              <Link href="/audit" className="inline-flex items-center justify-center font-bold px-6 py-3 transition-all duration-300 bg-[#0057ff] text-[#000000] hover:shadow-[0_0_20px_rgba(0,87,255,0.4)] group rounded-md">
-                <span className="mr-2 text-white">
-                  <ArrowRight className="w-4 h-4" />
+              <Link href="/audit" className="inline-flex items-stretch rounded-md overflow-hidden font-bold transition-all duration-150 hover:shadow-lg group">
+                <span className="bg-[#caff3d] px-3 flex items-center justify-center group-hover:bg-[#d4ff5c] transition-colors">
+                  <ArrowRight className="w-4 h-4 text-black" />
                 </span>
-                <span className="text-[12px] tracking-[0.12em] uppercase text-white">
+                <span className="bg-black text-white text-[12px] font-bold tracking-[0.12em] uppercase px-6 py-3 flex items-center gap-2 group-hover:bg-[#1a1a1a] transition-colors">
                   RUN FREE AUDIT
                 </span>
               </Link>
-              <Link href="#how-it-works" className="inline-flex items-center justify-center px-6 py-3 transition-all duration-300 bg-white text-[#000000] border border-[#E5E7EB] hover:bg-[#F9FAFB] rounded-md font-mono text-[12px] tracking-[0.1em] uppercase">
-                SEE HOW IT WORKS
+              <Link href="#how-it-works" className="inline-flex items-stretch rounded-md overflow-hidden font-bold transition-all duration-150 hover:shadow-md group">
+                <span className="bg-[#F3F4F6] px-3 flex items-center justify-center group-hover:bg-[#E5E7EB] transition-colors border border-[#E5E7EB] border-r-0">
+                  <Search className="w-4 h-4 text-black" />
+                </span>
+                <span className="bg-white text-black text-[12px] font-bold tracking-[0.1em] uppercase px-6 py-3 flex items-center border border-[#E5E7EB] border-l-0 group-hover:bg-[#F9FAFB] transition-colors">
+                  SEE HOW IT WORKS
+                </span>
               </Link>
             </motion.div>
           </div>
@@ -636,58 +693,67 @@ bias_result = fairguard.analyze_text(
       </section>
 
       {/* ═══ SECTION 9: FOOTER ═══ */}
-      <footer className="bg-white border-t border-[#E5E7EB] py-16">
-        <div className="max-w-[1200px] mx-auto px-6 md:px-12">
-          <div className="grid md:grid-cols-4 gap-12 mb-12">
-            {/* Brand */}
-            <div>
-              <div className="flex items-center gap-2 mb-4">
-                <div className="w-7 h-7 bg-[#ffffff] flex items-center justify-center rounded-md">
-                  <Shield className="w-3.5 h-3.5 text-[#caff3d]" />
+      <footer className="bg-[#191b20] border-t border-[#3A3E49]">
+        {/* Top nav row — bordered columns like refold */}
+        <div className="grid grid-cols-2 md:grid-cols-4 border-b border-[#3A3E49]">
+          {/* Brand column */}
+          <div className="font-mono p-10 border-r border-[#3A3E49] col-span-2 md:col-span-1">
+            <div className="flex items-center gap-2.5 mb-5">
+              <div className="flex items-stretch rounded-md overflow-hidden">
+                <div className="bg-[#caff3d] w-7 h-7 flex items-center justify-center">
+                  <Shield className="w-3.5 h-3.5 text-black" />
                 </div>
-                <span className="text-[15px] font-bold text-[#000000]" style={{ fontFamily: "var(--font-heading)" }}>FairGuard</span>
+                <div className="bg-white w-0.5" />
               </div>
-              <p className="text-[14px] text-[#4B5563] leading-[1.65] max-w-[260px]">
-                The bias firewall for AI. Find discrimination before it finds your users.
-              </p>
+              <span className="text-[15px] font-bold text-white" style={{ fontFamily: "var(--font-heading)" }}>FairGuard</span>
             </div>
+            <p className="text-[13px] text-[#9CA3AF] leading-[1.65] max-w-[220px]">
+              The bias firewall for AI. Find discrimination before it finds your users.
+            </p>
+          </div>
 
-            {/* Tools */}
-            <div>
-              <h4 className="text-[10px] font-bold tracking-[0.18em] uppercase text-[#9CA3AF] mb-5">Tools</h4>
-              <div className="flex flex-col gap-3">
-                <Link href="/audit" className="text-[14px] text-[#4B5563] hover:text-[#000000] transition-colors">Bias Audit</Link>
-                <Link href="/shield" className="text-[14px] text-[#4B5563] hover:text-[#000000] transition-colors">Shield Mode</Link>
-                <Link href="/stress" className="text-[14px] text-[#4B5563] hover:text-[#000000] transition-colors">Stress Test</Link>
-              </div>
-            </div>
-
-            {/* Resources */}
-            <div>
-              <h4 className="text-[10px] font-bold tracking-[0.18em] uppercase text-[#9CA3AF] mb-5">Resources</h4>
-              <div className="flex flex-col gap-3">
-                <Link href="/history" className="text-[14px] text-[#4B5563] hover:text-[#000000] transition-colors">Audit History</Link>
-                <Link href="#domains" className="text-[14px] text-[#4B5563] hover:text-[#000000] transition-colors">Supported Domains</Link>
-                <Link href="#how-it-works" className="text-[14px] text-[#4B5563] hover:text-[#000000] transition-colors">How It Works</Link>
-              </div>
-            </div>
-
-            {/* Legal */}
-            <div>
-              <h4 className="text-[10px] font-bold tracking-[0.18em] uppercase text-[#9CA3AF] mb-5">Legal Frameworks</h4>
-              <div className="flex flex-col gap-3 text-[14px] text-[#4B5563]">
-                <span>EU AI Act</span>
-                <span>India DPDP Act</span>
-                <span>US EEOC Guidelines</span>
-              </div>
+          {/* Tools */}
+          <div className="font-mono p-10 border-r border-[#3A3E49]">
+            <h4 className="text-[11px] font-bold tracking-[0.18em] uppercase text-[#64748b] mb-6">TOOLS</h4>
+            <div className="flex flex-col gap-4">
+              <Link href="/audit" className="text-[14px] text-[#d1d5db] hover:text-white transition-colors">Bias Audit</Link>
+              <Link href="/shield" className="text-[14px] text-[#d1d5db] hover:text-white transition-colors">Shield Mode</Link>
+              <Link href="/stress" className="text-[14px] text-[#d1d5db] hover:text-white transition-colors">Stress Test</Link>
+              <Link href="/history" className="text-[14px] text-[#d1d5db] hover:text-white transition-colors">Audit History</Link>
             </div>
           </div>
 
-          <div className="pt-6 border-t border-[#E5E7EB] flex items-center justify-between flex-wrap gap-4">
-            <span className="text-[13px] text-[#4B5563]">&copy; 2026 FairGuard. AI fairness, simplified.</span>
-            <span className="inline-flex items-center gap-1.5 bg-[#caff3d]/8 border border-[#caff3d]/20 rounded-full px-3.5 py-1.5 text-[12px] text-[#caff3d] font-semibold">
-              
+          {/* Resources */}
+          <div className="font-mono p-10 border-r border-[#3A3E49]">
+            <h4 className="text-[11px] font-bold tracking-[0.18em] uppercase text-[#64748b] mb-6">RESOURCES</h4>
+            <div className="flex flex-col gap-4">
+              <Link href="#domains" className="text-[14px] text-[#d1d5db] hover:text-white transition-colors">Supported Domains</Link>
+              <Link href="#how-it-works" className="text-[14px] text-[#d1d5db] hover:text-white transition-colors">How It Works</Link>
+              <Link href="/audit" className="text-[14px] text-[#d1d5db] hover:text-white transition-colors">Run Free Audit</Link>
+            </div>
+          </div>
+
+          {/* Legal */}
+          <div className="font-mono p-10">
+            <h4 className="text-[11px] font-bold tracking-[0.18em] uppercase text-[#64748b] mb-6">LEGAL FRAMEWORKS</h4>
+            <div className="flex flex-col gap-4">
+              <span className="text-[14px] text-[#d1d5db]">EU AI Act</span>
+              <span className="text-[14px] text-[#d1d5db]">India DPDP Act</span>
+              <span className="text-[14px] text-[#d1d5db]">US EEOC Guidelines</span>
+              <span className="text-[14px] text-[#d1d5db]">IEEE Ethics Standards</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Bottom bar */}
+        <div className="flex items-center justify-between px-10 py-6 flex-wrap gap-3">
+          <span className="text-[12px] text-[#64748b] font-mono">&copy; 2026 FairGuard. AI fairness, simplified.</span>
+          <div className="flex items-center gap-3">
+            <span className="inline-flex items-center gap-1.5 text-[11px] font-mono text-[#64748b]">
+              Built for
+              <span className="text-[#caff3d] font-semibold">Google Solution Challenge 2026</span>
             </span>
+            <span className="w-1.5 h-1.5 rounded-full bg-[#caff3d] animate-pulse" />
           </div>
         </div>
       </footer>

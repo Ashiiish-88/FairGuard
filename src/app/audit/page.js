@@ -257,7 +257,7 @@ function ColBtn({
             "text-[10px] font-semibold px-1.5 py-0.5 rounded-full",
             active
               ? "bg-[#caff3d]/20 text-[#caff3d]"
-              : "bg-[#caff3d]/15 text-black",
+              : "bg-[#0057ff]/8 text-[#0057ff]",
           ].join(" ")}
         >
           auto
@@ -619,7 +619,7 @@ export default function AuditPage() {
 
               {/* Domain notice */}
               {domainInfo && (
-                <div className="flex items-start gap-3 px-4 py-3.5 rounded-lg bg-[#caff3d]/8 border border-[#caff3d]/20">
+                <div className="flex items-start gap-3 px-4 py-3.5 rounded-lg bg-[#0057ff]/6 border border-[#0057ff]/20">
                   <Zap className="w-4 h-4 text-[#caff3d] mt-0.5 flex-shrink-0" />
                   <div>
                     <p className="text-sm font-semibold text-foreground">
@@ -636,7 +636,7 @@ export default function AuditPage() {
 
               {/* Dataset pill */}
               {data && (
-                <div className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-muted border border-border w-fit">
+                <div className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-[#0057ff]/4 border border-[#0057ff]/20 w-fit">
                   <Database className="w-3.5 h-3.5 text-muted-foreground" />
                   <span className="text-xs text-muted-foreground">
                     <span className="font-semibold text-foreground">
@@ -648,8 +648,8 @@ export default function AuditPage() {
                     </span>{" "}
                     columns
                   </span>
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#caff3d]" />
-                  <span className="text-[11px] font-semibold text-[#caff3d]">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#0057ff]" />
+                  <span className="text-[11px] font-semibold text-[#0057ff]">
                     Ready
                   </span>
                 </div>
@@ -948,6 +948,7 @@ export default function AuditPage() {
                       icon={<Network className="w-4 h-4" />}
                       title="Proxy Variables"
                       value={String(results.proxies?.length || 0)}
+                      valueClass={(results.proxies?.length || 0) > 0 ? "text-[#0057ff]" : undefined}
                       severity={
                         results.proxies?.length > 0 ? "WARNING" : "OK"
                       }
@@ -959,7 +960,7 @@ export default function AuditPage() {
                 {/* ── Row 2: Fingerprint + Bar charts ─────────────── */}
                 <motion.div
                   variants={staggerChild}
-                  className="grid md:grid-cols-2 gap-4"
+                  className="grid md:grid-cols-2 gap-4 items-start"
                 >
                   <BiasFingerprint fingerprint={results.fingerprint} />
                   {Object.entries(results.per_attribute || {}).map(
@@ -1090,7 +1091,7 @@ export default function AuditPage() {
                                   (r, i) => (
                                     <span
                                       key={i}
-                                      className="inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-md bg-muted text-muted-foreground border border-border"
+                                      className="inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-md bg-[#0057ff]/8 text-[#0057ff] border border-[#0057ff]/20"
                                     >
                                       <Scale className="w-3 h-3" />
                                       {r}
