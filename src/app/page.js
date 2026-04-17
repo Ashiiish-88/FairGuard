@@ -87,7 +87,7 @@ export default function LandingPage() {
       <section className="sm:h-[450px] h-[550px] w-full bg-base-100 flex relative overflow-clip">
         {/* ── LEFT: Staggered Stripes (Flipped) ── */}
         <motion.div
-          animate={{ y: [0, -10, 0] }}
+          animate={{ x: [0, -15, 0] }}
           transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
           className="hidden lg:flex overflow-hidden flex-col absolute top-[-100px] left-0 h-[700px] w-[20%] xl:w-[25%] scale-x-[-1] opacity-80 pointer-events-none"
         >
@@ -167,7 +167,7 @@ export default function LandingPage() {
 
         {/* ── RIGHT: Staggered Stripes ── */}
         <motion.div
-          animate={{ y: [0, -10, 0] }}
+          animate={{ x: [0, 15, 0] }}
           transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
           className="hidden lg:flex overflow-hidden flex-col absolute top-[-100px] right-0 h-[700px] w-[20%] xl:w-[25%] opacity-80 pointer-events-none"
         >
@@ -290,7 +290,7 @@ export default function LandingPage() {
             </h2>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-12 items-start">
+          <div className="grid md:grid-cols-2 gap-12 relative">
             {/* LEFT — Scrollable steps */}
             <div className="space-y-6" id="hiw-steps">
               {/* Step 1: Upload */}
@@ -355,7 +355,7 @@ export default function LandingPage() {
             <div className="hidden md:block">
               <div className="sticky top-28" id="hiw-panel" style={{ transform: "scale(0.85)", transformOrigin: "top right", maxHeight: "80vh" }}>
                 {/* Upload mockup */}
-                <div className="hiw-image active rounded-2xl overflow-hidden border border-[#E5E7EB] bg-white shadow-[0_8px_32px_rgba(0,0,0,0.08)]" data-panel="0">
+                <div className="hiw-image active h-[480px] flex flex-col rounded-2xl overflow-hidden border border-[#E5E7EB] bg-white shadow-[0_8px_32px_rgba(0,0,0,0.08)]" data-panel="0">
                   <div className="bg-[#F9FAFB] border-b border-[#E5E7EB] px-5 py-3 flex items-center gap-3">
                     <div className="flex gap-1.5">
                       <span className="w-[10px] h-[10px] rounded-full bg-[#FF5F57]" />
@@ -391,8 +391,8 @@ export default function LandingPage() {
                 </div>
 
                 {/* Analyze mockup — Fairness Debt Report */}
-                <div className="hiw-image rounded-2xl overflow-hidden shadow-[0_8px_32px_rgba(0,0,0,0.08)]" data-panel="1" style={{ display: "none" }}>
-                  <div className="bg-[#0C0E12] border border-[#252932] rounded-2xl overflow-hidden" style={{ fontFamily: "var(--font-geist-mono)" }}>
+                <div className="hiw-image h-[480px] flex flex-col rounded-2xl overflow-hidden shadow-[0_8px_32px_rgba(0,0,0,0.08)] bg-[#0C0E12]" data-panel="1" style={{ display: "none" }}>
+                  <div className="border border-[#252932] rounded-2xl overflow-hidden h-full flex flex-col" style={{ fontFamily: "var(--font-geist-mono)" }}>
                     <div className="bg-[#EF4444]/10 border-b border-[#EF4444]/20 px-6 py-3.5">
                       <span className="text-[12px] font-bold tracking-[0.08em] text-[#FCA5A5]">FAIRNESS DEBT REPORT</span>
                     </div>
@@ -426,8 +426,8 @@ export default function LandingPage() {
                 </div>
 
                 {/* Act mockup — LLM Probe code */}
-                <div className="hiw-image rounded-2xl overflow-hidden shadow-[0_8px_32px_rgba(0,0,0,0.08)]" data-panel="2" style={{ display: "none" }}>
-                  <div className="bg-[#0C0E12] border border-[#252932] rounded-2xl overflow-hidden">
+                <div className="hiw-image h-[480px] flex flex-col rounded-2xl overflow-hidden shadow-[0_8px_32px_rgba(0,0,0,0.08)] bg-[#0C0E12]" data-panel="2" style={{ display: "none" }}>
+                  <div className="border border-[#252932] rounded-2xl overflow-hidden h-full flex flex-col">
                     <div className="px-4 py-3 bg-[#1C2029] border-b border-[#252932] flex justify-between items-center">
                       <span className="text-[12px] text-refold-text-secondary" style={{ fontFamily: "var(--font-geist-mono)" }}>llm_probe.py</span>
                       <span className="flex items-center gap-1.5 text-[11px] text-refold-text-secondary">
