@@ -46,6 +46,25 @@
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
+
+  /* Refold Color Architecture */
+  --color-refold-bg: #000000;
+  --color-refold-surface: #0f172a;
+  --color-refold-card: #191b20;
+  --color-refold-card-hover: #2e3139;
+  --color-refold-border: rgba(255, 255, 255, 0.1);
+  --color-refold-text-primary: #f5f3ee;
+  --color-refold-text-white: #ffffff;
+  --color-refold-text-ash: #eaeaea;
+  --color-refold-text-secondary: #9ca3af;
+  --color-refold-text-dark: #2a2e39;
+
+  --color-refold-blue: #0057ff;
+  --color-refold-lime: #d8ff70;
+  --color-refold-cyan: #04cfff;
+  --color-refold-purple: #9a77f8;
+  --color-refold-orange: #ff8c42;
+  --color-refold-coral: #ff6b7a;
 }
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -184,6 +203,27 @@
   --sidebar-accent-foreground: #0A0A0A;
   --sidebar-border: #E5E7EB;
   --sidebar-ring: #F59E0B;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   REFOLD COMPONENTS
+   ═══════════════════════════════════════════════════════════════════ */
+@layer components {
+  .btn-refold-primary {
+    @apply inline-flex items-center justify-center font-bold px-6 py-3 transition-all duration-300 bg-refold-blue text-refold-text-white hover:shadow-[0_0_20px_rgba(0,87,255,0.4)];
+  }
+  .btn-refold-primary-cyan {
+    @apply inline-flex items-center justify-center font-bold px-6 py-3 transition-all duration-300 bg-refold-cyan text-refold-text-dark hover:shadow-[0_0_20px_rgba(4,207,255,0.4)];
+  }
+  .btn-refold-primary-lime {
+    @apply inline-flex items-center justify-center font-bold px-6 py-3 transition-all duration-300 bg-refold-lime text-refold-text-dark hover:shadow-[0_0_20px_rgba(216,255,112,0.4)];
+  }
+  .btn-refold-secondary {
+    @apply inline-flex items-center justify-center font-mono px-6 py-3 transition-all duration-300 bg-refold-card text-refold-text-primary border border-refold-border hover:bg-refold-card-hover;
+  }
+  .btn-refold-warning {
+    @apply inline-flex items-center justify-center font-bold px-6 py-3 transition-all duration-300 bg-refold-orange text-refold-bg hover:brightness-110;
+  }
 }
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -416,3 +456,52 @@ main {
   from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: translateY(0); }
 }
+
+/* ═══════════════════════════════════════════════════════════════════
+   REFOLD TEMPLATE UTILITIES
+   ═══════════════════════════════════════════════════════════════════ */
+@layer utilities {
+  .bg-gradient-1 {
+    background: linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0) 0%,
+      #2563EB 30%,
+      #04cfff 60%,
+      #d8ff70 100%
+    );
+  }
+
+  .heading-2 {
+    font-family: var(--font-heading);
+    font-size: clamp(34px, 4.5vw, 54px);
+    font-weight: 800;
+    line-height: 1.1;
+    letter-spacing: -0.03em;
+    color: #0A0A0A !important;
+  }
+
+  .body-md {
+    font-size: 16px;
+    line-height: 1.7;
+    color: #4B5563;
+  }
+
+  .bg-brand-charcoal-black { background-color: #0A0A0A !important; }
+  .bg-brand-lime-mist { background-color: #D9F99D !important; }
+  .text-brand-charcoal-black { color: #0A0A0A !important; }
+  .text-base-100 { color: #FFFFFF !important; }
+  .text-base-400 { color: #6B7280; }
+  .bg-base-100 { background-color: #FFFFFF; }
+  .bg-base-150 { background-color: #F8F9FA; }
+  .bg-base-550 { background-color: #1A1A1A !important; }
+
+  /* Custom button line-height */
+  .leading-cta-mobile { line-height: 1.25rem; }
+
+  /* Staggered transition for stripes */
+  .stripe-hover-effect {
+    transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1), filter 0.4s ease;
+  }
+}
+
+

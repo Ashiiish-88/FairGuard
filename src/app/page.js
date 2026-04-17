@@ -1,7 +1,10 @@
+"use client";
+
 import Link from "next/link";
 import { Shield, Search, ArrowRight, Upload, Cpu, Scale, ChevronRight, Activity, Zap, Clock, Eye, FileSearch, BarChart3, Code2, AlertTriangle } from "lucide-react";
 import HiwScroll from "@/components/hiw-scroll";
 import FingerprintToggle from "@/components/fingerprint-toggle";
+import { motion } from "framer-motion";
 
 /* ═══════════════════════════════════════════════════════════════════
    LANDING PAGE — FairGuard v2
@@ -73,64 +76,113 @@ const stats = [
   { value: "100%", label: "Privacy-first" },
 ];
 
+/* Stripe offsets — Refold staggered pattern [0, 50, 100, 150, 200, 250, 200, 150, 100, 50, 0, 50, 100, 150] */
+const stripeOffsets = [0, 50, 100, 150, 200, 250, 200, 150, 100, 50, 0, 50, 100, 150];
+
 export default function LandingPage() {
   return (
     <div className="min-h-screen bg-white">
 
-      {/* ═══ SECTION 1: HERO — Banded gradient stripes ═══ */}
-      <section className="relative overflow-hidden" style={{
-        minHeight: "480px",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        background: "linear-gradient(180deg, #93C5FD 0%, #7DD3FC 10%, #67E8F9 22%, #A5F3FC 35%, #CFFAFE 44%, #ffffff 50%, #CFFAFE 56%, #A5F3FC 65%, #67E8F9 78%, #7DD3FC 90%, #93C5FD 100%)"
-      }}>
-        {/* White radial glow in center for readability */}
-        <div className="absolute inset-0 pointer-events-none z-[1]" style={{
-          background: "radial-gradient(ellipse 60% 70% at 50% 50%, rgba(255,255,255,0.92) 30%, rgba(255,255,255,0.4) 65%, transparent 100%)"
-        }} />
+      {/* ═══ SECTION 1: HERO — Refold Template Fusion ═══ */}
+      <section className="sm:h-[450px] h-[550px] w-full bg-base-100 flex relative overflow-clip">
+        {/* ── LEFT: Staggered Stripes (Flipped) ── */}
+        <motion.div
+          animate={{ y: [0, -10, 0] }}
+          transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+          className="hidden lg:flex overflow-hidden flex-col absolute top-[-100px] left-0 h-[700px] w-[20%] xl:w-[25%] scale-x-[-1] opacity-80 pointer-events-none"
+        >
+          {stripeOffsets.map((offset, i) => (
+            <div
+              key={`left-${i}`}
+              className="bg-gradient-1 stripe-hover-effect"
+              style={{
+                width: "100%",
+                height: "50px",
+                transform: `translateX(${offset}px) scaleX(-1)`,
+              }}
+            />
+          ))}
+        </motion.div>
 
-        <div className="relative z-[2] text-center max-w-[760px] mx-auto px-6 py-20 md:py-24">
-          {/* Badge */}
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-white/80 border border-[#E5E7EB] rounded-full mb-8 shadow-sm backdrop-blur-sm">
-            <span className="w-2 h-2 rounded-full bg-[#F59E0B] animate-pulse-amber" />
-            <span className="text-[11px] font-semibold tracking-[0.12em] uppercase text-[#D97706]">AI Fairness Auditor</span>
-          </div>
-
-          {/* Headline */}
-          <h1 className="text-[clamp(40px,5vw,64px)] font-extrabold leading-[1.12] tracking-[-0.03em] text-[#0A0A0A] mb-5">
-            Find the bias{" "}
-            <span className="relative inline-block">
-              <span>hiding</span>
-              <span className="absolute bottom-1 left-0 right-0 h-1.5 bg-[#F59E0B] opacity-40 rounded-sm -z-10" />
-            </span>
-            <br />in your AI
-          </h1>
-
-          {/* Body */}
-          <p className="text-[17px] leading-[1.65] text-[#4B5563] max-w-[540px] mx-auto mb-10">
-            FairGuard audits any AI decision system in 60 seconds. Upload your data, detect hidden bias, get plain-English explanations and legal exposure estimates &mdash; before your AI harms real people.
-          </p>
-
-          {/* CTAs */}
-          <div className="flex items-center justify-center gap-4 flex-wrap">
-            <Link href="/audit" className="group inline-flex items-stretch rounded-md overflow-hidden transition-all duration-150 hover:-translate-y-px hover:shadow-[0_6px_20px_rgba(0,0,0,0.15)]">
-              <span className="bg-[#F59E0B] px-4 py-3.5 flex items-center justify-center text-black group-hover:bg-[#D97706] transition-colors">
-                <Shield className="w-4 h-4" />
-              </span>
-              <span className="bg-[#0A0A0A] text-white text-[12px] font-bold tracking-[0.12em] uppercase px-6 py-3.5 flex items-center group-hover:bg-[#1a1a1a] transition-colors">
-                RUN FREE AUDIT
-              </span>
-            </Link>
-            <Link
-              href="#how-it-works"
-              className="inline-flex items-center gap-2 text-[12px] font-bold tracking-[0.1em] uppercase px-6 py-3.5 rounded-md border-[1.5px] border-[#D1D5DB] bg-white text-[#0A0A0A] hover:border-[#F59E0B] hover:bg-[#FEF3C7] transition-all duration-200 hover:-translate-y-px"
+        {/* ── CENTER: Content ── */}
+        <div className="sm:w-[60%] w-[90%] m-auto h-full flex flex-col gap-10 justify-center items-center relative z-10">
+          <div className="flex flex-col gap-5 items-center">
+            {/* Badge */}
+            <motion.div
+              initial={{ opacity: 0, x: -30 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6 }}
+              className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-white border border-[#E5E7EB] rounded-full shadow-sm w-fit mb-2"
             >
-              SEE HOW IT WORKS
-              <ArrowRight className="w-3.5 h-3.5" />
-            </Link>
+              <span className="w-2 h-2 rounded-full bg-[#F59E0B] animate-pulse" />
+              <span className="text-[10px] font-bold tracking-[0.15em] uppercase text-[#D97706] font-mono">
+                AI Fairness Auditor
+              </span>
+            </motion.div>
+
+            <motion.h1
+              initial={{ opacity: 0, x: -30 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6, delay: 0.1 }}
+              className="heading-2 text-center text-balance max-w-[800px]"
+            >
+              Find the bias <span className="relative inline-block">
+                <span>hiding</span>
+                <span className="absolute bottom-1 left-0 right-0 h-1.5 bg-[#F59E0B] opacity-40 rounded-sm -z-10" />
+              </span> in your AI
+            </motion.h1>
+
+            <motion.p
+              initial={{ opacity: 0, x: -30 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              className="body-md text-center text-base-400 max-w-[580px] text-balance"
+            >
+              FairGuard audits any AI decision system in 60 seconds.
+              Detect hidden bias, get plain-English explanations, and
+              estimate legal exposure — before your AI harms real people.
+            </motion.p>
           </div>
+
+          <motion.div
+            initial={{ opacity: 0, x: -30 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.6, delay: 0.3 }}
+            className="flex gap-4 w-full justify-center sm:flex-row flex-col px-6"
+          >
+            {/* Primary Action */}
+            <Link href="/audit"
+              className="inline-flex items-center justify-center font-bold px-6 py-3 transition-all duration-300 bg-[#0057ff] text-[#ffffff] hover:shadow-[0_0_20px_rgba(0,87,255,0.4)] group rounded-md">
+              <span className="text-[12px] tracking-[0.12em] uppercase text-white">RUN FREE AUDIT</span>
+              <ArrowRight className="w-4 h-4 ml-2 transition-transform duration-300 group-hover:translate-x-1 text-white" />
+            </Link>
+
+            {/* Secondary Action */}
+            <Link href="#how-it-works"
+              className="inline-flex items-center justify-center px-6 py-3 transition-all duration-300 bg-[#191b20] text-[#f5f3ee] border border-[#eaeaea]/20 hover:bg-[#2e3139] rounded-md font-mono text-[12px] tracking-[0.1em] uppercase">
+              SEE HOW IT WORKS
+            </Link>
+          </motion.div>
         </div>
+
+        {/* ── RIGHT: Staggered Stripes ── */}
+        <motion.div
+          animate={{ y: [0, -10, 0] }}
+          transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
+          className="hidden lg:flex overflow-hidden flex-col absolute top-[-100px] right-0 h-[700px] w-[20%] xl:w-[25%] opacity-80 pointer-events-none"
+        >
+          {stripeOffsets.map((offset, i) => (
+            <div
+              key={`right-${i}`}
+              className="bg-gradient-1 stripe-hover-effect"
+              style={{
+                width: "100%",
+                height: "50px",
+                transform: `translateX(${offset}px) scaleX(-1)`,
+              }}
+            />
+          ))}
+        </motion.div>
       </section>
 
       {/* ═══ METRICS ROW — Below hero ═══ */}
@@ -142,8 +194,8 @@ export default function LandingPage() {
                 {i > 0 && (
                   <div className="absolute left-0 top-[20%] bottom-[20%] w-px bg-[#E5E7EB]" />
                 )}
-                <div className="text-[28px] font-extrabold text-[#0A0A0A] leading-none mb-2" style={{ fontFamily: "var(--font-heading)" }}>{s.value}</div>
-                <div className="text-[13px] text-[#6B7280]">{s.label}</div>
+                <div className="text-[28px] font-extrabold text-refold-text-dark leading-none mb-2" style={{ fontFamily: "var(--font-heading)" }}>{s.value}</div>
+                <div className="text-[13px] text-refold-text-secondary">{s.label}</div>
               </div>
             ))}
           </div>
@@ -161,7 +213,7 @@ export default function LandingPage() {
           </div>
 
           {/* Heading with blue accents */}
-          <h2 className="text-[clamp(28px,4vw,48px)] font-extrabold text-[#0A0A0A] text-center leading-[1.2] max-w-[900px] mx-auto mb-10 px-6">
+          <h2 className="text-[clamp(28px,4vw,48px)] font-extrabold text-refold-text-dark text-center leading-[1.2] max-w-[900px] mx-auto mb-10 px-6">
             AI bias is invisible. Until it isn&apos;t.{" "}
             <span className="text-[#1D5FDB]">Hiring</span>,{" "}
             <span className="text-[#1D5FDB]">Lending</span> or{" "}
@@ -183,11 +235,11 @@ export default function LandingPage() {
                 <div className="w-12 h-12 bg-[#111111] rounded-lg flex items-center justify-center mb-10 text-white">
                   {d.icon}
                 </div>
-                <h3 className="text-[18px] font-bold text-[#111111] mb-3" style={{ fontFamily: "var(--font-heading)" }}>{d.title}</h3>
-                <p className="text-[14px] leading-[1.65] text-[#6B7280] mb-4">{d.body}</p>
+                <h3 className="text-[18px] font-bold text-refold-text-dark mb-3" style={{ fontFamily: "var(--font-heading)" }}>{d.title}</h3>
+                <p className="text-[14px] leading-[1.65] text-refold-text-secondary mb-4">{d.body}</p>
                 <div className="bg-[#F9FAFB] border-l-[3px] border-l-[#F59E0B] py-2.5 px-3.5 rounded-r mb-4">
                   <span className="block text-[10px] font-bold tracking-[0.12em] text-[#D97706] mb-1">REAL BIAS FOUND</span>
-                  <span className="text-[12px] text-[#374151] leading-snug">{d.example}</span>
+                  <span className="text-[12px] text-refold-text-secondary leading-snug">{d.example}</span>
                 </div>
                 <Link href={d.href} className="text-[13px] font-semibold text-[#0D9488] inline-flex items-center gap-1 hover:gap-2 transition-all hover:text-[#0F766E]">
                   Audit this model <ChevronRight className="w-3.5 h-3.5" />
@@ -211,11 +263,11 @@ export default function LandingPage() {
                 <div className="w-12 h-12 bg-[#111111] rounded-lg flex items-center justify-center mb-10 text-white">
                   {d.icon}
                 </div>
-                <h3 className="text-[18px] font-bold text-[#111111] mb-3" style={{ fontFamily: "var(--font-heading)" }}>{d.title}</h3>
-                <p className="text-[14px] leading-[1.65] text-[#6B7280] mb-4">{d.body}</p>
+                <h3 className="text-[18px] font-bold text-refold-text-dark mb-3" style={{ fontFamily: "var(--font-heading)" }}>{d.title}</h3>
+                <p className="text-[14px] leading-[1.65] text-refold-text-secondary mb-4">{d.body}</p>
                 <div className="bg-[#F9FAFB] border-l-[3px] border-l-[#F59E0B] py-2.5 px-3.5 rounded-r mb-4">
                   <span className="block text-[10px] font-bold tracking-[0.12em] text-[#D97706] mb-1">REAL BIAS FOUND</span>
-                  <span className="text-[12px] text-[#374151] leading-snug">{d.example}</span>
+                  <span className="text-[12px] text-refold-text-secondary leading-snug">{d.example}</span>
                 </div>
                 <Link href={d.href} className="text-[13px] font-semibold text-[#0D9488] inline-flex items-center gap-1 hover:gap-2 transition-all hover:text-[#0F766E]">
                   Audit this model <ChevronRight className="w-3.5 h-3.5" />
@@ -233,7 +285,7 @@ export default function LandingPage() {
         <div className="max-w-[1200px] mx-auto px-6 md:px-12">
           <div className="text-center max-w-[540px] mx-auto mb-16">
             <span className="section-label inline-block mb-4">How It Works</span>
-            <h2 className="text-[clamp(28px,3vw,40px)] font-extrabold leading-[1.15] tracking-[-0.02em] text-[#0A0A0A]">
+            <h2 className="text-[clamp(28px,3vw,40px)] font-extrabold leading-[1.15] tracking-[-0.02em] text-refold-text-dark">
               Three steps to fairness
             </h2>
           </div>
@@ -249,13 +301,13 @@ export default function LandingPage() {
                   </div>
                   <div>
                     <span className="block text-[10px] font-bold tracking-[0.2em] text-[#9CA3AF]">01</span>
-                    <h3 className="text-[22px] font-bold text-[#0A0A0A]" style={{ fontFamily: "var(--font-heading)" }}>Upload</h3>
+                    <h3 className="text-[22px] font-bold text-refold-text-dark" style={{ fontFamily: "var(--font-heading)" }}>Upload</h3>
                   </div>
                 </div>
-                <p className="text-[15px] text-[#374151] leading-[1.7] mb-4">
+                <p className="text-[15px] text-refold-text-secondary leading-[1.7] mb-4">
                   Drop a CSV or JSON of AI decisions. Hiring, lending, pricing &mdash; any domain. Supports up to 100,000 rows.
                 </p>
-                <p className="text-[13px] text-[#6B7280] leading-[1.65]">
+                <p className="text-[13px] text-refold-text-secondary leading-[1.65]">
                   Your data stays in your browser. Nothing is uploaded to any server. Privacy-first architecture ensures zero data leakage.
                 </p>
               </div>
@@ -268,13 +320,13 @@ export default function LandingPage() {
                   </div>
                   <div>
                     <span className="block text-[10px] font-bold tracking-[0.2em] text-[#9CA3AF]">02</span>
-                    <h3 className="text-[22px] font-bold text-[#0A0A0A]" style={{ fontFamily: "var(--font-heading)" }}>Analyze</h3>
+                    <h3 className="text-[22px] font-bold text-refold-text-dark" style={{ fontFamily: "var(--font-heading)" }}>Analyze</h3>
                   </div>
                 </div>
-                <p className="text-[15px] text-[#374151] leading-[1.7] mb-4">
+                <p className="text-[15px] text-refold-text-secondary leading-[1.7] mb-4">
                   FairGuard computes 5 fairness metrics, detects proxy variables, and maps legal exposure across India DPDP Act, EU AI Act and US EEOC.
                 </p>
-                <p className="text-[13px] text-[#6B7280] leading-[1.65]">
+                <p className="text-[13px] text-refold-text-secondary leading-[1.65]">
                   Generates a fairness score out of 100, identifies affected populations, and calculates potential liability in rupees, euros, and dollars.
                 </p>
               </div>
@@ -287,13 +339,13 @@ export default function LandingPage() {
                   </div>
                   <div>
                     <span className="block text-[10px] font-bold tracking-[0.2em] text-[#9CA3AF]">03</span>
-                    <h3 className="text-[22px] font-bold text-[#0A0A0A]" style={{ fontFamily: "var(--font-heading)" }}>Act</h3>
+                    <h3 className="text-[22px] font-bold text-refold-text-dark" style={{ fontFamily: "var(--font-heading)" }}>Act</h3>
                   </div>
                 </div>
-                <p className="text-[15px] text-[#374151] leading-[1.7] mb-4">
+                <p className="text-[15px] text-refold-text-secondary leading-[1.7] mb-4">
                   Get plain-English explanations, a 6-axis Bias Fingerprint, and concrete remediation steps. Know exactly what to fix and how.
                 </p>
-                <p className="text-[13px] text-[#6B7280] leading-[1.65]">
+                <p className="text-[13px] text-refold-text-secondary leading-[1.65]">
                   Send it to Gemini with different names representing different demographics. Then analyze what comes back for bias patterns.
                 </p>
               </div>
@@ -310,14 +362,14 @@ export default function LandingPage() {
                       <span className="w-[10px] h-[10px] rounded-full bg-[#FFBD2E]" />
                       <span className="w-[10px] h-[10px] rounded-full bg-[#28C840]" />
                     </div>
-                    <span className="flex-1 text-center text-[11px] text-[#94A3B8]" style={{ fontFamily: "var(--font-geist-mono)" }}>fairguard.ai/audit</span>
+                    <span className="flex-1 text-center text-[11px] text-refold-text-secondary" style={{ fontFamily: "var(--font-geist-mono)" }}>fairguard.ai/audit</span>
                   </div>
                   <div className="p-6">
                     <div className="flex items-center gap-2 mb-4">
                       <Shield className="w-4 h-4 text-[#F59E0B]" />
-                      <span className="text-[15px] font-bold text-[#0A0A0A]">Audit Mode</span>
+                      <span className="text-[15px] font-bold text-refold-text-dark">Audit Mode</span>
                     </div>
-                    <div className="text-[11px] text-[#6B7280] mb-5">Upload any dataset (CSV or JSON) → detect bias → get explanations → understand legal risk</div>
+                    <div className="text-[11px] text-refold-text-secondary mb-5">Upload any dataset (CSV or JSON) → detect bias → get explanations → understand legal risk</div>
                     <div className="flex items-center gap-6 mb-6 text-[11px]">
                       <span className="flex items-center gap-2 text-[#D97706] font-semibold"><Upload className="w-3.5 h-3.5" /> Upload</span>
                       <span className="text-[#9CA3AF]">— Configure</span>
@@ -326,13 +378,13 @@ export default function LandingPage() {
                     </div>
                     <div className="border-2 border-dashed border-[#E5E7EB] rounded-xl py-8 text-center bg-[#FAFAFA]">
                       <Upload className="w-8 h-8 text-[#D1D5DB] mx-auto mb-3" />
-                      <div className="text-[14px] font-semibold text-[#374151] mb-1">Drag & drop a CSV or JSON file</div>
+                      <div className="text-[14px] font-semibold text-refold-text-secondary mb-1">Drag & drop a CSV or JSON file</div>
                       <div className="text-[11px] text-[#9CA3AF]">Up to 100,000 rows • Your data stays in your browser</div>
                     </div>
-                    <div className="text-center mt-5 text-[12px] text-[#6B7280]">Or try with a demo dataset:</div>
+                    <div className="text-center mt-5 text-[12px] text-refold-text-secondary">Or try with a demo dataset:</div>
                     <div className="flex justify-center gap-2 mt-2 flex-wrap">
                       {["Hiring Bias (CSV)", "Lending (JSON)", "Content Moderation"].map(d => (
-                        <span key={d} className="px-3 py-1.5 border border-[#E5E7EB] rounded-md text-[11px] text-[#374151] cursor-pointer hover:border-[#F59E0B] hover:bg-[#FEF3C7] transition">{d}</span>
+                        <span key={d} className="px-3 py-1.5 border border-[#E5E7EB] rounded-md text-[11px] text-refold-text-secondary cursor-pointer hover:border-[#F59E0B] hover:bg-[#FEF3C7] transition">{d}</span>
                       ))}
                     </div>
                   </div>
@@ -345,13 +397,13 @@ export default function LandingPage() {
                       <span className="text-[12px] font-bold tracking-[0.08em] text-[#FCA5A5]">FAIRNESS DEBT REPORT</span>
                     </div>
                     <div className="px-6 py-6 border-b border-[#252932]">
-                      <span className="block text-[10px] tracking-[0.15em] text-[#94A3B8] mb-2">FAIRNESS SCORE</span>
-                      <span className="text-[36px] font-black text-[#EF4444] leading-none" style={{ fontFamily: "var(--font-heading)" }}>43<span className="text-[16px] text-[#94A3B8]">/100</span></span>
+                      <span className="block text-[10px] tracking-[0.15em] text-refold-text-secondary mb-2">FAIRNESS SCORE</span>
+                      <span className="text-[36px] font-black text-[#EF4444] leading-none" style={{ fontFamily: "var(--font-heading)" }}>43<span className="text-[16px] text-refold-text-secondary">/100</span></span>
                     </div>
                     <div className="px-6 py-4 border-b border-[#252932]">
-                      <div className="flex justify-between text-[13px] py-1.5 text-[#94A3B8]">
+                      <div className="flex justify-between text-[13px] py-1.5 text-refold-text-secondary">
                         <span>People Affected</span>
-                        <span className="text-[#F1F5F9] font-semibold">~2,300 applicants</span>
+                        <span className="text-refold-text-primary font-semibold">~2,300 applicants</span>
                       </div>
                     </div>
                     <div className="px-6 py-5 border-b border-[#252932]">
@@ -361,7 +413,7 @@ export default function LandingPage() {
                         { reg: "EU AI Act", amount: "\u20ac8M", color: "text-[#FCA5A5]" },
                         { reg: "US EEOC", amount: "$185K", color: "text-[#FCD34D]" },
                       ].map((r) => (
-                        <div key={r.reg} className="flex justify-between items-center py-2 text-[13px] text-[#94A3B8] border-b border-white/[0.04] last:border-0">
+                        <div key={r.reg} className="flex justify-between items-center py-2 text-[13px] text-refold-text-secondary border-b border-white/[0.04] last:border-0">
                           <span>{r.reg}</span>
                           <span className={`font-extrabold text-[15px] ${r.color}`} style={{ fontFamily: "var(--font-heading)" }}>{r.amount}</span>
                         </div>
@@ -377,8 +429,8 @@ export default function LandingPage() {
                 <div className="hiw-image rounded-2xl overflow-hidden shadow-[0_8px_32px_rgba(0,0,0,0.08)]" data-panel="2" style={{ display: "none" }}>
                   <div className="bg-[#0C0E12] border border-[#252932] rounded-2xl overflow-hidden">
                     <div className="px-4 py-3 bg-[#1C2029] border-b border-[#252932] flex justify-between items-center">
-                      <span className="text-[12px] text-[#94A3B8]" style={{ fontFamily: "var(--font-geist-mono)" }}>llm_probe.py</span>
-                      <span className="flex items-center gap-1.5 text-[11px] text-[#94A3B8]">
+                      <span className="text-[12px] text-refold-text-secondary" style={{ fontFamily: "var(--font-geist-mono)" }}>llm_probe.py</span>
+                      <span className="flex items-center gap-1.5 text-[11px] text-refold-text-secondary">
                         <span className="w-[7px] h-[7px] rounded-full bg-[#F59E0B] animate-pulse" /> Analyzing...
                       </span>
                     </div>
@@ -405,7 +457,7 @@ bias_result = fairguard.analyze_text(
                     />
                     {/* Results mini-table */}
                     <div className="border-t border-[#252932]">
-                      <div className="grid grid-cols-[1fr_auto_auto] gap-4 px-4 py-2.5 bg-[#1C2029] text-[10px] font-semibold tracking-[0.12em] uppercase text-[#94A3B8]">
+                      <div className="grid grid-cols-[1fr_auto_auto] gap-4 px-4 py-2.5 bg-[#1C2029] text-[10px] font-semibold tracking-[0.12em] uppercase text-refold-text-secondary">
                         <span>Name</span>
                         <span>Power Adj</span>
                         <span>Status</span>
@@ -415,7 +467,7 @@ bias_result = fairguard.analyze_text(
                         { name: "Anjali", pct: "31%", color: "text-[#6EE7B7]", status: "Biased" },
                         { name: "Kwame", pct: "28%", color: "text-[#6EE7B7]", status: "Biased" },
                       ].map((r) => (
-                        <div key={r.name} className="grid grid-cols-[1fr_auto_auto] gap-4 px-4 py-2.5 border-t border-[#252932] items-center text-[12px] text-[#F1F5F9]">
+                        <div key={r.name} className="grid grid-cols-[1fr_auto_auto] gap-4 px-4 py-2.5 border-t border-[#252932] items-center text-[12px] text-refold-text-primary">
                           <span>{r.name}</span>
                           <span className={`font-bold ${r.color}`}>{r.pct}</span>
                           <span className="text-[9px] font-semibold tracking-[0.08em] px-2 py-0.5 rounded-full border bg-[#EF4444]/12 text-[#FCA5A5] border-[#EF4444]/20">{r.status}</span>
@@ -439,10 +491,10 @@ bias_result = fairguard.analyze_text(
             {/* Left text */}
             <div>
               <span className="section-label-dark inline-block mb-5">Bias Fingerprint</span>
-              <h2 className="text-[clamp(30px,3vw,44px)] font-extrabold leading-[1.15] tracking-[-0.02em] text-[#F1F5F9] mb-5">
+              <h2 className="text-[clamp(30px,3vw,44px)] font-extrabold leading-[1.15] tracking-[-0.02em] text-refold-text-primary mb-5">
                 Every biased system leaves a unique shape.
               </h2>
-              <p className="text-[16px] text-[#94A3B8] leading-[1.7] mb-9">
+              <p className="text-[16px] text-refold-text-secondary leading-[1.7] mb-9">
                 FairGuard renders a 6-axis radar chart &mdash; your AI&apos;s Bias Fingerprint. Each axis measures a different dimension of fairness. The shape tells the story instantly.
               </p>
 
@@ -458,8 +510,8 @@ bias_result = fairguard.analyze_text(
                   <div key={axis.name} className="flex items-start gap-3.5">
                     <span className={`w-2.5 h-2.5 rounded-full ${axis.color} mt-1.5 shrink-0`} />
                     <div>
-                      <div className="text-[14px] font-semibold text-[#F1F5F9]">{axis.name}</div>
-                      <div className="text-[12px] text-[#94A3B8]">{axis.desc}</div>
+                      <div className="text-[14px] font-semibold text-refold-text-primary">{axis.name}</div>
+                      <div className="text-[12px] text-refold-text-secondary">{axis.desc}</div>
                     </div>
                   </div>
                 ))}
@@ -478,10 +530,10 @@ bias_result = fairguard.analyze_text(
         <div className="max-w-[1200px] mx-auto px-6 md:px-12">
           <div className="text-center max-w-[600px] mx-auto mb-16">
             <span className="section-label inline-block mb-4">Adversarial Testing</span>
-            <h2 className="text-[clamp(28px,3vw,40px)] font-extrabold leading-[1.15] tracking-[-0.02em] text-[#0A0A0A] mb-4">
+            <h2 className="text-[clamp(28px,3vw,40px)] font-extrabold leading-[1.15] tracking-[-0.02em] text-refold-text-dark mb-4">
               Stress-test before your AI ships
             </h2>
-            <p className="text-[16px] text-[#374151] leading-[1.65]">
+            <p className="text-[16px] text-refold-text-secondary leading-[1.65]">
               Generate synthetic candidates with identical qualifications but different demographics. Expose how your model discriminates.
             </p>
           </div>
@@ -496,18 +548,18 @@ bias_result = fairguard.analyze_text(
                 <div className="w-10 h-10 bg-[#FEF3C7] border border-[#F59E0B]/20 rounded-lg flex items-center justify-center text-[#D97706] mb-5">
                   {f.icon}
                 </div>
-                <h3 className="text-[16px] font-bold text-[#0A0A0A] mb-2" style={{ fontFamily: "var(--font-heading)" }}>{f.title}</h3>
-                <p className="text-[14px] text-[#6B7280] leading-[1.65]">{f.desc}</p>
+                <h3 className="text-[16px] font-bold text-refold-text-dark mb-2" style={{ fontFamily: "var(--font-heading)" }}>{f.title}</h3>
+                <p className="text-[14px] text-refold-text-secondary leading-[1.65]">{f.desc}</p>
               </div>
             ))}
           </div>
 
           <div className="text-center mt-10">
-            <Link href="/stress" className="group inline-flex items-stretch rounded-md overflow-hidden transition-all duration-150 hover:-translate-y-px hover:shadow-[0_6px_20px_rgba(0,0,0,0.15)]">
-              <span className="bg-[#F59E0B] px-4 py-3.5 flex items-center justify-center text-black group-hover:bg-[#D97706] transition-colors">
+            <Link href="/stress" className="inline-flex items-center justify-center font-bold px-6 py-3 transition-all duration-300 bg-[#0057ff] text-[#ffffff] hover:shadow-[0_0_20px_rgba(0,87,255,0.4)] group rounded-md">
+              <span className="mr-2 text-white">
                 <Zap className="w-4 h-4" />
               </span>
-              <span className="bg-[#0A0A0A] text-white text-[12px] font-bold tracking-[0.12em] uppercase px-6 py-3.5 flex items-center group-hover:bg-[#1a1a1a] transition-colors">
+              <span className="text-[12px] tracking-[0.12em] uppercase text-white">
                 RUN STRESS TEST
               </span>
             </Link>
@@ -520,24 +572,24 @@ bias_result = fairguard.analyze_text(
         <div className="max-w-[1200px] mx-auto px-6 md:px-12 grid md:grid-cols-2 min-h-[380px]">
           {/* Left — Content */}
           <div className="py-20 md:py-24 pr-8 flex flex-col justify-center">
-            <h2 className="text-[clamp(30px,3.5vw,48px)] font-extrabold leading-[1.12] tracking-[-0.02em] text-[#0A0A0A] mb-5" style={{ fontFamily: "var(--font-heading)" }}>
+            <h2 className="text-[clamp(30px,3.5vw,48px)] font-extrabold leading-[1.12] tracking-[-0.02em] text-refold-text-dark mb-5" style={{ fontFamily: "var(--font-heading)" }}>
               AI <span className="text-[#0D9488] italic">Fairness Audit</span> for{" "}
               <br className="hidden md:block" />
               Every System
             </h2>
-            <p className="text-[16px] text-[#6B7280] leading-[1.7] mb-8 max-w-[460px]">
+            <p className="text-[16px] text-refold-text-secondary leading-[1.7] mb-8 max-w-[460px]">
               FairGuard is the bias firewall for modern AI. Trained on real-world fairness patterns across hiring, lending, and content moderation, it detects discrimination in seconds instead of months.
             </p>
             <div className="flex gap-3 flex-wrap">
-              <Link href="/audit" className="group inline-flex items-stretch rounded-md overflow-hidden transition-all duration-150 hover:-translate-y-px hover:shadow-[0_6px_20px_rgba(0,0,0,0.15)]">
-                <span className="bg-[#F59E0B] px-3.5 py-3 flex items-center justify-center text-black group-hover:bg-[#D97706] transition-colors">
+              <Link href="/audit" className="inline-flex items-center justify-center font-bold px-6 py-3 transition-all duration-300 bg-[#0057ff] text-[#ffffff] hover:shadow-[0_0_20px_rgba(0,87,255,0.4)] group rounded-md">
+                <span className="mr-2 text-white">
                   <ArrowRight className="w-4 h-4" />
                 </span>
-                <span className="bg-[#0A0A0A] text-white text-[11px] font-bold tracking-[0.12em] uppercase px-5 py-3 flex items-center group-hover:bg-[#1a1a1a] transition-colors">
+                <span className="text-[12px] tracking-[0.12em] uppercase text-white">
                   RUN FREE AUDIT
                 </span>
               </Link>
-              <Link href="#how-it-works" className="inline-flex items-center px-6 py-3 border border-[#D1D5DB] rounded-md text-[11px] font-bold tracking-[0.12em] uppercase text-[#0A0A0A] hover:border-[#9CA3AF] hover:bg-[#F9FAFB] transition-all">
+              <Link href="#how-it-works" className="inline-flex items-center justify-center px-6 py-3 transition-all duration-300 bg-[#191b20] text-[#f5f3ee] border border-[#eaeaea]/20 hover:bg-[#2e3139] rounded-md font-mono text-[12px] tracking-[0.1em] uppercase">
                 SEE HOW IT WORKS
               </Link>
             </div>
@@ -551,7 +603,7 @@ bias_result = fairguard.analyze_text(
                   key={i}
                   className="flex-1 w-full"
                   style={{
-                    background: `linear-gradient(to right, transparent ${offset}%, #FEF9C3 ${offset + 15}%, #06B6D4 ${offset + 40}%, #2563EB 100%)`,
+                    background: `linear-gradient(to right, transparent ${offset}%, #2563EB ${offset + 15}%, #04cfff ${offset + 40}%, #d8ff70 100%)`,
                   }}
                 />
               ))}
@@ -570,9 +622,9 @@ bias_result = fairguard.analyze_text(
                 <div className="w-7 h-7 bg-[#0A0A0A] flex items-center justify-center rounded-md">
                   <Shield className="w-3.5 h-3.5 text-[#F59E0B]" />
                 </div>
-                <span className="text-[15px] font-bold text-[#0A0A0A]" style={{ fontFamily: "var(--font-heading)" }}>FairGuard</span>
+                <span className="text-[15px] font-bold text-refold-text-dark" style={{ fontFamily: "var(--font-heading)" }}>FairGuard</span>
               </div>
-              <p className="text-[14px] text-[#6B7280] leading-[1.65] max-w-[260px]">
+              <p className="text-[14px] text-refold-text-secondary leading-[1.65] max-w-[260px]">
                 The bias firewall for AI. Find discrimination before it finds your users.
               </p>
             </div>
@@ -581,9 +633,9 @@ bias_result = fairguard.analyze_text(
             <div>
               <h4 className="text-[10px] font-bold tracking-[0.18em] uppercase text-[#9CA3AF] mb-5">Tools</h4>
               <div className="flex flex-col gap-3">
-                <Link href="/audit" className="text-[14px] text-[#6B7280] hover:text-[#0A0A0A] transition-colors">Bias Audit</Link>
-                <Link href="/shield" className="text-[14px] text-[#6B7280] hover:text-[#0A0A0A] transition-colors">Shield Mode</Link>
-                <Link href="/stress" className="text-[14px] text-[#6B7280] hover:text-[#0A0A0A] transition-colors">Stress Test</Link>
+                <Link href="/audit" className="text-[14px] text-refold-text-secondary hover:text-refold-text-dark transition-colors">Bias Audit</Link>
+                <Link href="/shield" className="text-[14px] text-refold-text-secondary hover:text-refold-text-dark transition-colors">Shield Mode</Link>
+                <Link href="/stress" className="text-[14px] text-refold-text-secondary hover:text-refold-text-dark transition-colors">Stress Test</Link>
               </div>
             </div>
 
@@ -591,16 +643,16 @@ bias_result = fairguard.analyze_text(
             <div>
               <h4 className="text-[10px] font-bold tracking-[0.18em] uppercase text-[#9CA3AF] mb-5">Resources</h4>
               <div className="flex flex-col gap-3">
-                <Link href="/history" className="text-[14px] text-[#6B7280] hover:text-[#0A0A0A] transition-colors">Audit History</Link>
-                <Link href="#domains" className="text-[14px] text-[#6B7280] hover:text-[#0A0A0A] transition-colors">Supported Domains</Link>
-                <Link href="#how-it-works" className="text-[14px] text-[#6B7280] hover:text-[#0A0A0A] transition-colors">How It Works</Link>
+                <Link href="/history" className="text-[14px] text-refold-text-secondary hover:text-refold-text-dark transition-colors">Audit History</Link>
+                <Link href="#domains" className="text-[14px] text-refold-text-secondary hover:text-refold-text-dark transition-colors">Supported Domains</Link>
+                <Link href="#how-it-works" className="text-[14px] text-refold-text-secondary hover:text-refold-text-dark transition-colors">How It Works</Link>
               </div>
             </div>
 
             {/* Legal */}
             <div>
               <h4 className="text-[10px] font-bold tracking-[0.18em] uppercase text-[#9CA3AF] mb-5">Legal Frameworks</h4>
-              <div className="flex flex-col gap-3 text-[14px] text-[#6B7280]">
+              <div className="flex flex-col gap-3 text-[14px] text-refold-text-secondary">
                 <span>EU AI Act</span>
                 <span>India DPDP Act</span>
                 <span>US EEOC Guidelines</span>
@@ -609,7 +661,7 @@ bias_result = fairguard.analyze_text(
           </div>
 
           <div className="pt-6 border-t border-[#E5E7EB] flex items-center justify-between flex-wrap gap-4">
-            <span className="text-[13px] text-[#6B7280]">&copy; 2026 FairGuard. AI fairness, simplified.</span>
+            <span className="text-[13px] text-refold-text-secondary">&copy; 2026 FairGuard. AI fairness, simplified.</span>
             <span className="inline-flex items-center gap-1.5 bg-[#10B981]/8 border border-[#10B981]/20 rounded-full px-3.5 py-1.5 text-[12px] text-[#10B981] font-semibold">
               <span className="w-1.5 h-1.5 rounded-full bg-[#10B981]" style={{ animation: "pulse-green 2s ease-in-out infinite" }} />
               All systems operational
