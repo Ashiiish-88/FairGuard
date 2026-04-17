@@ -87,7 +87,7 @@ export default function LandingPage() {
       <section className="sm:h-[450px] h-[550px] w-full bg-white flex relative overflow-x-clip">
         {/* ── LEFT: Staggered Stripes (Flipped) ── */}
         <motion.div
-          animate={{ x: [0, -10, 0] }}
+          animate={{ x: [0, -15, 0] }}
           transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
           className="hidden lg:flex flex-col absolute top-[-100px] -left-[10%] h-[700px] w-[30%] xl:w-[35%] scale-x-[-1] opacity-80 pointer-events-none"
         >
@@ -168,7 +168,7 @@ export default function LandingPage() {
 
         {/* ── RIGHT: Staggered Stripes ── */}
         <motion.div
-          animate={{ x: [0, -10, 0] }}
+          animate={{ x: [0, 15, 0] }}
           transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
           className="hidden lg:flex flex-col absolute top-[-100px] -right-[10%] h-[700px] w-[30%] xl:w-[35%] opacity-80 pointer-events-none"
         >
@@ -349,12 +349,11 @@ export default function LandingPage() {
             </div>
 
             {/* RIGHT — Sticky image panel */}
-            <div className="hidden md:block relative h-full">
-              <div className="sticky top-0 h-[100vh] flex flex-col justify-center w-full">
-                <div id="hiw-panel" className="w-full relative" style={{ transform: "scale(0.9)", transformOrigin: "center right", height: "600px" }}>
-                  {/* Upload mockup */}
-                <div className="hiw-image active rounded-2xl overflow-hidden border border-[#E5E7EB] bg-white shadow-[0_8px_32px_rgba(0,0,0,0.08)]" data-panel="0">
-                  <div className="bg-white border-b border-[#E5E7EB] px-5 py-3 flex items-center gap-3">
+            <div className="hidden md:block">
+              <div className="sticky top-28" id="hiw-panel" style={{ transform: "scale(0.85)", transformOrigin: "top right", maxHeight: "80vh" }}>
+                {/* Upload mockup */}
+                <div className="hiw-image active h-[480px] flex flex-col rounded-2xl overflow-hidden border border-[#E5E7EB] bg-white shadow-[0_8px_32px_rgba(0,0,0,0.08)]" data-panel="0">
+                  <div className="bg-[#F9FAFB] border-b border-[#E5E7EB] px-5 py-3 flex items-center gap-3">
                     <div className="flex gap-1.5">
                       <span className="w-[10px] h-[10px] rounded-full bg-[#FF5F57]" />
                       <span className="w-[10px] h-[10px] rounded-full bg-[#FFBD2E]" />
@@ -389,18 +388,10 @@ export default function LandingPage() {
                 </div>
 
                 {/* Analyze mockup — Fairness Debt Report */}
-                <div className="hiw-image rounded-2xl overflow-hidden border border-[#E5E7EB] bg-white shadow-[0_8px_32px_rgba(0,0,0,0.08)]" data-panel="1" style={{ display: "none" }}>
-                  <div className="bg-white border-b border-[#E5E7EB] px-5 py-3 flex items-center gap-3">
-                    <div className="flex gap-1.5">
-                      <span className="w-[10px] h-[10px] rounded-full bg-[#FF5F57]" />
-                      <span className="w-[10px] h-[10px] rounded-full bg-[#FFBD2E]" />
-                      <span className="w-[10px] h-[10px] rounded-full bg-[#28C840]" />
-                    </div>
-                    <span className="flex-1 text-center text-[11px] text-[#4B5563]" style={{ fontFamily: "var(--font-geist-mono)" }}>fairguard.ai/report</span>
-                  </div>
-                  <div className="bg-white" style={{ fontFamily: "var(--font-geist-mono)" }}>
-                    <div className="bg-[#ff6b7a]/10 border-b border-[#ff6b7a]/20 px-6 py-3.5">
-                      <span className="text-[12px] font-bold tracking-[0.08em] text-[#ff6b7a]">FAIRNESS DEBT REPORT</span>
+                <div className="hiw-image h-[480px] flex flex-col rounded-2xl overflow-hidden shadow-[0_8px_32px_rgba(0,0,0,0.08)] bg-[#0C0E12]" data-panel="1" style={{ display: "none" }}>
+                  <div className="border border-[#252932] rounded-2xl overflow-hidden h-full flex flex-col" style={{ fontFamily: "var(--font-geist-mono)" }}>
+                    <div className="bg-[#EF4444]/10 border-b border-[#EF4444]/20 px-6 py-3.5">
+                      <span className="text-[12px] font-bold tracking-[0.08em] text-[#FCA5A5]">FAIRNESS DEBT REPORT</span>
                     </div>
                     <div className="px-6 py-6 border-b border-[#E5E7EB]">
                       <span className="block text-[10px] tracking-[0.15em] text-[#4B5563] mb-2">FAIRNESS SCORE</span>
@@ -432,20 +423,12 @@ export default function LandingPage() {
                 </div>
 
                 {/* Act mockup — LLM Probe code */}
-                <div className="hiw-image rounded-2xl overflow-hidden border border-[#E5E7EB] bg-white shadow-[0_8px_32px_rgba(0,0,0,0.08)]" data-panel="2" style={{ display: "none" }}>
-                  <div className="bg-white border-b border-[#E5E7EB] px-5 py-3 flex items-center gap-3">
-                    <div className="flex gap-1.5">
-                      <span className="w-[10px] h-[10px] rounded-full bg-[#FF5F57]" />
-                      <span className="w-[10px] h-[10px] rounded-full bg-[#FFBD2E]" />
-                      <span className="w-[10px] h-[10px] rounded-full bg-[#28C840]" />
-                    </div>
-                    <span className="flex-1 text-center text-[11px] text-[#4B5563]" style={{ fontFamily: "var(--font-geist-mono)" }}>fairguard.ai/remediate</span>
-                  </div>
-                  <div className="bg-white">
-                    <div className="px-4 py-3 bg-[#F9FAFB] border-b border-[#E5E7EB] flex justify-between items-center">
-                      <span className="text-[12px] text-[#4B5563]" style={{ fontFamily: "var(--font-geist-mono)" }}>llm_probe.py</span>
-                      <span className="flex items-center gap-1.5 text-[11px] text-[#4B5563]">
-                        <span className="w-[7px] h-[7px] rounded-full bg-[#caff3d] animate-pulse" /> Analyzing...
+                <div className="hiw-image h-[480px] flex flex-col rounded-2xl overflow-hidden shadow-[0_8px_32px_rgba(0,0,0,0.08)] bg-[#0C0E12]" data-panel="2" style={{ display: "none" }}>
+                  <div className="border border-[#252932] rounded-2xl overflow-hidden h-full flex flex-col">
+                    <div className="px-4 py-3 bg-[#1C2029] border-b border-[#252932] flex justify-between items-center">
+                      <span className="text-[12px] text-refold-text-secondary" style={{ fontFamily: "var(--font-geist-mono)" }}>llm_probe.py</span>
+                      <span className="flex items-center gap-1.5 text-[11px] text-refold-text-secondary">
+                        <span className="w-[7px] h-[7px] rounded-full bg-[#F59E0B] animate-pulse" /> Analyzing...
                       </span>
                     </div>
                     <div
