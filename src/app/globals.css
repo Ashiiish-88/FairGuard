@@ -282,7 +282,7 @@
     font-weight: 600;
     letter-spacing: 0.2em;
     text-transform: uppercase;
-    color: var(--fg-amber-vivid);
+    color: #9ACC14;
   }
 
   .section-label-dark {
@@ -290,7 +290,7 @@
     font-weight: 600;
     letter-spacing: 0.2em;
     text-transform: uppercase;
-    color: var(--fg-amber-vivid);
+    color: #9ACC14;
   }
 
   /* ─── Score colors ─── */
@@ -442,7 +442,8 @@ main {
       rgba(255, 255, 255, 0) 0%,
       #2563EB 30%,
       #04cfff 60%,
-      #caff3d 100%
+      #caff3d 85%,
+      rgba(255, 255, 255, 0) 100%
     );
   }
 

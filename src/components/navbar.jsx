@@ -63,10 +63,10 @@ export default function Navbar() {
 
         {/* Split CTA — Refold style */}
         <Link href="/audit" className="group inline-flex items-stretch rounded-md border border-[#E5E7EB] overflow-hidden transition-all duration-150 hover:-translate-y-px hover:shadow-[0_6px_20px_rgba(0,0,0,0.15)]">
-          <span className="bg-[#caff3d] px-3.5 py-2.5 flex items-center border-r border-[#E5E7EB] justify-center text-black transition-colors duration-150 group-hover:bg-[#c2e665]">
+          <span className="bg-[#caff3d] px-3.5 py-2.5 flex items-center border-r border-[#E5E7EB] justify-center text-black transition-colors duration-150 group-hover:bg-[#d4ff5c]">
             <Search className="w-3.5 h-3.5" />
           </span>
-          <span className="bg-white text-[#000000] text-[11px] font-bold tracking-[0.12em] uppercase px-5 py-2.5 flex items-center transition-colors duration-150 group-hover:bg-[#1a1a1a]">
+          <span className="bg-white text-[#000000] text-[11px] font-bold tracking-[0.12em] uppercase px-5 py-2.5 flex items-center transition-colors duration-150 group-hover:bg-[#F3F4F6]">
             RUN AUDIT
           </span>
         </Link>
