@@ -9,10 +9,10 @@ export default function ScoreGauge({ score = 0, size = 200, label = "" }) {
   const offset = circumference - (progress / 100) * circumference;
 
   const getColor = (s) => {
-    if (s >= 90) return { stroke: "#0D9488", text: "text-[#0D9488]", glow: "rgba(13,148,136,0.15)" };
-    if (s >= 70) return { stroke: "#10B981", text: "text-[#10B981]", glow: "rgba(16,185,129,0.15)" };
-    if (s >= 50) return { stroke: "#F59E0B", text: "text-[#F59E0B]", glow: "rgba(245,158,11,0.15)" };
-    return { stroke: "#EF4444", text: "text-[#EF4444]", glow: "rgba(239,68,68,0.15)" };
+    if (s >= 90) return { stroke: "#04cfff", text: "text-[#04cfff]", glow: "rgba(13,148,136,0.15)" };
+    if (s >= 70) return { stroke: "#caff3d", text: "text-[#caff3d]", glow: "rgba(16,185,129,0.15)" };
+    if (s >= 50) return { stroke: "#caff3d", text: "text-[#caff3d]", glow: "rgba(245,158,11,0.15)" };
+    return { stroke: "#ff6b7a", text: "text-[#ff6b7a]", glow: "rgba(239,68,68,0.15)" };
   };
 
   const color = getColor(progress);
@@ -58,7 +58,7 @@ export default function ScoreGauge({ score = 0, size = 200, label = "" }) {
           </motion.span>
         </div>
       </div>
-      {label && <p className="text-sm text-[#6B7280] text-center">{label}</p>}
+      {label && <p className="text-sm text-[#9CA3AF] text-center">{label}</p>}
     </div>
   );
 }

@@ -33,10 +33,10 @@ export default function Navbar() {
       <div className="max-w-[1200px] mx-auto px-6 md:px-12 h-full flex items-center justify-between">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2.5 group">
-          <div className="w-8 h-8 bg-[#0A0A0A] flex items-center justify-center rounded-md">
-            <Shield className="w-4 h-4 text-[#F59E0B]" />
+          <div className="w-8 h-8 bg-[#ffffff] flex items-center justify-center rounded-md">
+            <Shield className="w-4 h-4 text-[#caff3d]" />
           </div>
-          <span className="text-[17px] font-bold text-[#0A0A0A] tracking-tight" style={{ fontFamily: "var(--font-heading)" }}>
+          <span className="text-[17px] font-bold text-[#000000] tracking-tight" style={{ fontFamily: "var(--font-heading)" }}>
             FairGuard
           </span>
         </Link>
@@ -51,8 +51,8 @@ export default function Navbar() {
                 href={link.href}
                 className={`text-[11px] font-semibold tracking-[0.1em] uppercase transition-colors duration-150 ${
                   isActive
-                    ? "text-[#0A0A0A]"
-                    : "text-[#6B7280] hover:text-[#0A0A0A]"
+                    ? "text-[#000000]"
+                    : "text-[#9CA3AF] hover:text-[#000000]"
                 }`}
               >
                 {link.label}
@@ -62,11 +62,11 @@ export default function Navbar() {
         </div>
 
         {/* Split CTA — Refold style */}
-        <Link href="/audit" className="group inline-flex items-stretch rounded-md overflow-hidden transition-all duration-150 hover:-translate-y-px hover:shadow-[0_6px_20px_rgba(0,0,0,0.15)]">
-          <span className="bg-[#F59E0B] px-3.5 py-2.5 flex items-center justify-center text-black transition-colors duration-150 group-hover:bg-[#D97706]">
+        <Link href="/audit" className="group inline-flex items-stretch rounded-md border border-[#E5E7EB] overflow-hidden transition-all duration-150 hover:-translate-y-px hover:shadow-[0_6px_20px_rgba(0,0,0,0.15)]">
+          <span className="bg-[#caff3d] px-3.5 py-2.5 flex items-center border-r border-[#E5E7EB] justify-center text-black transition-colors duration-150 group-hover:bg-[#d4ff5c]">
             <Search className="w-3.5 h-3.5" />
           </span>
-          <span className="bg-[#0A0A0A] text-white text-[11px] font-bold tracking-[0.12em] uppercase px-5 py-2.5 flex items-center transition-colors duration-150 group-hover:bg-[#1a1a1a]">
+          <span className="bg-white text-[#000000] text-[11px] font-bold tracking-[0.12em] uppercase px-5 py-2.5 flex items-center transition-colors duration-150 group-hover:bg-[#F3F4F6]">
             RUN AUDIT
           </span>
         </Link>

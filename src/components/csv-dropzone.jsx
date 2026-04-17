@@ -25,10 +25,10 @@ export default function CsvDropzone({ onFileLoaded, file }) {
       onDrop={handleDrop}
       className={`relative border-2 border-dashed rounded-xl p-12 text-center cursor-pointer transition-all duration-200 ${
         dragActive
-          ? "border-[#F59E0B] bg-[#FEF3C7]/20"
+          ? "border-[#caff3d] bg-gray-50/20"
           : file
-            ? "border-[#0D9488] bg-[#CCFBF1]/10"
-            : "border-[#D1D5DB] bg-[#F9FAFB] hover:border-[#9CA3AF] hover:bg-white"
+            ? "border-[#04cfff] bg-[#CCFBF1]/10"
+            : "border-[#D1D5DB] bg-white hover:border-[#64748b] hover:bg-white"
       }`}
     >
       <input
@@ -39,16 +39,16 @@ export default function CsvDropzone({ onFileLoaded, file }) {
       />
       {file ? (
         <div className="flex flex-col items-center gap-3">
-          <div className="w-14 h-14 bg-[#0D9488]/10 flex items-center justify-center rounded-xl">
-            <FileText className="w-7 h-7 text-[#0D9488]" />
+          <div className="w-14 h-14 bg-[#04cfff]/10 flex items-center justify-center rounded-xl">
+            <FileText className="w-7 h-7 text-[#04cfff]" />
           </div>
           <div>
-            <p className="font-semibold text-[#111827]">{file.name}</p>
-            <p className="text-sm text-[#6B7280] mt-1">{(file.size / 1024).toFixed(1)} KB</p>
+            <p className="font-semibold text-[#000000]">{file.name}</p>
+            <p className="text-sm text-[#9CA3AF] mt-1">{(file.size / 1024).toFixed(1)} KB</p>
           </div>
           <button
             onClick={(e) => { e.stopPropagation(); onFileLoaded(null); }}
-            className="text-xs text-[#6B7280] hover:text-[#EF4444] flex items-center gap-1 transition-colors"
+            className="text-xs text-[#9CA3AF] hover:text-[#ff6b7a] flex items-center gap-1 transition-colors"
           >
             <X className="w-3 h-3" /> Remove
           </button>
@@ -59,8 +59,8 @@ export default function CsvDropzone({ onFileLoaded, file }) {
             <Upload className="w-7 h-7 text-[#9CA3AF]" />
           </div>
           <div>
-            <p className="font-semibold text-[#111827]">Drop your CSV or JSON file here</p>
-            <p className="text-sm text-[#6B7280] mt-1">or click to browse</p>
+            <p className="font-semibold text-[#000000]">Drop your CSV or JSON file here</p>
+            <p className="text-sm text-[#9CA3AF] mt-1">or click to browse</p>
           </div>
         </div>
       )}

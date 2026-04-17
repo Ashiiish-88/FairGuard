@@ -1,4 +1,4 @@
-import { DM_Sans, DM_Mono, PT_Serif } from "next/font/google";
+import { DM_Sans, DM_Mono } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/navbar";
 
@@ -12,12 +12,6 @@ const dmMono = DM_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
   weight: ["400", "500"],
-});
-
-const ptSerif = PT_Serif({
-  variable: "--font-heading",
-  subsets: ["latin"],
-  weight: ["400", "700"],
 });
 
 export const metadata = {
@@ -46,9 +40,9 @@ export default function RootLayout({ children }) {
   return (
     <html
       lang="en"
-      className={`${dmSans.variable} ${dmMono.variable} ${ptSerif.variable} h-full antialiased`}
+      className={`${dmSans.variable} ${dmMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col bg-background text-foreground">
+      <body className="min-h-full flex flex-col bg-white text-[#000000]">
         <Navbar />
         <main className="flex-1">{children}</main>
       </body>

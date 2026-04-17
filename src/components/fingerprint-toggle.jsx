@@ -30,19 +30,19 @@ export default function FingerprintToggle() {
   const [showAfter, setShowAfter] = useState(false);
 
   const values = showAfter ? AFTER_VALUES : BEFORE_VALUES;
-  const shapeColor = showAfter ? "#10B981" : "#EF4444";
-  const shapeFill = showAfter ? "rgba(16,185,129,0.15)" : "rgba(239,68,68,0.15)";
+  const shapeColor = showAfter ? "#0057ff" : "#ff6b7a";
+  const shapeFill = showAfter ? "rgba(0,87,255,0.15)" : "rgba(255,107,122,0.15)";
 
   return (
-    <div className="bg-[#13161C] border border-[#252932] rounded-2xl p-8">
+    <div className="bg-white rounded-2xl p-8 border border-[#E5E7EB] shadow-[0_8px_32px_rgba(0,0,0,0.08)]">
       {/* Toggle tabs */}
-      <div className="flex gap-1 bg-[#1C2029] rounded-md p-1 w-fit mb-7">
+      <div className="flex gap-1 bg-[#F9FAFB] border border-[#E5E7EB] rounded-md p-1 w-fit mb-7">
         <button
           onClick={() => setShowAfter(false)}
           className={`px-5 py-2 text-[12px] font-semibold rounded transition-all duration-200 ${
             !showAfter
-              ? "bg-[#F59E0B] text-black"
-              : "text-[#94A3B8] hover:text-[#F1F5F9]"
+              ? "bg-white shadow-sm border border-[#E5E7EB] text-[#000000]"
+              : "text-[#4B5563] hover:text-[#000000]"
           }`}
         >
           Before Fix
@@ -51,8 +51,8 @@ export default function FingerprintToggle() {
           onClick={() => setShowAfter(true)}
           className={`px-5 py-2 text-[12px] font-semibold rounded transition-all duration-200 ${
             showAfter
-              ? "bg-[#10B981] text-white"
-              : "text-[#94A3B8] hover:text-[#F1F5F9]"
+              ? "bg-white shadow-sm border border-[#E5E7EB] text-[#000000]"
+              : "text-[#4B5563] hover:text-[#000000]"
           }`}
         >
           After Fix
@@ -64,7 +64,7 @@ export default function FingerprintToggle() {
         <svg viewBox="0 0 300 260" className="w-full h-full max-w-[300px]">
           {/* Hexagonal grid */}
           {[100, 75, 50, 25].map((r) => (
-            <polygon key={r} points={hexPoints(150, 130, r)} fill="none" stroke="#252932" strokeWidth="1" />
+            <polygon key={r} points={hexPoints(150, 130, r)} fill="none" stroke="#E5E7EB" strokeWidth="1" />
           ))}
           {/* Axis labels */}
           {["DP", "EO", "IF", "IP", "PR", "CF"].map((label, i) => {
@@ -73,7 +73,7 @@ export default function FingerprintToggle() {
             const ly = 130 + 115 * Math.sin(angle);
             return (
               <text key={label} x={lx} y={ly} textAnchor="middle" dominantBaseline="middle"
-                fill="#94A3B8" fontSize="9" fontWeight="600" letterSpacing="0.05em">{label}</text>
+                fill="#4B5563" fontSize="9" fontWeight="600" letterSpacing="0.05em">{label}</text>
             );
           })}
           {/* Data shape with CSS transition */}
@@ -86,7 +86,7 @@ export default function FingerprintToggle() {
           />
           {/* Dots */}
           {radarDots(150, 130, values).map((pt, i) => (
-            <circle key={i} cx={pt[0]} cy={pt[1]} r="4" fill={shapeColor} stroke="#0C0E12" strokeWidth="2"
+            <circle key={i} cx={pt[0]} cy={pt[1]} r="4" fill={shapeColor} stroke="#ffffff" strokeWidth="2"
               style={{ transition: "all 0.6s cubic-bezier(0.4, 0, 0.2, 1)" }}
             />
           ))}
@@ -94,21 +94,21 @@ export default function FingerprintToggle() {
       </div>
 
       {/* Score comparison */}
-      <div className="flex items-center gap-5 mt-6 pt-6 border-t border-[#252932]">
+      <div className="flex items-center gap-5 mt-6 pt-6 border-t border-[#E5E7EB]">
         <div className={`text-center transition-opacity duration-300 ${!showAfter ? "opacity-100" : "opacity-40"}`}>
-          <span className="block text-[10px] tracking-[0.12em] text-[#94A3B8] mb-1">BEFORE</span>
-          <span className="text-[28px] font-extrabold text-[#EF4444]" style={{ fontFamily: "var(--font-heading)" }}>43/100</span>
+          <span className="block text-[10px] tracking-[0.12em] text-[#4B5563] mb-1">BEFORE</span>
+          <span className="text-[28px] font-extrabold text-[#ff6b7a]" style={{ fontFamily: "var(--font-heading)" }}>43/100</span>
         </div>
-        <span className="text-[20px] text-[#94A3B8]">&rarr;</span>
+        <span className="text-[20px] text-[#9CA3AF]">&rarr;</span>
         <div className={`text-center transition-opacity duration-300 ${showAfter ? "opacity-100" : "opacity-40"}`}>
-          <span className="block text-[10px] tracking-[0.12em] text-[#94A3B8] mb-1">AFTER</span>
-          <span className="text-[28px] font-extrabold text-[#10B981]" style={{ fontFamily: "var(--font-heading)" }}>79/100</span>
+          <span className="block text-[10px] tracking-[0.12em] text-[#4B5563] mb-1">AFTER</span>
+          <span className="text-[28px] font-extrabold text-[#0057ff]" style={{ fontFamily: "var(--font-heading)" }}>79/100</span>
         </div>
         <div className="ml-auto text-right">
-          <div className={`text-[13px] font-bold transition-colors duration-300 ${showAfter ? "text-[#10B981]" : "text-[#94A3B8]"}`}>
+          <div className={`text-[13px] font-bold transition-colors duration-300 ${showAfter ? "text-[#0057ff]" : "text-[#000000]"}`}>
             {showAfter ? "+36 points" : "Needs remediation"}
           </div>
-          <div className="text-[11px] text-[#94A3B8]">
+          <div className="text-[11px] text-[#4B5563] mt-0.5">
             {showAfter ? "by removing 2 proxy columns" : "2 proxy variables detected"}
           </div>
         </div>
