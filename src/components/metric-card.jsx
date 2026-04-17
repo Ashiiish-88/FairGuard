@@ -1,36 +1,102 @@
+// components/metric-card.tsx
 "use client";
 
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 
-const severityColors = {
-  CRITICAL: "bg-red-500/20 text-red-400 border-red-500/30",
-  HIGH: "bg-orange-500/20 text-orange-400 border-orange-500/30",
-  MODERATE: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
-  OK: "bg-emerald-500/20 text-emerald-400 border-emerald-500/30",
-  WARNING: "bg-orange-500/20 text-orange-400 border-orange-500/30",
-};
+const SEVERITY_STYLES = {
+  CRITICAL: {
+    card: "border-[#ff6b7a]/25 bg-[#ff6b7a]/4",
+    value: "text-[#ff6b7a]",
+    badge: "bg-[#ff6b7a]/10 text-[#ff6b7a] border-[#ff6b7a]/25",
+    icon: "bg-[#ff6b7a]/10",
+  },
+  HIGH: {
+    card: "border-[#ff6b7a]/25 bg-[#ff6b7a]/4",
+    value: "text-[#ff6b7a]",
+    badge: "bg-[#ff6b7a]/10 text-[#ff6b7a] border-[#ff6b7a]/25",
+    icon: "bg-[#ff6b7a]/10",
+  },
+  WARNING: {
+    card: "border-[#ff8c42]/25 bg-[#ff8c42]/4",
+    value: "text-[#ff8c42]",
+    badge: "bg-[#ff8c42]/10 text-[#ff8c42] border-[#ff8c42]/25",
+    icon: "bg-[#ff8c42]/10",
+  },
+  MODERATE: {
+    card: "border-[#ff8c42]/25 bg-[#ff8c42]/4",
+    value: "text-[#ff8c42]",
+    badge: "bg-[#ff8c42]/10 text-[#ff8c42] border-[#ff8c42]/25",
+    icon: "bg-[#ff8c42]/10",
+  },
+  OK: {
+    card: "border-[#caff3d]/25 bg-[#caff3d]/4",
+    value: "text-black",
+    badge: "bg-[#caff3d]/20 text-black border-[#caff3d]/40",
+    icon: "bg-[#caff3d]/15",
+  },
+  LOW: {
+    card: "border-[#caff3d]/25 bg-[#caff3d]/4",
+    value: "text-black",
+    badge: "bg-[#caff3d]/20 text-black border-[#caff3d]/40",
+    icon: "bg-[#caff3d]/15",
+  },
+}
 
-export default function MetricCard({ icon, title, value, subtitle, severity, className = "" }) {
+export default function MetricCard({
+  icon,
+  title,
+  value,
+  subtitle,
+  severity,
+}) {
+  const sev =
+    severity && SEVERITY_STYLES[severity]
+      ? SEVERITY_STYLES[severity]
+      : null;
+
   return (
-    <Card className={`bg-card/50 backdrop-blur-sm border-border/50 hover:border-border transition-colors ${className}`}>
-      <CardContent className="p-5">
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-1.5">
-              {icon && <span className="text-lg">{icon}</span>}
-              <p className="text-sm text-muted-foreground font-medium truncate">{title}</p>
-            </div>
-            <p className="text-2xl font-bold tracking-tight">{value}</p>
-            {subtitle && <p className="text-xs text-muted-foreground mt-1">{subtitle}</p>}
-          </div>
-          {severity && (
-            <Badge variant="outline" className={`shrink-0 text-xs ${severityColors[severity] || severityColors.OK}`}>
-              {severity}
-            </Badge>
-          )}
+    <div
+      className={[
+        "rounded-xl border p-5 transition-all duration-150",
+        "hover:shadow-sm",
+        sev
+          ? sev.card
+          : "bg-card border-border hover:border-border/80",
+      ].join(" ")}
+    >
+      <div className="flex items-start justify-between gap-3 mb-3">
+        <div
+          className={[
+            "w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0",
+            sev ? sev.icon : "bg-muted",
+          ].join(" ")}
+        >
+          <span className="text-muted-foreground">{icon}</span>
         </div>
-      </CardContent>
-    </Card>
+        {severity && sev && (
+          <span
+            className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border ${sev.badge}`}
+          >
+            {severity}
+          </span>
+        )}
+      </div>
+
+      <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">
+        {title}
+      </p>
+      <p
+        className={[
+          "text-xl font-bold font-mono leading-none",
+          sev ? sev.value : "text-foreground",
+        ].join(" ")}
+      >
+        {value}
+      </p>
+      {subtitle && (
+        <p className="text-xs text-muted-foreground mt-1.5 leading-snug">
+          {subtitle}
+        </p>
+      )}
+    </div>
   );
 }
