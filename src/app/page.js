@@ -475,9 +475,9 @@ bias_result = fairguard.analyze_text(
                 </div>
               </div>
             </div>
-            </div>
           </div>
         </div>
+        
       </section>
 
       {/* ═══ SECTION 4: BIAS FINGERPRINT (DARK) ═══ */}
