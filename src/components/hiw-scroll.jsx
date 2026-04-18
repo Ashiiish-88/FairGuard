@@ -3,68 +3,91 @@ import { useEffect } from "react";
 
 export default function HiwScroll() {
   useEffect(() => {
-    const steps = document.querySelectorAll(".hiw-step");
-    const panels = document.querySelectorAll(".hiw-image");
-    
-    // Set up panels for crossfade
+    const steps = Array.from(document.querySelectorAll(".hiw-step"));
+    const panels = Array.from(document.querySelectorAll(".hiw-image"));
+    const rightCol = document.getElementById("hiw-right-col");
+
+    if (!steps.length || !panels.length || !rightCol) return;
+
+    // ── 1. Sync right col height to left col so sticky has room to scroll ──
+    const leftCol = rightCol.previousElementSibling;
+    const syncHeight = () => {
+      if (leftCol) rightCol.style.height = leftCol.offsetHeight + "px";
+    };
+    syncHeight();
+    const ro = new ResizeObserver(syncHeight);
+    if (leftCol) ro.observe(leftCol);
+
+    // ── 2. Init all panels: absolute stack, first visible ──
     panels.forEach((p, i) => {
-      p.style.transition = "opacity 0.6s cubic-bezier(0.22, 1, 0.36, 1), transform 0.6s cubic-bezier(0.22, 1, 0.36, 1)";
-      p.style.position = i === 0 ? "relative" : "absolute";
-      p.style.top = "0";
-      p.style.left = "0";
-      p.style.width = "100%";
-      p.style.display = "block"; // override any display: none
+      p.style.position = "absolute";
+      p.style.inset = "0";
+      p.style.transition = "opacity 0.6s ease";
       p.style.opacity = i === 0 ? "1" : "0";
       p.style.pointerEvents = i === 0 ? "auto" : "none";
-      p.style.transform = i === 0 ? "translateY(0)" : "translateY(40px)";
+      p.style.zIndex = i === 0 ? "2" : "1";
     });
 
-    // Set up initial state for steps
+    // ── 3. Init cards ──
     steps.forEach((s, i) => {
-      s.style.transition = "opacity 0.5s ease, transform 0.5s ease";
-      s.style.opacity = i === 0 ? "1" : "0.3";
+      s.style.transition = "opacity 0.4s ease, background-color 0.4s ease";
+      s.style.opacity = i === 0 ? "1" : "0.4";
+      s.style.backgroundColor = i === 0 ? "#F7F7F9" : "#ffffff";
     });
 
-    if (!steps.length || !panels.length) return;
+    // ── 4. Switch active panel & card ──
+    let current = -1; // -1 forces initial run
+    function switchTo(idx) {
+      if (idx === current) return;
+      current = idx;
 
-    // Use a tighter threshold to trigger exactly when the block crosses the middle of the screen
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            const idx = entry.target.getAttribute("data-step");
-            
-            // Crossfade panels with premium ease
-            panels.forEach((p) => {
-              if (p.getAttribute("data-panel") === idx) {
-                p.style.opacity = "1";
-                p.style.pointerEvents = "auto";
-                p.style.transform = "translateY(0)";
-              } else {
-                p.style.opacity = "0";
-                p.style.pointerEvents = "none";
-                p.style.transform = "translateY(40px)";
-              }
-            });
-            
-            // Highlight active step
-            steps.forEach((s) => {
-              if (s.getAttribute("data-step") === idx) {
-                s.style.opacity = "1";
-                s.style.transform = "scale(1)";
-              } else {
-                s.style.opacity = "0.3";
-                s.style.transform = "scale(0.98)";
-              }
-            });
+      panels.forEach((p) => {
+        const panelIdx = Number(p.getAttribute("data-panel"));
+        const active = panelIdx === idx;
+        p.style.opacity = active ? "1" : "0";
+        p.style.pointerEvents = active ? "auto" : "none";
+        p.style.zIndex = active ? "2" : "1";
+      });
+
+      steps.forEach((s) => {
+        const stepIdx = Number(s.getAttribute("data-step"));
+        const active = stepIdx === idx;
+        s.style.opacity = active ? "1" : "0.4";
+        s.style.backgroundColor = active ? "#F7F7F9" : "#ffffff";
+      });
+    }
+
+    // ── 5. Detect which step is closest to viewport center on every scroll ──
+    let ticking = false;
+    function onScroll() {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => {
+        const mid = window.innerHeight / 2;
+        let closest = 0;
+        let minDist = Infinity;
+        steps.forEach((s, i) => {
+          const rect = s.getBoundingClientRect();
+          const cardMid = rect.top + rect.height / 2;
+          const dist = Math.abs(cardMid - mid);
+          if (dist < minDist) {
+            minDist = dist;
+            closest = i;
           }
         });
-      },
-      { threshold: 0.5, rootMargin: "-35% 0px -35% 0px" }
-    );
+        switchTo(closest);
+        ticking = false;
+      });
+    }
 
-    steps.forEach((step) => observer.observe(step));
-    return () => observer.disconnect();
+    // Run once on mount + listen
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      ro.disconnect();
+    };
   }, []);
 
   return null;
