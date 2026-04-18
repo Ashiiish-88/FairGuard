@@ -357,7 +357,7 @@ Respond in exactly this format, nothing else: APPROVE:0.85 or REJECT:0.23`;
 // ─── Groq Client (OpenAI-compatible API, no SDK needed) ───
 export async function getGroqDecision(candidate, decisionType, modelId = "llama-3.1-8b-instant") {
   const isLlama33 = modelId.includes("3.3") || modelId.includes("70b");
-  const apiKey = isLlama33 ? process.env.GROQ_API_KEY_3_3 : process.env.GROQ_API_KEY_3_1;
+  const apiKey = process.env.GROQ_API_KEY || (isLlama33 ? process.env.GROQ_API_KEY_3_3 : process.env.GROQ_API_KEY_3_1);
   
   if (!apiKey) return null;
 

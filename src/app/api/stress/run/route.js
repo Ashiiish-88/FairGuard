@@ -58,6 +58,7 @@ export async function POST(request) {
       const qualCol = Object.keys(source_data[0]).find(k => qualKeys.includes(k.toLowerCase()));
 
       if (outcomeCol) {
+        const neededGroups = Math.ceil((candidate_count || 30) / 6);
         const rejected = source_data
           .filter(r => String(r[outcomeCol]) !== "1" && String(r[outcomeCol]).toLowerCase() !== "true" && String(r[outcomeCol]).toLowerCase() !== "approved")
           .sort((a, b) => {
@@ -65,27 +66,37 @@ export async function POST(request) {
             const scoreB = qualCol ? Number(b[qualCol]) : 0;
             return scoreB - scoreA;
           })
-          .slice(0, 5);
+          .slice(0, neededGroups);
 
         if (rejected.length > 0) {
-          baseProfiles = rejected.map(r => {
+          const rawBase = rejected.map(r => {
             const clean = { ...r };
             delete clean.gender; delete clean.name; delete clean.ethnicity;
             delete clean[outcomeCol]; delete clean.id;
             return clean;
           });
+          baseProfiles = [];
+          for (let i = 0; i < neededGroups; i++) {
+            baseProfiles.push(rawBase[i % rawBase.length]);
+          }
         }
       }
     }
 
     if (baseProfiles.length === 0) {
-      baseProfiles = [
+      const defaultProfiles = [
         { qualification_score: 85, experience_years: 8, skill_score: 0.88, education: "Masters" },
         { qualification_score: 72, experience_years: 4, skill_score: 0.75, education: "Bachelors" },
         { qualification_score: 92, experience_years: 12, skill_score: 0.94, education: "PhD" },
         { qualification_score: 65, experience_years: 2, skill_score: 0.68, education: "Bachelors" },
         { qualification_score: 78, experience_years: 6, skill_score: 0.82, education: "Masters" },
-      ].slice(0, Math.min(5, Math.ceil(candidate_count / 6)));
+      ];
+      
+      const neededGroups = Math.ceil(candidate_count / 6);
+      baseProfiles = [];
+      for (let i = 0; i < neededGroups; i++) {
+        baseProfiles.push(defaultProfiles[i % defaultProfiles.length]);
+      }
     }
 
     // ── Step 2: Create demographic clones ──

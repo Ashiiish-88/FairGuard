@@ -339,6 +339,16 @@ function Divider({ label }) {
   );
 }
 
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function renderMarkdown(str) {
+  if (!str) return "";
+  let html = str.replace(/\*\*(.*?)\*\*/g, '<strong class="font-bold text-foreground">$1</strong>');
+  html = html.replace(/\*(.*?)\*/g, '<em class="italic">$1</em>');
+  html = html.replace(/\n\n/g, '<br/><br/>');
+  return html;
+}
+
 // ─── Main page ────────────────────────────────────────────────────────────────
 
 export default function AuditPage() {
@@ -365,6 +375,7 @@ export default function AuditPage() {
     async (parsedData) => {
       setData(parsedData);
       try {
+        sessionStorage.setItem("fairguard_source_data", JSON.stringify(parsedData.slice(0, 200))); // Store a sample for stress test
         const res = await fetch("/api/audit/detect", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -373,13 +384,17 @@ export default function AuditPage() {
         const det = await res.json();
         setDetected(det.detected);
         if (det.domain) setDomainInfo(det.domain);
-        setConfig((prev) => ({
-          ...prev,
-          outcome: det.detected?.decision_columns?.[0]?.column || "",
-          protected: (det.detected?.protected_columns || []).map(
-            (c) => c.column
-          ),
-        }));
+        setConfig((prev) => {
+          const outcomeCol = det.detected?.decision_columns?.[0];
+          return {
+            ...prev,
+            outcome: outcomeCol?.column || "",
+            positiveOutcome: outcomeCol?.unique_values?.[0] || "1",
+            protected: (det.detected?.protected_columns || []).map(
+              (c) => c.column
+            ),
+          };
+        });
         setStep(1);
       } catch (e) {
         setError(`Column detection failed: ${e.message}`);
@@ -671,7 +686,7 @@ export default function AuditPage() {
                         active={config.outcome === c.column}
                         suggested
                         onClick={() =>
-                          setConfig((p) => ({ ...p, outcome: c.column }))
+                          setConfig((p) => ({ ...p, outcome: c.column, positiveOutcome: c.unique_values?.[0] || "1" }))
                         }
                       />
                     ))}
@@ -1074,12 +1089,14 @@ export default function AuditPage() {
                     <div className="px-6 py-5">
                       {explanation ? (
                         <div className="space-y-4">
-                          <p className="text-base font-semibold text-foreground leading-snug">
-                            {explanation.summary}
-                          </p>
-                          <p className="text-sm text-muted-foreground leading-relaxed">
-                            {explanation.explanation}
-                          </p>
+                          <p 
+                            className="text-base font-semibold text-foreground leading-snug whitespace-pre-wrap"
+                            dangerouslySetInnerHTML={{ __html: renderMarkdown(explanation.summary) }}
+                          />
+                          <p 
+                            className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap"
+                            dangerouslySetInnerHTML={{ __html: renderMarkdown(explanation.explanation) }}
+                          />
 
                           {explanation.legal_references?.length > 0 && (
                             <div className="pt-4 border-t border-border">

@@ -160,6 +160,12 @@ export default function StressTestPage() {
     setError(null);
     setResults(null);
 
+    let sourceData = null;
+    try {
+      const stored = sessionStorage.getItem("fairguard_source_data");
+      if (stored) sourceData = JSON.parse(stored);
+    } catch(e) {}
+
     try {
       const res = await fetch("/api/stress/run", {
         method: "POST",
@@ -169,6 +175,7 @@ export default function StressTestPage() {
           candidate_count:   candidateCount,
           demographic_axes:  axes,
           ai_model:          selectedModel,
+          source_data:       sourceData,
         }),
       });
       const json = await res.json();

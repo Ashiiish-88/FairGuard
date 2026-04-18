@@ -151,7 +151,7 @@ export async function POST(request) {
           });
         }
 
-        if (ageDI.violation && ageDI.minority_group) {
+        if (ageDI?.violation && ageDI?.minority_group) {
           const ageMinRate = ageDI.rates?.[ageDI.minority_group] ?? 0;
           alerts.push({
             type: "AGE_BIAS",

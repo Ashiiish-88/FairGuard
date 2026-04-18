@@ -1016,10 +1016,10 @@ export default function ShieldPage() {
                       title="Latest decisions"
                       subtitle="Most recent entries processed by the stream"
                       right={
-                        currentMetrics?.is_real_gemini ? (
+                        currentMetrics?.is_real_model ? (
                           <span className="inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-md bg-[#9a77f8]/10 text-[#9a77f8] border border-[#9a77f8]/20">
                             <Cpu className="w-3 h-3" />
-                            via Gemini
+                            via {currentMetrics?.model_label || "AI"}
                           </span>
                         ) : undefined
                       }
