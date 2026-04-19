@@ -776,16 +776,11 @@ names = [<span style="color:#04cfff">"Brian"</span>, <span style="color:#04cfff"
         {/* Top nav row — bordered columns like refold */}
         <div className="grid grid-cols-2 md:grid-cols-4 border-b border-[#3A3E49]">
           {/* Brand column */}
-          <div className="font-mono p-10 border-r border-[#3A3E49] col-span-2 md:col-span-1">
-            <div className="flex items-center gap-2.5 mb-5">
-              <div className="flex items-stretch rounded-md overflow-hidden">
-                <div className="bg-[#caff3d] w-7 h-7 flex items-center justify-center">
-                  <Shield className="w-3.5 h-3.5 text-black" />
-                </div>
-                <div className="bg-white w-0.5" />
-              </div>
-              <span className="text-[15px] font-bold text-white" style={{ fontFamily: "var(--font-heading)" }}>FairGuard</span>
-            </div>
+          <div className="font-mono p-10 border-r border-[#3A3E49] col-span-2 md:col-span-1 flex flex-col justify-center">
+            {/* Using negative margins to kill the huge gap caused by the SVG's internal transparent padding */}
+            <Link href="/" className="flex items-center -mt-8 -mb-10 hover:opacity-90 transition-opacity relative z-10 w-fit">
+              <img src="/Footer_Logo.svg" alt="FairGuard Logo" className="h-40 w-auto" />
+            </Link>
             <p className="text-[13px] text-[#9CA3AF] leading-[1.65] max-w-[220px]">
               The bias firewall for AI. Find discrimination before it finds your users.
             </p>
@@ -816,10 +811,10 @@ names = [<span style="color:#04cfff">"Brian"</span>, <span style="color:#04cfff"
           <div className="font-mono p-10">
             <h4 className="text-[11px] font-bold tracking-[0.18em] uppercase text-[#64748b] mb-6">LEGAL FRAMEWORKS</h4>
             <div className="flex flex-col gap-4">
-              <span className="text-[14px] text-[#d1d5db]">EU AI Act</span>
-              <span className="text-[14px] text-[#d1d5db]">India DPDP Act</span>
-              <span className="text-[14px] text-[#d1d5db]">US EEOC Guidelines</span>
-              <span className="text-[14px] text-[#d1d5db]">IEEE Ethics Standards</span>
+              <Link href="https://artificialintelligenceact.eu/" className="text-[14px] text-[#d1d5db]">EU AI Act</Link>
+              <Link href="https://www.pib.gov.in/PressReleseDetailm.aspx?PRID=2190014&reg=3&lang=2" className="text-[14px] text-[#d1d5db]">India DPDP Act</Link>
+              <Link href="https://www.eeoc.gov/" className="text-[14px] text-[#d1d5db]">US EEOC Guidelines</Link>
+              <Link href="https://standards.ieee.org/wp-content/uploads/import/documents/other/ead1e.pdf" className="text-[14px] text-[#d1d5db]">IEEE Ethics Standards</Link>
             </div>
           </div>
         </div>

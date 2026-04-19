@@ -1,7 +1,7 @@
 // app/audit/page.tsx
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import Papa from "papaparse";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -76,6 +76,11 @@ const DEMO_DATASETS = [
   {
     label: "Algorithmic Pricing",
     file: "/demo_pricing_data.csv",
+    type: "csv",
+  },
+  {
+    label: "Lending & Credit",
+    file: "/demo_lending_data.csv",
     type: "csv",
   },
 ];
@@ -386,10 +391,17 @@ export default function AuditPage() {
         if (det.domain) setDomainInfo(det.domain);
         setConfig((prev) => {
           const outcomeCol = det.detected?.decision_columns?.[0];
+          // Pick the most semantically positive unique value (not just first)
+          const positiveKeywords = ["1", "true", "hired", "approved", "yes", "flagged", "removed", "selected", "granted", "allowed"];
+          const uniqueVals = (outcomeCol?.unique_values || []).map(String);
+          const guessedPositive =
+            uniqueVals.find((v) => positiveKeywords.includes(v.toLowerCase())) ??
+            uniqueVals[0] ??
+            "1";
           return {
             ...prev,
             outcome: outcomeCol?.column || "",
-            positiveOutcome: outcomeCol?.unique_values?.[0] || "1",
+            positiveOutcome: guessedPositive,
             protected: (det.detected?.protected_columns || []).map(
               (c) => c.column
             ),
@@ -678,70 +690,135 @@ export default function AuditPage() {
                   subtitle="The column containing your model's decision — hired, approved, flagged, etc."
                 />
                 <div className="p-6 space-y-5">
+                  {/* PRIMARY — only auto-detected decision columns get the "auto" badge */}
                   <div className="flex flex-wrap gap-2">
-                    {(detected?.decision_columns || []).map((c) => (
-                      <ColBtn
-                        key={c.column}
-                        label={c.column}
-                        active={config.outcome === c.column}
-                        suggested
-                        onClick={() =>
-                          setConfig((p) => ({ ...p, outcome: c.column, positiveOutcome: c.unique_values?.[0] || "1" }))
-                        }
-                      />
-                    ))}
-                    {(detected?.feature_columns || [])
-                      .filter((c) => c.unique_count <= 10)
-                      .filter(
-                        (c) =>
-                          !detected?.decision_columns?.some(
-                            (d) => d.column === c.column
-                          )
-                      )
-                      .map((c) => (
+                    {(detected?.decision_columns || []).length > 0 ? (
+                      (detected.decision_columns).map((c) => (
                         <ColBtn
                           key={c.column}
                           label={c.column}
                           active={config.outcome === c.column}
-                          onClick={() =>
-                            setConfig((p) => ({ ...p, outcome: c.column }))
-                          }
+                          suggested
+                          onClick={() => {
+                            const positiveKeywords = ["1", "true", "hired", "approved", "yes",
+                              "flagged", "removed", "selected", "granted", "allowed", "accepted"];
+                            const uniqueVals = (c.unique_values || []).map(String);
+                            const guessedPositive =
+                              uniqueVals.find((v) => positiveKeywords.includes(v.toLowerCase())) ??
+                              uniqueVals[0] ?? "1";
+                            setConfig((p) => ({ ...p, outcome: c.column, positiveOutcome: guessedPositive }));
+                          }}
                         />
-                      ))}
+                      ))
+                    ) : (
+                      <p className="text-xs text-muted-foreground italic">
+                        No decision column auto-detected — select one below.
+                      </p>
+                    )}
                   </div>
 
-                  {/* Positive outcome input */}
-                  <div className="flex items-center gap-3 pt-4 border-t border-border">
-                    <label className="text-xs font-medium text-muted-foreground whitespace-nowrap">
-                      Positive outcome value
-                    </label>
-                    <input
-                      value={config.positiveOutcome}
-                      onChange={(e) =>
-                        setConfig((p) => ({
-                          ...p,
-                          positiveOutcome: e.target.value,
-                        }))
-                      }
-                      className="w-24 px-3 py-1.5 rounded-md border border-border
-                                 bg-muted text-sm font-mono text-foreground
-                                 focus:outline-none focus:ring-2 focus:ring-[#caff3d]/40
-                                 focus:border-[#caff3d] transition-all duration-150"
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      e.g.{" "}
-                      <code className="font-mono bg-muted px-1 rounded">
-                        1
-                      </code>
-                      ,{" "}
-                      <code className="font-mono bg-muted px-1 rounded">
-                        hired
-                      </code>
-                      ,{" "}
-                      <code className="font-mono bg-muted px-1 rounded">
-                        true
-                      </code>
-                    </p>
+                  {/* SECONDARY — other low-cardinality feature cols, clearly labelled as manual override */}
+                  {(() => {
+                    const primarySet   = new Set((detected?.decision_columns  || []).map((c) => c.column));
+                    const proxySet     = new Set((detected?.proxy_candidates   || []).map((c) => c.column));
+                    const protectedSet = new Set((detected?.protected_columns  || []).map((c) => c.column));
+                    const secondaryCols = (detected?.feature_columns || []).filter(
+                      (c) =>
+                        c.unique_count <= 8 &&
+                        !primarySet.has(c.column) &&
+                        !proxySet.has(c.column) &&
+                        !protectedSet.has(c.column)
+                    );
+                    if (secondaryCols.length === 0) return null;
+                    return (
+                      <div className="pt-3 border-t border-border space-y-2">
+                        <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">
+                          Other columns — manual override
+                        </p>
+                        <div className="flex flex-wrap gap-2">
+                          {secondaryCols.map((c) => (
+                            <ColBtn
+                              key={c.column}
+                              label={c.column}
+                              active={config.outcome === c.column}
+                              onClick={() => {
+                                const allVals = data
+                                  ? [...new Set(data.map((r) => String(r[c.column])))]
+                                  : [];
+                                const positiveKeywords = ["1", "true", "yes", "approved",
+                                  "hired", "flagged", "selected", "granted", "allowed", "accepted"];
+                                const guessedPositive =
+                                  allVals.find((v) => positiveKeywords.includes(v.toLowerCase())) ??
+                                  allVals[0] ?? "1";
+                                setConfig((p) => ({ ...p, outcome: c.column, positiveOutcome: guessedPositive }));
+                              }}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })()}
+
+                  {/* Positive outcome input + live match preview */}
+                  <div className="flex flex-col gap-2 pt-4 border-t border-border">
+                    <div className="flex items-center gap-3">
+                      <label className="text-xs font-medium text-muted-foreground whitespace-nowrap">
+                        Positive outcome value
+                      </label>
+                      <input
+                        value={config.positiveOutcome}
+                        onChange={(e) =>
+                          setConfig((p) => ({ ...p, positiveOutcome: e.target.value }))
+                        }
+                        className="w-24 px-3 py-1.5 rounded-md border border-border
+                                   bg-muted text-sm font-mono text-foreground
+                                   focus:outline-none focus:ring-2 focus:ring-[#caff3d]/40
+                                   focus:border-[#caff3d] transition-all duration-150"
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        e.g.{" "}
+                        <code className="font-mono bg-muted px-1 rounded">1</code>,{" "}
+                        <code className="font-mono bg-muted px-1 rounded">hired</code>,{" "}
+                        <code className="font-mono bg-muted px-1 rounded">true</code>
+                      </p>
+                    </div>
+
+                    {/* Live match preview — catches wrong column/value BEFORE running the full analysis */}
+                    {config.outcome && config.positiveOutcome && data && (() => {
+                      const matches = data.filter(
+                        (r) => String(r[config.outcome]) === String(config.positiveOutcome)
+                      ).length;
+                      const pct = ((matches / data.length) * 100).toFixed(1);
+                      const isZero = matches === 0;
+                      return (
+                        <div
+                          className={[
+                            "flex items-center gap-2 px-3 py-2 rounded-md text-xs border",
+                            isZero
+                              ? "bg-[#ff6b7a]/8 border-[#ff6b7a]/20 text-[#ff6b7a]"
+                              : "bg-[#caff3d]/6 border-[#caff3d]/20 text-foreground",
+                          ].join(" ")}
+                        >
+                          {isZero ? (
+                            <XCircle className="w-3.5 h-3.5 flex-shrink-0" />
+                          ) : (
+                            <CheckCircle2 className="w-3.5 h-3.5 text-[#caff3d] flex-shrink-0" />
+                          )}
+                          {isZero ? (
+                            <span>
+                              <strong>No rows match</strong> — approval rates will show 0%.
+                              Check the outcome column and value above.
+                            </span>
+                          ) : (
+                            <span>
+                              <strong className="font-mono">{matches.toLocaleString()}</strong> of{" "}
+                              <strong className="font-mono">{data.length.toLocaleString()}</strong>{" "}
+                              rows are positive outcomes ({pct}%)
+                            </span>
+                          )}
+                        </div>
+                      );
+                    })()}
                   </div>
                 </div>
               </div>
@@ -979,15 +1056,21 @@ export default function AuditPage() {
                 >
                   <BiasFingerprint fingerprint={results.fingerprint} />
                   {Object.entries(results.per_attribute || {}).map(
-                    ([attr, metrics]) => (
-                      <BiasChart
-                        key={attr}
-                        title={`Approval rates · ${attr}`}
-                        data={Object.entries(
-                          metrics.disparate_impact?.rates || {}
-                        ).map(([group, rate]) => ({ group, rate }))}
-                      />
-                    )
+                    ([attr, metrics]) => {
+                      // Prefer DI rates; fall back to DPD rates (no 5-row minimum)
+                      const diRates = metrics.disparate_impact?.rates || {};
+                      const dpdRates = metrics.demographic_parity?.rates || {};
+                      const ratesObj = Object.keys(diRates).length > 0 ? diRates : dpdRates;
+                      const chartData = Object.entries(ratesObj).map(([group, rate]) => ({ group, rate }));
+                      if (chartData.length === 0) return null;
+                      return (
+                        <BiasChart
+                          key={attr}
+                          title={`Approval rates · ${attr}`}
+                          data={chartData}
+                        />
+                      );
+                    }
                   )}
                 </motion.div>
 
