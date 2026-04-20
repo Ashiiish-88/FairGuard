@@ -135,6 +135,47 @@ GROQ_API_KEY_3_3=your_groq_llama_3_3_api_key_here
 
 ```
 
+## ✨ Key Features
+
+Our platform operates in **3 distinct modes**, providing full coverage from historical data analysis to live monitoring and proactive penetration testing:
+
+- **🔍 Audit Mode (Static Data Scanning)**
+  - Upload any CSV dataset (e.g., hiring decisions).
+  - FairGuard **auto-detects** decision columns, protected attributes (like gender/age), and potential proxy features (like zipcode matching race).
+  - Runs 5 statistical fairness metrics (Disparate Impact, Demographic Parity, Equalized Odds, Proxy Detection, Intersectional Analysis).
+  - Uses the **Gemini AI API** to explain complex bias results in plain English and flag legal compliance risks (e.g., EEOC 80% Rule, India DPDP Act).
+
+- **🛡️ Shield Mode (Real-time Monitoring)**
+  - Connects to an active AI pipeline (simulated via Server-Sent Events / SSE) to monitor decisions live.
+  - Maintains a running fairness score and visualizes gender gap trends over time.
+  - Instantly alerts administrators when unfairness thresholds are breached.
+
+- **🧪 Stress Test Mode (AI Bias Pen-Testing)**
+  - Point FairGuard at an AI decision endpoint.
+  - Gemini generates **hundreds of synthetic candidate profiles** with identical qualifications but varying demographics.
+  - Automatically submits these candidates, analyzes the outcomes, and exposes precisely where the model's biases hide (e.g., older women being systematically rejected despite perfect qualifications).
+
+---
+
+## 🛠️ Tech Stack
+
+FairGuard is built entirely on a modern, serverless Next.js architecture, guaranteeing blazing-fast performance and effortless deployment.
+
+**Framework:** Next.js 15 (App Router)
+**Styling & UI:** Tailwind CSS v4, shadcn/ui, Framer Motion
+**Data Visualization:** Recharts
+**Data Processing (Privacy-first):** PapaParse (client-side CSV parsing)
+**AI Engine:** Google Gemini (`@google/generative-ai`)
+**Stats/Math Engine:** Pure JavaScript (Zero dependencies needed for complex bias calculations)
+**Deployment:** Vercel (Serverless)
+
+---
+
+## 🚀 Getting Started (Bootstrapping)
+
+To run FairGuard locally, simply follow these steps.
+
+### 1. Clone the Repository
 ```bash
 npm run dev
 ```
