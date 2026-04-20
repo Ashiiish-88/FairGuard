@@ -1,7 +1,11 @@
 {
   "compilerOptions": {
+    "allowJs": true,
+    "checkJs": true,
+    "strict": false,
     "paths": {
       "@/*": ["./src/*"]
     }
-  }
+  },
+  "exclude": ["node_modules", ".next", "out"]
 }
