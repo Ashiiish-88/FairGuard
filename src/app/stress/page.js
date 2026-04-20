@@ -1,7 +1,8 @@
 // app/stress/page.tsx
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
+import Papa from "papaparse";
 import { motion, AnimatePresence } from "framer-motion";
 import BiasChart from "@/components/bias-chart";
 import MetricCard from "@/components/metric-card";
@@ -21,6 +22,11 @@ import {
   Sparkles,
   Scale,
   ArrowRight,
+  Upload,
+  Database,
+  FileText,
+  Trash2,
+  Info,
 } from "lucide-react";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -146,6 +152,54 @@ export default function StressTestPage() {
   const [error,          setError]          = useState(null);
   const [selectedModel,  setSelectedModel]  = useState("gemini");
 
+  // ── Data source state ──────────────────────────────────────────────────────
+  const [sourceDataInfo, setSourceDataInfo] = useState(null); // { rowCount, cols, from: "audit"|"upload" }
+  const fileInputRef = useRef(null);
+
+  // Check sessionStorage for audit-imported data on mount
+  useEffect(() => {
+    try {
+      const stored = sessionStorage.getItem("fairguard_source_data");
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setSourceDataInfo({
+            rowCount: parsed.length,
+            cols: Object.keys(parsed[0] || {}).length,
+            from: "audit",
+          });
+        }
+      }
+    } catch {}
+  }, []);
+
+  const handleCsvUpload = useCallback((e) => {
+    const f = e.target.files?.[0];
+    if (!f) return;
+    Papa.parse(f, {
+      header: true,
+      skipEmptyLines: true,
+      complete: (res) => {
+        if (!Array.isArray(res.data) || res.data.length === 0) return;
+        try {
+          sessionStorage.setItem("fairguard_source_data", JSON.stringify(res.data.slice(0, 200)));
+          setSourceDataInfo({
+            rowCount: res.data.length,
+            cols: Object.keys(res.data[0] || {}).length,
+            from: "upload",
+          });
+        } catch {}
+      },
+    });
+    // Reset input so the same file can be re-selected
+    e.target.value = "";
+  }, []);
+
+  const clearSourceData = useCallback(() => {
+    try { sessionStorage.removeItem("fairguard_source_data"); } catch {}
+    setSourceDataInfo(null);
+  }, []);
+
   const toggleAxis = (id) =>
     setAxes((prev) =>
       prev.includes(id) ? prev.filter((a) => a !== id) : [...prev, id]
@@ -241,7 +295,98 @@ export default function StressTestPage() {
           {!results && (
             <motion.div key="config" {...fadeUp} className="space-y-4">
 
-              {/* ── 1. Decision type ──────────────────────────── */}
+              {/* ── 0. Data source ──────────────────────────────── */}
+              <div className="bg-card rounded-xl border border-border overflow-hidden">
+                <div className="flex items-center gap-3 px-5 py-4 border-b border-border">
+                  {/* Step 0 marker */}
+                  <div className="flex items-stretch rounded-md overflow-hidden flex-shrink-0">
+                    <div className="bg-[#9a77f8] w-7 h-7 flex items-center justify-center">
+                      <Database className="w-3.5 h-3.5 text-white" />
+                    </div>
+                    <div className="bg-black w-0.5" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-semibold text-foreground">Data source</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      Optionally probe real rejected profiles from your audit — or use synthetic
+                    </p>
+                  </div>
+                  {sourceDataInfo && (
+                    <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full bg-[#9a77f8]/10 text-[#9a77f8] border border-[#9a77f8]/20">
+                      <CheckCircle2 className="w-3 h-3" />
+                      {sourceDataInfo.from === "audit" ? "From audit" : "Uploaded"}
+                    </span>
+                  )}
+                </div>
+
+                <div className="p-5 space-y-3">
+                  {sourceDataInfo ? (
+                    /* Loaded data pill */
+                    <div className="flex items-center justify-between gap-3 px-4 py-3 rounded-lg bg-[#9a77f8]/6 border border-[#9a77f8]/20">
+                      <div className="flex items-center gap-2.5">
+                        <FileText className="w-4 h-4 text-[#9a77f8] flex-shrink-0" />
+                        <div>
+                          <p className="text-sm font-semibold text-foreground">
+                            {sourceDataInfo.rowCount.toLocaleString()} rows ·{" "}
+                            {sourceDataInfo.cols} columns
+                          </p>
+                          <p className="text-xs text-muted-foreground mt-0.5">
+                            {sourceDataInfo.from === "audit"
+                              ? "Imported from Audit Mode — top rejected profiles will be used as base profiles"
+                              : "Uploaded CSV — real rejected rows become counterfactual base profiles"}
+                          </p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={clearSourceData}
+                        className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-[#ff6b7a] transition-colors flex-shrink-0"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                        Clear
+                      </button>
+                    </div>
+                  ) : (
+                    /* Upload prompt */
+                    <>
+                      <div className="flex items-start gap-3 px-4 py-3 rounded-lg bg-muted/50 border border-border">
+                        <Info className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+                        <p className="text-xs text-muted-foreground leading-relaxed">
+                          <span className="font-semibold text-foreground">Using synthetic profiles</span> — 5
+                          hardcoded base CVs with varying qualifications. Or upload a CSV / run an
+                          Audit first to probe real rejected candidates.
+                        </p>
+                      </div>
+
+                      <div className="flex items-center gap-3">
+                        <button
+                          onClick={() => fileInputRef.current?.click()}
+                          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg border-2 border-dashed
+                                     border-[#9a77f8]/40 bg-[#9a77f8]/4 text-sm font-medium text-[#9a77f8]
+                                     hover:border-[#9a77f8]/70 hover:bg-[#9a77f8]/8 transition-all duration-150"
+                        >
+                          <Upload className="w-3.5 h-3.5" />
+                          Upload CSV
+                        </button>
+                        <input
+                          ref={fileInputRef}
+                          type="file"
+                          accept=".csv"
+                          className="hidden"
+                          onChange={handleCsvUpload}
+                        />
+                        <span className="text-xs text-muted-foreground">
+                          or go to{" "}
+                          <a href="/audit" className="font-semibold text-foreground underline underline-offset-2 hover:text-[#9a77f8] transition-colors">
+                            Audit Mode
+                          </a>
+                          {" "}first — it auto-saves data here
+                        </span>
+                      </div>
+                    </>
+                  )}
+                </div>
+              </div>
+
               <div className="bg-card rounded-xl border border-border overflow-hidden">
                 <SectionStep
                   number={1}
@@ -540,7 +685,23 @@ export default function StressTestPage() {
                       Simulated — no API key
                     </span>
                   )}
+
+                  {/* Data source badge */}
+                  {results.analysis?.summary?.source === "counterfactual_from_csv" ? (
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md
+                                     bg-[#9a77f8]/8 border border-[#9a77f8]/20 text-xs font-semibold text-[#9a77f8]">
+                      <FileText className="w-3 h-3" />
+                      Real CSV profiles
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md
+                                     bg-muted border border-border text-xs font-medium text-muted-foreground">
+                      <Database className="w-3 h-3" />
+                      Synthetic profiles
+                    </span>
+                  )}
                 </div>
+
 
                 <button
                   onClick={() => setResults(null)}

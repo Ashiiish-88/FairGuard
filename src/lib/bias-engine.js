@@ -356,9 +356,11 @@ export function autoDetectColumns(data) {
   const columns = Object.keys(data[0]);
   const decisionKw = [
     "decision", "outcome", "result", "approved", "rejected", "hired", "selected",
-    "accepted", "denied", "granted", "label", "target", "class", "y", "default",
-    "loan_status", "income", "flagged", "action_taken", "removed", "banned",
+    "accepted", "denied", "granted", "label", "target", "class", "default",
+    "loan_status", "flagged", "action_taken", "removed", "banned",
     "price_tier", "price_offered", "premium_tier", "claim_approved"
+    // NOTE: "y" and "income" removed — "y" matched years_experience/ethnicity;
+    // "income" matched income_bracket which is a feature, not a decision.
   ];
   const protectedKw = [
     "gender", "sex", "race", "ethnicity", "age", "religion", "disability",
@@ -378,13 +380,17 @@ export function autoDetectColumns(data) {
     const sampleVals = unique(data.slice(0, 100).map(r => r[col])).slice(0, 10);
     const isBinary = sampleVals.length <= 5;
     const isDecision = decisionKw.some(kw => colLower.includes(kw));
+    const isProxy   = proxyKw.some(kw => colLower.includes(kw));
+    const isProtected = protectedKw.some(kw => colLower.includes(kw));
 
-    if (isBinary && isDecision) {
-      detected.decision_columns.push({ column: col, unique_values: sampleVals.map(String), confidence: "HIGH" });
-    } else if (protectedKw.some(kw => colLower.includes(kw))) {
+    // Priority order: protected → proxy → decision → feature
+    // Proxy must fire BEFORE decision so zip_type is never promoted to an outcome column.
+    if (isProtected) {
       detected.protected_columns.push({ column: col, unique_values: sampleVals.map(String), confidence: "HIGH" });
-    } else if (proxyKw.some(kw => colLower.includes(kw))) {
+    } else if (isProxy) {
       detected.proxy_candidates.push({ column: col, unique_values: sampleVals.slice(0, 5).map(String), confidence: "MEDIUM" });
+    } else if (isBinary && isDecision) {
+      detected.decision_columns.push({ column: col, unique_values: sampleVals.map(String), confidence: "HIGH" });
     } else {
       detected.feature_columns.push({ column: col, unique_count: unique(data.map(r => r[col])).length });
     }

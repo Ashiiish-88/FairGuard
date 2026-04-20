@@ -100,21 +100,9 @@ export default function Navbar() {
           {/* ── Logo ──────────────────────────────────────────── */}
           <Link
             href="/"
-            className="flex items-center gap-2.5 flex-shrink-0 group"
+            className="flex items-center flex-shrink-0 group"
           >
-            {/* Split icon block */}
-            <div className="flex items-stretch rounded-md overflow-hidden">
-              <div className="bg-[#caff3d] w-7 h-7 flex items-center justify-center group-hover:bg-[#d4ff5c] transition-colors">
-                <Shield className="w-3.5 h-3.5 text-black" />
-              </div>
-              <div className="bg-black w-0.5" />
-            </div>
-            <span
-              className="text-[17px] font-bold text-foreground tracking-tight"
-              style={{ fontFamily: "var(--font-heading)" }}
-            >
-              FairGuard
-            </span>
+            <img src="/Navbar_Logo.svg" alt="FairGuard Logo" className="h-36 w-auto group-hover:opacity-90 transition-opacity" />
           </Link>
 
           {/* ── Desktop nav links ──────────────────────────────── */}
