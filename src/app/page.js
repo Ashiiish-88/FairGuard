@@ -84,23 +84,25 @@ export default function LandingPage() {
     <div className="min-h-screen bg-white">
 
       {/* ═══ SECTION 1: HERO — Refold Template Fusion ═══ */}
-      <section className="sm:h-[450px] h-[550px] w-full bg-white flex relative overflow-x-clip">
+      <section className="sm:h-[450px] h-[550px] w-full bg-white flex relative overflow-hidden">
         {/* ── LEFT: Staggered Stripes (Flipped) ── */}
         <motion.div
-          animate={{ x: [0, -15, 0] }}
-          transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+          
+          
           className="hidden lg:flex flex-col absolute top-[-100px] -left-[10%] h-[700px] w-[30%] xl:w-[35%] scale-x-[-1] opacity-80 pointer-events-none"
         >
           {stripeOffsets.map((offset, i) => (
-            <div
+            <motion.div
               key={`left-${i}`}
+              animate={{ x: [offset, offset - 70, offset] }}
+              transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: i * 0.15 }}
               className="stripe-hover-effect"
-              style={{
-                width: "120%",
-                height: "50px",
-                background: "linear-gradient(to right, #2563EB 0%, #04cfff 60%, #caff3d 85%, transparent 100%)",
-                transform: `translateX(${offset}px) scaleX(-1)`,
-              }}
+                style={{
+                  width: "120%",
+                  height: "50px",
+                  background: "linear-gradient(to right, #2563EB 0%, #04cfff 60%, #caff3d 85%, transparent 100%)",
+                  scaleX: -1,
+                }}
             />
           ))}
         </motion.div>
@@ -177,20 +179,22 @@ export default function LandingPage() {
 
         {/* ── RIGHT: Staggered Stripes ── */}
         <motion.div
-          animate={{ x: [0, 15, 0] }}
-          transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
+          
+          
           className="hidden lg:flex flex-col absolute top-[-100px] -right-[10%] h-[700px] w-[30%] xl:w-[35%] opacity-80 pointer-events-none"
         >
           {stripeOffsets.map((offset, i) => (
-            <div
+            <motion.div
               key={`right-${i}`}
+              animate={{ x: [offset, offset - 70, offset] }}
+              transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: i * 0.15 }}
               className="stripe-hover-effect"
-              style={{
-                width: "120%",
-                height: "50px",
-                background: "linear-gradient(to right, #2563EB 0%, #04cfff 60%, #caff3d 85%, transparent 100%)",
-                transform: `translateX(${offset}px) scaleX(-1)`,
-              }}
+                style={{
+                  width: "120%",
+                  height: "50px",
+                  background: "linear-gradient(to right, #2563EB 0%, #04cfff 60%, #caff3d 85%, transparent 100%)",
+                  scaleX: -1,
+                }}
             />
           ))}
         </motion.div>
@@ -213,29 +217,30 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <section className="pt-20 pb-4 bg-white" id="domains">
-        <div className="max-w-[1280px] mx-auto">
+      <section className="bg-white w-full" id="domains">
+        <div className="w-full border-t border-[#EAEAEA]">
+          <div className="max-w-[1200px] mx-auto w-full border-l border-r border-[#EAEAEA] pt-24 pb-12">
+            {/* Label */}
+            <div className="text-center mb-6">
+              <span className="inline-flex items-center gap-2 text-[13px] font-bold tracking-[0.15em] uppercase text-[#000000]">
+                <Shield className="w-4 h-4" /> THE PROBLEM
+              </span>
+            </div>
 
-          {/* Label */}
-          <div className="text-center mb-6">
-            <span className="inline-flex items-center gap-2 text-[13px] font-bold tracking-[0.15em] uppercase text-[#000000]">
-              <Shield className="w-4 h-4" /> THE PROBLEM
-            </span>
+            {/* Heading with blue accents */}
+            <h2 className="text-[clamp(28px,4vw,48px)] font-extrabold text-[#000000] text-center leading-[1.2] max-w-[900px] mx-auto px-6">
+              AI bias is invisible. Until it isn&apos;t.{" "}
+              <span className="text-[#1D5FDB]">Hiring</span>,{" "}
+              <span className="text-[#1D5FDB]">Lending</span> or{" "}
+              <span className="text-[#1D5FDB]">Healthcare</span>
+            </h2>
           </div>
+        </div>
 
-          {/* Heading with blue accents */}
-          <h2 className="text-[clamp(28px,4vw,48px)] font-extrabold text-[#000000] text-center leading-[1.2] max-w-[900px] mx-auto mb-10 px-6">
-            AI bias is invisible. Until it isn&apos;t.{" "}
-            <span className="text-[#1D5FDB]">Hiring</span>,{" "}
-            <span className="text-[#1D5FDB]">Lending</span> or{" "}
-            <span className="text-[#1D5FDB]">Healthcare</span>
-          </h2>
-
-          {/* Horizontal rule */}
-          <hr className="border-t border-[#E5E7EB] mx-20 mb-0" />
-
-          {/* Row 1: First 3 domains */}
-          <div className="grid grid-cols-1 md:grid-cols-3 border-t border-b border-[#EAEAEA] mx-8 md:mx-20">
+        {/* Row 1: First 3 domains */}
+        <div className="w-full border-t border-[#EAEAEA]">
+          <div className="max-w-[1200px] mx-auto w-full border-l border-r border-[#EAEAEA]">
+            <div className="grid grid-cols-1 md:grid-cols-3">
             {domains.slice(0, 3).map((d, idx) => {
               const gradients = [
                 { bar: "linear-gradient(180deg,#A6FFE1,#DCFFE2 60.1%)", iconBg: "bg-gray-50", iconColor: "#3DC784" },
@@ -270,11 +275,14 @@ export default function LandingPage() {
                 </div>
               );
             })}
+            </div>
           </div>
+        </div>
 
-
-          {/* Row 2: Next 3 domains */}
-          <div className="grid grid-cols-1 md:grid-cols-3 border-t border-b border-[#EAEAEA] mx-8 md:mx-20 mt-0">
+        {/* Row 2: Next 3 domains */}
+        <div className="w-full border-t border-b border-[#EAEAEA]">
+          <div className="max-w-[1200px] mx-auto w-full border-l border-r border-[#EAEAEA]">
+            <div className="grid grid-cols-1 md:grid-cols-3 mt-0">
             {domains.slice(3, 6).map((d, idx) => {
               const gradients = [
                 { bar: "linear-gradient(180deg,#F23E11,#FAA4DF)",    iconBg: "bg-red-50",    iconColor: "#F23E11" },
@@ -309,23 +317,19 @@ export default function LandingPage() {
                 </div>
               );
             })}
+            </div>
           </div>
-
         </div>
       </section>
 
       {/* ═══ SECTION BREAK ═══ */}
-      <div className="w-full max-w-[1280px] mx-auto bg-white hidden md:block">
-        <hr className="border-t border-[#E5E7EB] mx-8 md:mx-20 m-0" />
-      </div>
-
       {/* ═══ SECTION 3: HOW IT WORKS — Refold Continuous Sticky Scroll ═══ */}
-      <section className="bg-white" id="how-it-works">
+      <section className="bg-white w-full border-b border-[#EAEAEA]" id="how-it-works">
         <HiwScroll />
 
         {/* Header row — bordered like refold */}
-        <div className="border-b border-[#EAEAEA] flex items-center px-6 sm:px-32">
-          <div className="flex border-l border-r w-full justify-center border-[#EAEAEA] py-16">
+        <div className="w-full border-b border-[#EAEAEA]">
+          <div className="max-w-[1200px] mx-auto w-full border-l border-r border-[#EAEAEA] py-16">
             <div className="flex flex-col gap-4 items-center">
               <span className="section-label inline-block">How It Works</span>
               <h2 className="text-[clamp(28px,3vw,40px)] font-extrabold leading-[1.15] tracking-[-0.02em] text-[#000000] text-center">
@@ -336,8 +340,8 @@ export default function LandingPage() {
         </div>
 
         {/* Main grid row */}
-        <div className="border-b border-[#EAEAEA] flex items-start px-6 sm:px-32">
-          <div className="grid grid-cols-1 xl:grid-cols-[41%_59%] w-full relative border-l border-r border-[#EAEAEA]">
+        <div className="w-full border-b border-[#EAEAEA]">
+          <div className="max-w-[1200px] mx-auto w-full grid grid-cols-1 xl:grid-cols-[41%_59%] relative border-l border-r border-[#EAEAEA]">
 
             {/* LEFT — Continuous stacked steps (no gap) */}
             <div>
@@ -465,8 +469,8 @@ export default function LandingPage() {
             </div>
 
             {/* RIGHT — driven by HiwScroll JS — ONE sticky wrapper, panels absolute inside */}
-            <div className="hidden xl:block relative" id="hiw-right-col">
-              <div className="sticky top-[80px] h-[500px] relative" id="hiw-sticky-panel">
+            <div className="hidden xl:block relative border-l border-[#EAEAEA]" id="hiw-right-col">
+              <div className="sticky top-[calc(50vh-250px)] h-[500px] relative" id="hiw-sticky-panel">
                 {/* ── Panel 0: Upload — Lime→Cyan gradient + upload mockup ── */}
                 <div className="hiw-image absolute inset-0 overflow-hidden" data-panel="0">
                   {/* Gradient strips */}
@@ -596,8 +600,8 @@ names = [<span style="color:#04cfff">"Brian"</span>, <span style="color:#04cfff"
         </div>
 
         {/* Bottom spacer row like refold */}
-        <div className="border-b border-[#EAEAEA] flex items-center px-6 sm:px-32">
-          <div className="h-20 border-l border-r border-[#EAEAEA] w-full bg-white" />
+        <div className="w-full">
+          <div className="h-20 max-w-[1200px] mx-auto border-l border-r border-[#EAEAEA] w-full bg-white" />
         </div>
 
       </section>
@@ -646,9 +650,10 @@ names = [<span style="color:#04cfff">"Brian"</span>, <span style="color:#04cfff"
 
 
       {/* ═══ SECTION 7: STRESS TEST FEATURES ═══ */}
-      <section className="py-24 bg-white">
-        <div className="max-w-[1200px] mx-auto px-6 md:px-12">
-          <div className="text-center max-w-[600px] mx-auto mb-16">
+      <section className="bg-white w-full" id="stress-test">
+        <div className="w-full border-t border-[#EAEAEA]">
+          <div className="max-w-[1200px] mx-auto w-full border-l border-r border-[#EAEAEA] pt-24 pb-16">
+            <div className="text-center max-w-[600px] mx-auto px-6">
             <span className="section-label inline-block mb-4">Adversarial Testing</span>
             <h2 className="text-[clamp(28px,3vw,40px)] font-extrabold leading-[1.15] tracking-[-0.02em] text-[#000000] mb-4">
               Stress-test before your AI ships
@@ -657,8 +662,12 @@ names = [<span style="color:#04cfff">"Brian"</span>, <span style="color:#04cfff"
               Generate synthetic candidates with identical qualifications but different demographics. Expose how your model discriminates.
             </p>
           </div>
+          </div>
+        </div>
 
-          <div className="grid md:grid-cols-3 border border-[#EAEAEA]">
+        <div className="w-full border-t border-[#EAEAEA]">
+          <div className="max-w-[1200px] mx-auto w-full border-l border-r border-[#EAEAEA]">
+            <div className="grid md:grid-cols-3">
             {[
               { icon: <Zap className="w-5 h-5" />, title: "Synthetic Candidates", desc: "Gemini generates diverse profiles with controlled qualifications to isolate bias signals.", bar: "linear-gradient(180deg,#A9DFFF,#E8FBF9 60.1%)", iconBg: "bg-blue-50", iconColor: "#0057ff" },
               { icon: <BarChart3 className="w-5 h-5" />, title: "Disparate Impact Analysis", desc: "Computes the 4/5ths rule across every demographic axis with statistical significance.", bar: "linear-gradient(180deg,#A6FFE1,#DCFFE2 60.1%)", iconBg: "bg-green-50", iconColor: "#3DC784" },
@@ -680,9 +689,13 @@ names = [<span style="color:#04cfff">"Brian"</span>, <span style="color:#04cfff"
                 </div>
               </div>
             ))}
+            </div>
           </div>
+        </div>
 
-          <div className="text-center mt-10">
+        <div className="w-full border-t border-b border-[#EAEAEA]">
+          <div className="max-w-[1200px] mx-auto w-full border-l border-r border-[#EAEAEA] py-16">
+            <div className="text-center">
             <Link href="/stress"
               className="inline-flex items-stretch rounded-md overflow-hidden font-bold transition-all duration-150 hover:shadow-lg group">
               <span className="bg-[#caff3d] px-3 flex items-center justify-center group-hover:bg-[#d4ff5c] transition-colors">
@@ -694,6 +707,7 @@ names = [<span style="color:#04cfff">"Brian"</span>, <span style="color:#04cfff"
             </Link>
           </div>
         </div>
+        </div>
       </section>
 
       {/* ═══ SECTION 8: FINAL CTA — Refold split layout ═══ */}
@@ -701,19 +715,21 @@ names = [<span style="color:#04cfff">"Brian"</span>, <span style="color:#04cfff"
         {/* Full-bleed Right Background */}
         <div className="absolute right-0 top-1/2 -translate-y-1/2 h-[700px] w-[55%] hidden md:block">
           <motion.div 
-            animate={{ x: [0, -20, 0] }}
-            transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
+            
+            
             className="absolute inset-0 flex flex-col justify-center pointer-events-none w-[120%]"
             style={{ transformOrigin: "right" }}
           >
             {stripeOffsets.map((offset, i) => (
-              <div
+              <motion.div
                 key={`cta-${i}`}
+                animate={{ x: [offset, offset - 70, offset] }}
+                transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: i * 0.15 }}
                 className="w-full shrink-0 stripe-hover-effect"
                 style={{
                   height: "50px",
                   background: "linear-gradient(to right, #2563EB 0%, #04cfff 30%, #caff3d 45%, transparent 65%)",
-                  transform: `translateX(${offset}px) scaleX(-1)`,
+                  scaleX: -1,
                 }}
               />
             ))}
