@@ -95,7 +95,7 @@ export default function LandingPage() {
             <motion.div
               key={`left-${i}`}
               animate={{ x: [offset, offset - 70, offset] }}
-              transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: i * 0.15 }}
+              transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut", delay: i * 0.15 }}
               className="stripe-hover-effect"
                 style={{
                   width: "120%",
@@ -187,7 +187,7 @@ export default function LandingPage() {
             <motion.div
               key={`right-${i}`}
               animate={{ x: [offset, offset - 70, offset] }}
-              transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: i * 0.15 }}
+              transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut", delay: i * 0.15 }}
               className="stripe-hover-effect"
                 style={{
                   width: "120%",
@@ -724,7 +724,7 @@ names = [<span style="color:#04cfff">"Brian"</span>, <span style="color:#04cfff"
               <motion.div
                 key={`cta-${i}`}
                 animate={{ x: [offset, offset - 70, offset] }}
-                transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: i * 0.15 }}
+                transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut", delay: i * 0.15 }}
                 className="w-full shrink-0 stripe-hover-effect"
                 style={{
                   height: "50px",
