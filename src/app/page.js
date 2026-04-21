@@ -827,10 +827,10 @@ names = [<span style="color:#04cfff">"Brian"</span>, <span style="color:#04cfff"
           <div className="font-mono p-10">
             <h4 className="text-[11px] font-bold tracking-[0.18em] uppercase text-[#64748b] mb-6">LEGAL FRAMEWORKS</h4>
             <div className="flex flex-col gap-4">
-              <Link href="https://artificialintelligenceact.eu/" className="text-[14px] text-[#d1d5db]">EU AI Act</Link>
-              <Link href="https://www.pib.gov.in/PressReleseDetailm.aspx?PRID=2190014&reg=3&lang=2" className="text-[14px] text-[#d1d5db]">India DPDP Act</Link>
-              <Link href="https://www.eeoc.gov/" className="text-[14px] text-[#d1d5db]">US EEOC Guidelines</Link>
-              <Link href="https://standards.ieee.org/wp-content/uploads/import/documents/other/ead1e.pdf" className="text-[14px] text-[#d1d5db]">IEEE Ethics Standards</Link>
+              <Link href="https://artificialintelligenceact.eu/" className="text-[14px] text-[#d1d5db] hover:text-white transition-colors">EU AI Act</Link>
+              <Link href="https://www.pib.gov.in/PressReleseDetailm.aspx?PRID=2190014&reg=3&lang=2" className="text-[14px] text-[#d1d5db] hover:text-white transition-colors">India DPDP Act</Link>
+              <Link href="https://www.eeoc.gov/" className="text-[14px] text-[#d1d5db] hover:text-white transition-colors">US EEOC Guidelines</Link>
+              <Link href="https://standards.ieee.org/wp-content/uploads/import/documents/other/ead1e.pdf" className="text-[14px] text-[#d1d5db] hover:text-white transition-colors">IEEE Ethics Standards</Link>
             </div>
           </div>
         </div>
