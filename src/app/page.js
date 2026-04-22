@@ -80,6 +80,17 @@ const stats = [
 const stripeOffsets = [0, 50, 100, 150, 200, 250, 200, 150, 100, 50, 0, 50, 100, 150];
 
 export default function LandingPage() {
+  const handleHashLink = (event, targetId) => {
+    event.preventDefault();
+
+    const target = document.getElementById(targetId);
+    if (!target) return;
+
+    const top = target.getBoundingClientRect().top + window.scrollY;
+    window.history.replaceState(null, "", `#${targetId}`);
+    window.scrollTo({ top, behavior: "smooth" });
+  };
+
   return (
     <div className="min-h-screen bg-white">
 
@@ -87,8 +98,8 @@ export default function LandingPage() {
       <section className="sm:h-[450px] h-[550px] w-full bg-white flex relative overflow-hidden">
         {/* ── LEFT: Staggered Stripes (Flipped) ── */}
         <motion.div
-          
-          
+
+
           className="hidden lg:flex flex-col absolute top-[-100px] -left-[10%] h-[700px] w-[30%] xl:w-[35%] scale-x-[-1] opacity-80 pointer-events-none"
         >
           {stripeOffsets.map((offset, i) => (
@@ -97,12 +108,12 @@ export default function LandingPage() {
               animate={{ x: [offset, offset - 70, offset] }}
               transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut", delay: i * 0.15 }}
               className="stripe-hover-effect"
-                style={{
-                  width: "120%",
-                  height: "50px",
-                  background: "linear-gradient(to right, #2563EB 0%, #04cfff 60%, #caff3d 85%, transparent 100%)",
-                  scaleX: -1,
-                }}
+              style={{
+                width: "120%",
+                height: "50px",
+                background: "linear-gradient(to right, #2563EB 0%, #04cfff 60%, #caff3d 85%, transparent 100%)",
+                scaleX: -1,
+              }}
             />
           ))}
         </motion.div>
@@ -165,7 +176,9 @@ export default function LandingPage() {
             </Link>
 
             {/* Secondary Action */}
-            <Link href="#how-it-works"
+            <Link
+              href="#how-it-works"
+              onClick={(event) => handleHashLink(event, "how-it-works")}
               className="inline-flex items-stretch rounded-md overflow-hidden font-bold transition-all duration-150 hover:shadow-md group">
               <span className="bg-[#F3F4F6] px-3 flex items-center justify-center group-hover:bg-[#E5E7EB] transition-colors border border-[#E5E7EB] border-r-0">
                 <Search className="w-4 h-4 text-black" />
@@ -179,8 +192,8 @@ export default function LandingPage() {
 
         {/* ── RIGHT: Staggered Stripes ── */}
         <motion.div
-          
-          
+
+
           className="hidden lg:flex flex-col absolute top-[-100px] -right-[10%] h-[700px] w-[30%] xl:w-[35%] opacity-80 pointer-events-none"
         >
           {stripeOffsets.map((offset, i) => (
@@ -189,12 +202,12 @@ export default function LandingPage() {
               animate={{ x: [offset, offset - 70, offset] }}
               transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut", delay: i * 0.15 }}
               className="stripe-hover-effect"
-                style={{
-                  width: "120%",
-                  height: "50px",
-                  background: "linear-gradient(to right, #2563EB 0%, #04cfff 60%, #caff3d 85%, transparent 100%)",
-                  scaleX: -1,
-                }}
+              style={{
+                width: "120%",
+                height: "50px",
+                background: "linear-gradient(to right, #2563EB 0%, #04cfff 60%, #caff3d 85%, transparent 100%)",
+                scaleX: -1,
+              }}
             />
           ))}
         </motion.div>
@@ -241,40 +254,40 @@ export default function LandingPage() {
         <div className="w-full border-t border-[#EAEAEA]">
           <div className="max-w-[1200px] mx-auto w-full border-l border-r border-[#EAEAEA]">
             <div className="grid grid-cols-1 md:grid-cols-3">
-            {domains.slice(0, 3).map((d, idx) => {
-              const gradients = [
-                { bar: "linear-gradient(180deg,#A6FFE1,#DCFFE2 60.1%)", iconBg: "bg-gray-50", iconColor: "#3DC784" },
-                { bar: "linear-gradient(180deg,#A9DFFF,#E8FBF9 60.1%)", iconBg: "bg-gray-50", iconColor: "#0057ff" },
-                { bar: "linear-gradient(180deg,#FFC8BC 39.9%,#FFEECD)",  iconBg: "bg-red-50",  iconColor: "#F23E11" },
-              ];
-              const g = gradients[idx];
-              return (
-                <div key={d.title} className={`flex w-full h-[250px] lg:h-[300px] pl-8 ${idx < 2 ? "border-r" : ""} border-[#EAEAEA]`}>
-                  <div className="flex flex-col gap-10 w-full py-8">
-                    <div className="flex flex-col gap-4">
-                      <div className="flex items-center gap-2">
-                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${g.iconBg} border border-[#E5E7EB]`}>
-                          <span style={{ color: g.iconColor }}>{d.icon}</span>
+              {domains.slice(0, 3).map((d, idx) => {
+                const gradients = [
+                  { bar: "linear-gradient(180deg,#A6FFE1,#DCFFE2 60.1%)", iconBg: "bg-gray-50", iconColor: "#3DC784" },
+                  { bar: "linear-gradient(180deg,#A9DFFF,#E8FBF9 60.1%)", iconBg: "bg-gray-50", iconColor: "#0057ff" },
+                  { bar: "linear-gradient(180deg,#FFC8BC 39.9%,#FFEECD)", iconBg: "bg-red-50", iconColor: "#F23E11" },
+                ];
+                const g = gradients[idx];
+                return (
+                  <div key={d.title} className={`flex w-full h-[250px] lg:h-[300px] pl-8 ${idx < 2 ? "border-r" : ""} border-[#EAEAEA]`}>
+                    <div className="flex flex-col gap-10 w-full py-8">
+                      <div className="flex flex-col gap-4">
+                        <div className="flex items-center gap-2">
+                          <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${g.iconBg} border border-[#E5E7EB]`}>
+                            <span style={{ color: g.iconColor }}>{d.icon}</span>
+                          </div>
+                          {d.isNew && (
+                            <span className="text-[9px] font-bold tracking-[0.15em] uppercase px-2 py-0.5 rounded-full bg-[#caff3d]/20 text-[#000000] border border-[#caff3d]/40">New</span>
+                          )}
                         </div>
-                        {d.isNew && (
-                          <span className="text-[9px] font-bold tracking-[0.15em] uppercase px-2 py-0.5 rounded-full bg-[#caff3d]/20 text-[#000000] border border-[#caff3d]/40">New</span>
-                        )}
+                      </div>
+                      <div>
+                        <div className="flex flex-col justify-between font-sans gap-2 w-fit h-fit">
+                          <h3 className="text-[17px] font-bold text-[#000000] leading-tight">{d.title}</h3>
+                          <div className="text-[13px] text-[#4B5563] leading-[1.6] max-w-[240px]">{d.body}</div>
+                        </div>
                       </div>
                     </div>
-                    <div>
-                      <div className="flex flex-col justify-between font-sans gap-2 w-fit h-fit">
-                        <h3 className="text-[17px] font-bold text-[#000000] leading-tight">{d.title}</h3>
-                        <div className="text-[13px] text-[#4B5563] leading-[1.6] max-w-[240px]">{d.body}</div>
-                      </div>
+                    <div className="flex flex-col w-6 h-full flex-shrink-0">
+                      <div className="flex flex-col h-[60%]" style={{ backgroundImage: g.bar }} />
+                      <div className="flex flex-col h-[40%]" style={{ backgroundImage: g.bar, opacity: 0.5 }} />
                     </div>
                   </div>
-                  <div className="flex flex-col w-6 h-full flex-shrink-0">
-                    <div className="flex flex-col h-[60%]" style={{ backgroundImage: g.bar }} />
-                    <div className="flex flex-col h-[40%]" style={{ backgroundImage: g.bar, opacity: 0.5 }} />
-                  </div>
-                </div>
-              );
-            })}
+                );
+              })}
             </div>
           </div>
         </div>
@@ -283,40 +296,40 @@ export default function LandingPage() {
         <div className="w-full border-t border-b border-[#EAEAEA]">
           <div className="max-w-[1200px] mx-auto w-full border-l border-r border-[#EAEAEA]">
             <div className="grid grid-cols-1 md:grid-cols-3 mt-0">
-            {domains.slice(3, 6).map((d, idx) => {
-              const gradients = [
-                { bar: "linear-gradient(180deg,#F23E11,#FAA4DF)",    iconBg: "bg-red-50",    iconColor: "#F23E11" },
-                { bar: "linear-gradient(180deg,#FEB73E,#FFF9D4)",    iconBg: "bg-amber-50",  iconColor: "#ff8c42" },
-                { bar: "linear-gradient(180deg,#CFB6FF 39.9%,#FFD37F)", iconBg: "bg-purple-50", iconColor: "#9a77f8" },
-              ];
-              const g = gradients[idx];
-              return (
-                <div key={d.title} className={`flex w-full h-[250px] lg:h-[300px] pl-8 ${idx < 2 ? "border-r" : ""} border-[#EAEAEA]`}>
-                  <div className="flex flex-col gap-10 w-full py-8">
-                    <div className="flex flex-col gap-4">
-                      <div className="flex items-center gap-2">
-                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${g.iconBg} border border-[#E5E7EB]`}>
-                          <span style={{ color: g.iconColor }}>{d.icon}</span>
+              {domains.slice(3, 6).map((d, idx) => {
+                const gradients = [
+                  { bar: "linear-gradient(180deg,#F23E11,#FAA4DF)", iconBg: "bg-red-50", iconColor: "#F23E11" },
+                  { bar: "linear-gradient(180deg,#FEB73E,#FFF9D4)", iconBg: "bg-amber-50", iconColor: "#ff8c42" },
+                  { bar: "linear-gradient(180deg,#CFB6FF 39.9%,#FFD37F)", iconBg: "bg-purple-50", iconColor: "#9a77f8" },
+                ];
+                const g = gradients[idx];
+                return (
+                  <div key={d.title} className={`flex w-full h-[250px] lg:h-[300px] pl-8 ${idx < 2 ? "border-r" : ""} border-[#EAEAEA]`}>
+                    <div className="flex flex-col gap-10 w-full py-8">
+                      <div className="flex flex-col gap-4">
+                        <div className="flex items-center gap-2">
+                          <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${g.iconBg} border border-[#E5E7EB]`}>
+                            <span style={{ color: g.iconColor }}>{d.icon}</span>
+                          </div>
+                          {d.isNew && (
+                            <span className="text-[9px] font-bold tracking-[0.15em] uppercase px-2 py-0.5 rounded-full bg-[#caff3d]/20 text-[#000000] border border-[#caff3d]/40">New</span>
+                          )}
                         </div>
-                        {d.isNew && (
-                          <span className="text-[9px] font-bold tracking-[0.15em] uppercase px-2 py-0.5 rounded-full bg-[#caff3d]/20 text-[#000000] border border-[#caff3d]/40">New</span>
-                        )}
+                      </div>
+                      <div>
+                        <div className="flex flex-col justify-between font-sans gap-2 w-fit h-fit">
+                          <h3 className="text-[17px] font-bold text-[#000000] leading-tight">{d.title}</h3>
+                          <div className="text-[13px] text-[#4B5563] leading-[1.6] max-w-[240px]">{d.body}</div>
+                        </div>
                       </div>
                     </div>
-                    <div>
-                      <div className="flex flex-col justify-between font-sans gap-2 w-fit h-fit">
-                        <h3 className="text-[17px] font-bold text-[#000000] leading-tight">{d.title}</h3>
-                        <div className="text-[13px] text-[#4B5563] leading-[1.6] max-w-[240px]">{d.body}</div>
-                      </div>
+                    <div className="flex flex-col w-6 h-full flex-shrink-0">
+                      <div className="flex flex-col h-[60%]" style={{ backgroundImage: g.bar }} />
+                      <div className="flex flex-col h-[40%]" style={{ backgroundImage: g.bar, opacity: 0.5 }} />
                     </div>
                   </div>
-                  <div className="flex flex-col w-6 h-full flex-shrink-0">
-                    <div className="flex flex-col h-[60%]" style={{ backgroundImage: g.bar }} />
-                    <div className="flex flex-col h-[40%]" style={{ backgroundImage: g.bar, opacity: 0.5 }} />
-                  </div>
-                </div>
-              );
-            })}
+                );
+              })}
             </div>
           </div>
         </div>
@@ -375,8 +388,8 @@ export default function LandingPage() {
                   {/* Mobile gradient strip */}
                   <div className="h-[300px] relative w-full block xl:hidden mt-4 overflow-hidden">
                     <div className="h-full flex flex-row">
-                      {[15,25,35,45,55,65].map((stop, i) => (
-                        <div key={i} className="flex-1 h-full" style={{ background: `linear-gradient(rgb(202,255,61) 0%, rgb(4,207,255) ${stop}%, rgb(4,207,255) ${stop+10}%, rgb(202,255,61) 100%)` }} />
+                      {[15, 25, 35, 45, 55, 65].map((stop, i) => (
+                        <div key={i} className="flex-1 h-full" style={{ background: `linear-gradient(rgb(202,255,61) 0%, rgb(4,207,255) ${stop}%, rgb(4,207,255) ${stop + 10}%, rgb(202,255,61) 100%)` }} />
                       ))}
                     </div>
                   </div>
@@ -417,8 +430,8 @@ export default function LandingPage() {
                   {/* Mobile gradient strip */}
                   <div className="h-[300px] relative w-full block xl:hidden mt-4 overflow-hidden">
                     <div className="h-full flex flex-row">
-                      {[15,25,35,45,55,65].map((stop, i) => (
-                        <div key={i} className="flex-1 h-full" style={{ background: `linear-gradient(rgb(255,249,212) 0%, rgb(254,183,62) ${stop}%, rgb(254,183,62) ${stop+10}%, rgb(255,249,212) 100%)` }} />
+                      {[15, 25, 35, 45, 55, 65].map((stop, i) => (
+                        <div key={i} className="flex-1 h-full" style={{ background: `linear-gradient(rgb(255,249,212) 0%, rgb(254,183,62) ${stop}%, rgb(254,183,62) ${stop + 10}%, rgb(255,249,212) 100%)` }} />
                       ))}
                     </div>
                   </div>
@@ -459,8 +472,8 @@ export default function LandingPage() {
                   {/* Mobile gradient strip */}
                   <div className="h-[300px] relative w-full block xl:hidden mt-4 overflow-hidden">
                     <div className="h-full flex flex-row">
-                      {[15,25,35,45,55,65].map((stop, i) => (
-                        <div key={i} className="flex-1 h-full" style={{ background: `linear-gradient(rgb(4,207,255) 0%, rgb(0,87,255) ${stop}%, rgb(0,87,255) ${stop+10}%, rgb(4,207,255) 100%)` }} />
+                      {[15, 25, 35, 45, 55, 65].map((stop, i) => (
+                        <div key={i} className="flex-1 h-full" style={{ background: `linear-gradient(rgb(4,207,255) 0%, rgb(0,87,255) ${stop}%, rgb(0,87,255) ${stop + 10}%, rgb(4,207,255) 100%)` }} />
                       ))}
                     </div>
                   </div>
@@ -475,8 +488,8 @@ export default function LandingPage() {
                 <div className="hiw-image absolute inset-0 overflow-hidden" data-panel="0">
                   {/* Gradient strips */}
                   <div className="absolute inset-0 flex flex-row">
-                    {[15,22,30,38,46,54].map((stop, i) => (
-                      <div key={i} className="flex-1 h-full" style={{ background: `linear-gradient(rgb(220,255,226) 0%, rgb(166,255,225) ${stop}%, rgb(166,255,225) ${stop+10}%, rgb(220,255,226) 100%)` }} />
+                    {[15, 22, 30, 38, 46, 54].map((stop, i) => (
+                      <div key={i} className="flex-1 h-full" style={{ background: `linear-gradient(rgb(220,255,226) 0%, rgb(166,255,225) ${stop}%, rgb(166,255,225) ${stop + 10}%, rgb(220,255,226) 100%)` }} />
                     ))}
                   </div>
                   {/* Mockup overlay */}
@@ -515,8 +528,8 @@ export default function LandingPage() {
                 <div className="hiw-image absolute inset-0 overflow-hidden" data-panel="1" style={{ opacity: 0 }}>
                   {/* Gradient strips */}
                   <div className="absolute inset-0 flex flex-row">
-                    {[15,25,35,45,55,65].map((stop, i) => (
-                      <div key={i} className="flex-1 h-full" style={{ background: `linear-gradient(rgb(232,251,249) 0%, rgb(169,223,255) ${stop}%, rgb(169,223,255) ${stop+10}%, rgb(232,251,249) 100%)` }} />
+                    {[15, 25, 35, 45, 55, 65].map((stop, i) => (
+                      <div key={i} className="flex-1 h-full" style={{ background: `linear-gradient(rgb(232,251,249) 0%, rgb(169,223,255) ${stop}%, rgb(169,223,255) ${stop + 10}%, rgb(232,251,249) 100%)` }} />
                     ))}
                   </div>
                   {/* Mockup overlay */}
@@ -553,8 +566,8 @@ export default function LandingPage() {
                 <div className="hiw-image absolute inset-0 overflow-hidden" data-panel="2" style={{ opacity: 0 }}>
                   {/* Gradient strips */}
                   <div className="absolute inset-0 flex flex-row">
-                    {[15,22,30,38,46,54].map((stop, i) => (
-                      <div key={i} className="flex-1 h-full" style={{ background: `linear-gradient(rgb(255,238,205) 0%, rgb(255,200,188) ${stop}%, rgb(255,200,188) ${stop+10}%, rgb(255,238,205) 100%)` }} />
+                    {[15, 22, 30, 38, 46, 54].map((stop, i) => (
+                      <div key={i} className="flex-1 h-full" style={{ background: `linear-gradient(rgb(255,238,205) 0%, rgb(255,200,188) ${stop}%, rgb(255,200,188) ${stop + 10}%, rgb(255,238,205) 100%)` }} />
                     ))}
                   </div>
                   {/* Mockup overlay */}
@@ -567,7 +580,8 @@ export default function LandingPage() {
                         </span>
                       </div>
                       <div className="px-4 py-4 text-[11px] leading-[1.7] overflow-x-auto whitespace-pre" style={{ fontFamily: "var(--font-geist-mono)" }}
-                        dangerouslySetInnerHTML={{ __html: `<span style="color:#64748b"># FairGuard LLM Probe</span>
+                        dangerouslySetInnerHTML={{
+                          __html: `<span style="color:#64748b"># FairGuard LLM Probe</span>
 <span style="color:#0057ff">template</span> = <span style="color:#04cfff">"Write a review for {name}"</span>
 names = [<span style="color:#04cfff">"Brian"</span>, <span style="color:#04cfff">"Anjali"</span>, <span style="color:#04cfff">"Kwame"</span>]
 
@@ -654,41 +668,41 @@ names = [<span style="color:#04cfff">"Brian"</span>, <span style="color:#04cfff"
         <div className="w-full border-t border-[#EAEAEA]">
           <div className="max-w-[1200px] mx-auto w-full border-l border-r border-[#EAEAEA] pt-24 pb-16">
             <div className="text-center max-w-[600px] mx-auto px-6">
-            <span className="section-label inline-block mb-4">Adversarial Testing</span>
-            <h2 className="text-[clamp(28px,3vw,40px)] font-extrabold leading-[1.15] tracking-[-0.02em] text-[#000000] mb-4">
-              Stress-test before your AI ships
-            </h2>
-            <p className="text-[16px] text-[#4B5563] leading-[1.65]">
-              Generate synthetic candidates with identical qualifications but different demographics. Expose how your model discriminates.
-            </p>
-          </div>
+              <span className="section-label inline-block mb-4">Adversarial Testing</span>
+              <h2 className="text-[clamp(28px,3vw,40px)] font-extrabold leading-[1.15] tracking-[-0.02em] text-[#000000] mb-4">
+                Stress-test before your AI ships
+              </h2>
+              <p className="text-[16px] text-[#4B5563] leading-[1.65]">
+                Generate synthetic candidates with identical qualifications but different demographics. Expose how your model discriminates.
+              </p>
+            </div>
           </div>
         </div>
 
         <div className="w-full border-t border-[#EAEAEA]">
           <div className="max-w-[1200px] mx-auto w-full border-l border-r border-[#EAEAEA]">
             <div className="grid md:grid-cols-3">
-            {[
-              { icon: <Zap className="w-5 h-5" />, title: "Synthetic Candidates", desc: "Gemini generates diverse profiles with controlled qualifications to isolate bias signals.", bar: "linear-gradient(180deg,#A9DFFF,#E8FBF9 60.1%)", iconBg: "bg-blue-50", iconColor: "#0057ff" },
-              { icon: <BarChart3 className="w-5 h-5" />, title: "Disparate Impact Analysis", desc: "Computes the 4/5ths rule across every demographic axis with statistical significance.", bar: "linear-gradient(180deg,#A6FFE1,#DCFFE2 60.1%)", iconBg: "bg-green-50", iconColor: "#3DC784" },
-              { icon: <AlertTriangle className="w-5 h-5" />, title: "Intersectional Testing", desc: "Finds bias at intersections — e.g., older women in rural areas rejected most.", bar: "linear-gradient(180deg,#FFC8BC 39.9%,#FFEECD)", iconBg: "bg-red-50", iconColor: "#F23E11" },
-            ].map((f, idx) => (
-              <div key={f.title} className={`flex h-[220px] pl-8 ${idx < 2 ? "border-r" : ""} border-[#EAEAEA]`}>
-                <div className="flex flex-col gap-5 w-full py-8">
-                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${f.iconBg} border border-[#E5E7EB] flex-shrink-0`}>
-                    <span style={{ color: f.iconColor }}>{f.icon}</span>
+              {[
+                { icon: <Zap className="w-5 h-5" />, title: "Synthetic Candidates", desc: "Gemini generates diverse profiles with controlled qualifications to isolate bias signals.", bar: "linear-gradient(180deg,#A9DFFF,#E8FBF9 60.1%)", iconBg: "bg-blue-50", iconColor: "#0057ff" },
+                { icon: <BarChart3 className="w-5 h-5" />, title: "Disparate Impact Analysis", desc: "Computes the 4/5ths rule across every demographic axis with statistical significance.", bar: "linear-gradient(180deg,#A6FFE1,#DCFFE2 60.1%)", iconBg: "bg-green-50", iconColor: "#3DC784" },
+                { icon: <AlertTriangle className="w-5 h-5" />, title: "Intersectional Testing", desc: "Finds bias at intersections — e.g., older women in rural areas rejected most.", bar: "linear-gradient(180deg,#FFC8BC 39.9%,#FFEECD)", iconBg: "bg-red-50", iconColor: "#F23E11" },
+              ].map((f, idx) => (
+                <div key={f.title} className={`flex h-[220px] pl-8 ${idx < 2 ? "border-r" : ""} border-[#EAEAEA]`}>
+                  <div className="flex flex-col gap-5 w-full py-8">
+                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${f.iconBg} border border-[#E5E7EB] flex-shrink-0`}>
+                      <span style={{ color: f.iconColor }}>{f.icon}</span>
+                    </div>
+                    <div>
+                      <h3 className="text-[16px] font-bold text-[#000000] mb-1.5" style={{ fontFamily: "var(--font-heading)" }}>{f.title}</h3>
+                      <p className="text-[13px] text-[#4B5563] leading-[1.6] max-w-[240px]">{f.desc}</p>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="text-[16px] font-bold text-[#000000] mb-1.5" style={{ fontFamily: "var(--font-heading)" }}>{f.title}</h3>
-                    <p className="text-[13px] text-[#4B5563] leading-[1.6] max-w-[240px]">{f.desc}</p>
+                  <div className="flex flex-col w-5 h-full flex-shrink-0">
+                    <div className="h-[60%]" style={{ backgroundImage: f.bar }} />
+                    <div className="h-[40%]" style={{ backgroundImage: f.bar, opacity: 0.5 }} />
                   </div>
                 </div>
-                <div className="flex flex-col w-5 h-full flex-shrink-0">
-                  <div className="h-[60%]" style={{ backgroundImage: f.bar }} />
-                  <div className="h-[40%]" style={{ backgroundImage: f.bar, opacity: 0.5 }} />
-                </div>
-              </div>
-            ))}
+              ))}
             </div>
           </div>
         </div>
@@ -696,17 +710,17 @@ names = [<span style="color:#04cfff">"Brian"</span>, <span style="color:#04cfff"
         <div className="w-full border-t border-b border-[#EAEAEA]">
           <div className="max-w-[1200px] mx-auto w-full border-l border-r border-[#EAEAEA] py-16">
             <div className="text-center">
-            <Link href="/stress"
-              className="inline-flex items-stretch rounded-md overflow-hidden font-bold transition-all duration-150 hover:shadow-lg group">
-              <span className="bg-[#caff3d] px-3 flex items-center justify-center group-hover:bg-[#d4ff5c] transition-colors">
-                <Zap className="w-4 h-4 text-black" />
-              </span>
-              <span className="bg-black text-white text-[12px] font-bold tracking-[0.12em] uppercase px-6 py-3 flex items-center gap-2 group-hover:bg-[#1a1a1a] transition-colors">
-                RUN STRESS TEST
-              </span>
-            </Link>
+              <Link href="/stress"
+                className="inline-flex items-stretch rounded-md overflow-hidden font-bold transition-all duration-150 hover:shadow-lg group">
+                <span className="bg-[#caff3d] px-3 flex items-center justify-center group-hover:bg-[#d4ff5c] transition-colors">
+                  <Zap className="w-4 h-4 text-black" />
+                </span>
+                <span className="bg-black text-white text-[12px] font-bold tracking-[0.12em] uppercase px-6 py-3 flex items-center gap-2 group-hover:bg-[#1a1a1a] transition-colors">
+                  RUN STRESS TEST
+                </span>
+              </Link>
+            </div>
           </div>
-        </div>
         </div>
       </section>
 
@@ -714,9 +728,9 @@ names = [<span style="color:#04cfff">"Brian"</span>, <span style="color:#04cfff"
       <section className="relative bg-white overflow-hidden min-h-[380px] flex items-center">
         {/* Full-bleed Right Background */}
         <div className="absolute right-0 top-1/2 -translate-y-1/2 h-[700px] w-[55%] hidden md:block">
-          <motion.div 
-            
-            
+          <motion.div
+
+
             className="absolute inset-0 flex flex-col justify-center pointer-events-none w-[120%]"
             style={{ transformOrigin: "right" }}
           >
@@ -739,7 +753,7 @@ names = [<span style="color:#04cfff">"Brian"</span>, <span style="color:#04cfff"
         <div className="max-w-[1200px] w-full mx-auto px-6 md:px-12 grid md:grid-cols-2 relative z-10">
           {/* Left — Content */}
           <div className="py-20 md:py-24 pr-8 flex flex-col justify-center">
-            <motion.h2 
+            <motion.h2
               initial={{ opacity: 0, x: -30 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true, margin: "-50px" }}
@@ -749,7 +763,7 @@ names = [<span style="color:#04cfff">"Brian"</span>, <span style="color:#04cfff"
               <br className="hidden md:block" />
               Every System
             </motion.h2>
-            <motion.p 
+            <motion.p
               initial={{ opacity: 0, x: -30 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true, margin: "-50px" }}
@@ -757,7 +771,7 @@ names = [<span style="color:#04cfff">"Brian"</span>, <span style="color:#04cfff"
               className="text-[16px] text-[#4B5563] leading-[1.7] mb-8 max-w-[460px]">
               FairGuard is the bias firewall for modern AI. Trained on real-world fairness patterns across hiring, lending, and content moderation, it detects discrimination in seconds instead of months.
             </motion.p>
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, x: -30 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true, margin: "-50px" }}
@@ -771,7 +785,11 @@ names = [<span style="color:#04cfff">"Brian"</span>, <span style="color:#04cfff"
                   RUN FREE AUDIT
                 </span>
               </Link>
-              <Link href="#how-it-works" className="inline-flex items-stretch rounded-md overflow-hidden font-bold transition-all duration-150 hover:shadow-md group">
+              <Link
+                href="#how-it-works"
+                onClick={(event) => handleHashLink(event, "how-it-works")}
+                className="inline-flex items-stretch rounded-md overflow-hidden font-bold transition-all duration-150 hover:shadow-md group"
+              >
                 <span className="bg-[#F3F4F6] px-3 flex items-center justify-center group-hover:bg-[#E5E7EB] transition-colors border border-[#E5E7EB] border-r-0">
                   <Search className="w-4 h-4 text-black" />
                 </span>
@@ -817,8 +835,20 @@ names = [<span style="color:#04cfff">"Brian"</span>, <span style="color:#04cfff"
           <div className="font-mono p-10 border-r border-[#3A3E49]">
             <h4 className="text-[11px] font-bold tracking-[0.18em] uppercase text-[#64748b] mb-6">RESOURCES</h4>
             <div className="flex flex-col gap-4">
-              <Link href="#domains" className="text-[14px] text-[#d1d5db] hover:text-white transition-colors">Supported Domains</Link>
-              <Link href="#how-it-works" className="text-[14px] text-[#d1d5db] hover:text-white transition-colors">How It Works</Link>
+              <Link
+                href="#domains"
+                onClick={(event) => handleHashLink(event, "domains")}
+                className="text-[14px] text-[#d1d5db] hover:text-white transition-colors"
+              >
+                Supported Domains
+              </Link>
+              <Link
+                href="#how-it-works"
+                onClick={(event) => handleHashLink(event, "how-it-works")}
+                className="text-[14px] text-[#d1d5db] hover:text-white transition-colors"
+              >
+                How It Works
+              </Link>
               <Link href="/audit" className="text-[14px] text-[#d1d5db] hover:text-white transition-colors">Run Free Audit</Link>
             </div>
           </div>
@@ -827,10 +857,10 @@ names = [<span style="color:#04cfff">"Brian"</span>, <span style="color:#04cfff"
           <div className="font-mono p-10">
             <h4 className="text-[11px] font-bold tracking-[0.18em] uppercase text-[#64748b] mb-6">LEGAL FRAMEWORKS</h4>
             <div className="flex flex-col gap-4">
-              <Link href="https://artificialintelligenceact.eu/" className="text-[14px] text-[#d1d5db] hover:text-white transition-colors">EU AI Act</Link>
-              <Link href="https://www.pib.gov.in/PressReleseDetailm.aspx?PRID=2190014&reg=3&lang=2" className="text-[14px] text-[#d1d5db] hover:text-white transition-colors">India DPDP Act</Link>
-              <Link href="https://www.eeoc.gov/" className="text-[14px] text-[#d1d5db] hover:text-white transition-colors">US EEOC Guidelines</Link>
-              <Link href="https://standards.ieee.org/wp-content/uploads/import/documents/other/ead1e.pdf" className="text-[14px] text-[#d1d5db] hover:text-white transition-colors">IEEE Ethics Standards</Link>
+              <Link href="https://artificialintelligenceact.eu/" target="_blank" rel="noopener noreferrer" className="text-[14px] text-[#d1d5db] hover:text-white transition-colors">EU AI Act</Link>
+              <Link href="https://www.pib.gov.in/PressReleseDetailm.aspx?PRID=2190014&reg=3&lang=2" target="_blank" rel="noopener noreferrer" className="text-[14px] text-[#d1d5db] hover:text-white transition-colors">India DPDP Act</Link>
+              <Link href="https://www.eeoc.gov/" target="_blank" rel="noopener noreferrer" className="text-[14px] text-[#d1d5db] hover:text-white transition-colors">US EEOC Guidelines</Link>
+              <Link href="https://standards.ieee.org/wp-content/uploads/import/documents/other/ead1e.pdf" target="_blank" rel="noopener noreferrer" className="text-[14px] text-[#d1d5db] hover:text-white transition-colors">IEEE Ethics Standards</Link>
             </div>
           </div>
         </div>
