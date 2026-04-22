@@ -431,7 +431,7 @@ export default function HistoryPage() {
 
                           {/* Domain icon */}
                           <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-muted flex items-center justify-center text-xl">
-                            {audit.domain_icon ?? "📊"}
+                            <BarChart3 className="w-5 h-5 text-muted-foreground" />
                           </div>
 
                           {/* Domain + meta */}
