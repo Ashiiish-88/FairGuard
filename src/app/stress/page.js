@@ -36,28 +36,24 @@ const DECISION_TYPES = [
     id: "hiring",
     label: "Hiring",
     sublabel: "Resume Screening",
-    icon: "💼",
     description: "Does the AI treat Brian and Lakisha equally with the same CV?",
   },
   {
     id: "lending",
     label: "Lending",
     sublabel: "Loan & Credit",
-    icon: "🏦",
     description: "Same financial profile, different names — same approval rate?",
   },
   {
     id: "insurance",
     label: "Insurance",
     sublabel: "Underwriting",
-    icon: "🏥",
     description: "Identical risk profiles across demographic groups.",
   },
   {
     id: "content_moderation",
     label: "Moderation",
     sublabel: "Content Review",
-    icon: "📱",
     description: "Same post content — is it flagged differently by group?",
   },
 ];
@@ -410,9 +406,6 @@ export default function StressTestPage() {
                               : "border-border bg-background hover:border-[#0057ff]/30 hover:bg-[#0057ff]/3",
                           ].join(" ")}
                         >
-                          {/* Icon */}
-                          <span className="text-2xl leading-none">{t.icon}</span>
-
                           {/* Labels */}
                           <div>
                             <p className={`text-sm font-semibold leading-none ${active ? "text-[#0057ff]" : "text-foreground"}`}>
