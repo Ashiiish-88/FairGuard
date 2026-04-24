@@ -1,32 +1,58 @@
-# FairGuard
-
-**Know if your AI is fair.**
-
-Most companies deploying AI have no idea whether it discriminates. Not because they don't care — because auditing AI bias traditionally takes 3 weeks, costs ₹5 lakhs, and requires a data science team. FairGuard does it in 60 seconds.
-
-Upload any dataset where an AI makes decisions about people. FairGuard tells you who is being treated unfairly, how bad it is legally, and what to do about it.
+<p align="center">
+  <a href="https://fair-guard.vercel.app">
+    <img src="public/Footer_Logo.svg" alt="FairGuard" height="400" style="margin-top: -140px; margin-bottom: -160px; clip-path: inset(30% 0 30% 0);" />
+  </a>
+</p>
 
 ---
 
-**Live demo →** `[https://fair-guard.vercel.app/]`
+<p align="justify">
+<b>Know if your AI is fair.</b>
+</p>
+
+<p align="justify">
+Most companies deploying AI have no idea whether it discriminates. Not because they don't care — because auditing AI bias traditionally takes 3 weeks, costs ₹5 lakhs, and requires a data science team. FairGuard does it in 60 seconds.
+</p>
+
+<p align="justify">
+Upload any dataset where an AI makes decisions about people. FairGuard tells you who is being treated unfairly, how bad it is legally, and what to do about it.
+</p>
+
+---
+
+**Live demo →** [https://fair-guard.vercel.app](https://fair-guard.vercel.app)
 
 ---
 
 ## What it actually does
 
+<p align="justify">
 FairGuard runs five mathematical fairness tests on your data simultaneously:
+</p>
 
-**Disparate Impact Ratio** — the core legal test. Divides the approval rate of the worst-treated group by the best-treated group. If the result is below 0.8, the system is discriminatory under the EEOC 80% Rule. A hiring AI that approves 70% of men but only 40% of women has a ratio of 0.57 — illegal in most jurisdictions.
+<p align="justify">
+<b>Disparate Impact Ratio</b> — the core legal test. Divides the approval rate of the worst-treated group by the best-treated group. If the result is below 0.8, the system is discriminatory under the EEOC 80% Rule. A hiring AI that approves 70% of men but only 40% of women has a ratio of 0.57 — illegal in most jurisdictions.
+</p>
 
-**Demographic Parity Difference** — the raw gap between groups. Takes the highest group approval rate minus the lowest. A gap above 30% is flagged as critical.
+<p align="justify">
+<b>Demographic Parity Difference</b> — the raw gap between groups. Takes the highest group approval rate minus the lowest. A gap above 30% is flagged as critical.
+</p>
 
-**Equalized Odds** — filters to only the most qualified candidates first, then checks if bias persists. This separates "the data was biased" from "the model is biased." If equally qualified women are still rejected more than equally qualified men, the problem is in the model logic itself.
+<p align="justify">
+<b>Equalized Odds</b> — filters to only the most qualified candidates first, then checks if bias persists. This separates "the data was biased" from "the model is biased." If equally qualified women are still rejected more than equally qualified men, the problem is in the model logic itself.
+</p>
 
-**Proxy Detection** — finds columns that secretly encode protected attributes. ZIP code correlates with race. Device type correlates with income. Neighborhood risk score correlates with ethnicity. The engine computes Pearson correlation (numeric columns) and Cramér's V chi-square (categorical columns) against every protected attribute. Anything above 0.3 is flagged; above 0.6 is a confirmed proxy.
+<p align="justify">
+<b>Proxy Detection</b> — finds columns that secretly encode protected attributes. ZIP code correlates with race. Device type correlates with income. Neighborhood risk score correlates with ethnicity. The engine computes Pearson correlation (numeric columns) and Cramér's V chi-square (categorical columns) against every protected attribute. Anything above 0.3 is flagged; above 0.6 is a confirmed proxy.
+</p>
 
-**Intersectional Analysis** — checks every two-way combination of protected attributes. A system might treat women fairly and treat older people fairly, but treat older women catastrophically. Single-attribute analysis misses this entirely. FairGuard doesn't.
+<p align="justify">
+<b>Intersectional Analysis</b> — checks every two-way combination of protected attributes. A system might treat women fairly and treat older people fairly, but treat older women catastrophically. Single-attribute analysis misses this entirely. FairGuard doesn't.
+</p>
 
+<p align="justify">
 All five metrics feed into a composite Fairness Score (0–100), a letter grade, and a Bias Fingerprint — a six-axis radar chart showing the unique "shape" of how this system discriminates.
+</p>
 
 ---
 
@@ -34,51 +60,85 @@ All five metrics feed into a composite Fairness Score (0–100), a letter grade,
 
 ### Audit Mode
 
+<p align="justify">
 Upload a CSV or JSON file. FairGuard auto-detects which column is the outcome, which columns are protected attributes, and what domain you're working in (hiring, lending, content moderation, insurance, pricing, healthcare, education). The domain detection adapts the report language and legal references — a content moderation audit references the EU Digital Services Act and India IT Act, not EEOC hiring rules.
+</p>
 
+<p align="justify">
 Results include the Fairness Score, Bias Fingerprint radar, per-group approval rate charts, proxy variable warnings, a Fairness Debt card showing legal exposure in ₹/€/$, and a plain-English Gemini explanation written for whoever needs to act on it — not for data scientists.
+</p>
 
 ### Stress Test
 
+<p align="justify">
 Counterfactual AI penetration testing. Take a candidate profile — a real rejected row from your uploaded data, or a synthetic profile — clone it six times changing only the name and demographic, then send each clone to a real AI model (Gemini, Llama 3.1 8B via Groq, or Llama 3.3 70B via Groq) and compare the decisions.
+</p>
 
+<p align="justify">
 Brian Thompson and Lakisha Williams. Same CV. Same qualifications. Same experience. Different names. Watch what the AI does.
+</p>
 
+<p align="justify">
 This is not a simulation. Each result is a real API call to a live model. When the bar chart shows Brian approved at 83% and Lakisha at 31%, that is Gemini's actual response to identical profiles.
+</p>
 
 ### Shield Mode
 
+<p align="justify">
 Real-time bias monitoring. Upload your dataset, configure which columns to watch, select an AI model, and start the stream. FairGuard generates candidates, sends them to the selected AI one by one, and plots fairness metrics on a live rolling-window chart. Alerts fire the moment the disparity ratio crosses the legal threshold.
+</p>
 
+<p align="justify">
 The live decisions panel shows actual names and outcomes as they arrive — "Priya Sharma: REJECTED", "James Miller: APPROVED" — making the discrimination visible as it happens rather than in retrospect.
+</p>
 
 ---
 
 ## Why this is different
 
+<p align="justify">
 Every other bias tool at a hackathon does the same thing: upload CSV, show a bar chart, suggest removing the gender column. FairGuard does four things that are genuinely uncommon:
+</p>
 
-**Domain agnosticism.** The engine doesn't know or care whether you're auditing a hiring model, a loan approval system, a content moderator, or a pricing algorithm. It operates on the structure: protected attribute, outcome, decision. The legal references and plain-English explanations adapt to the domain automatically.
+<p align="justify">
+<b>Domain agnosticism.</b> The engine doesn't know or care whether you're auditing a hiring model, a loan approval system, a content moderator, or a pricing algorithm. It operates on the structure: protected attribute, outcome, decision. The legal references and plain-English explanations adapt to the domain automatically.
+</p>
 
-**Multi-model comparison.** You can run the same counterfactual probe against Gemini, Llama 3.1, and Llama 3.3 and compare the bias profiles. Different models have different bias fingerprints. Showing that is research-level insight in a demo.
+<p align="justify">
+<b>Multi-model comparison.</b> You can run the same counterfactual probe against Gemini, Llama 3.1, and Llama 3.3 and compare the bias profiles. Different models have different bias fingerprints. Showing that is research-level insight in a demo.
+</p>
 
-**Fairness Debt.** Every bias finding is converted into estimated legal exposure — actual fine ranges under India DPDP Act 2023, EU AI Act, EEOC, EU Digital Services Act, and others depending on domain. Executives understand risk in rupees. Data scientists understand it in ratios. FairGuard speaks both.
+<p align="justify">
+<b>Fairness Debt.</b> Every bias finding is converted into estimated legal exposure — actual fine ranges under India DPDP Act 2023, EU AI Act, EEOC, EU Digital Services Act, and others depending on domain. Executives understand risk in rupees. Data scientists understand it in ratios. FairGuard speaks both.
+</p>
 
-**Counterfactual proof over statistical suggestion.** Saying "there might be gender bias" is a suggestion. Showing that the same AI approved Brian and rejected Lakisha with identical profiles is proof. The distinction matters when the finding has to go to a legal team or a board.
+<p align="justify">
+<b>Counterfactual proof over statistical suggestion.</b> Saying "there might be gender bias" is a suggestion. Showing that the same AI approved Brian and rejected Lakisha with identical profiles is proof. The distinction matters when the finding has to go to a legal team or a board.
+</p>
 
 ---
 
 ## Demo datasets
 
+<p align="justify">
 Three datasets are included to show FairGuard across different domains. Load any of them from the Audit Mode upload screen.
+</p>
 
-**Hiring** (`demo_hiring_data.csv`) — 120 applicants. Gender and ethnicity bias. White male applicants hired at 73%, Black applicants at 4% despite comparable qualifications. Disparate impact ratio: 0.055. ZIP type flags as a confirmed proxy for ethnicity.
+<p align="justify">
+<b>Hiring</b> (<code>demo_hiring_data.csv</code>) — 120 applicants. Gender and ethnicity bias. White male applicants hired at 73%, Black applicants at 4% despite comparable qualifications. Disparate impact ratio: 0.055. ZIP type flags as a confirmed proxy for ethnicity.
+</p>
 
-**Content Moderation** (`demo_content_moderation.csv`) — 200 posts. Minority racial users flagged at 59%, majority users at 16%. AAVE and non-native English variants carry additional flag penalties. Audit config: outcome = `flagged`, positive value = `1`.
+<p align="justify">
+<b>Content Moderation</b> (<code>demo_content_moderation.csv</code>) — 200 posts. Minority racial users flagged at 59%, majority users at 16%. AAVE and non-native English variants carry additional flag penalties. Audit config: outcome = <code>flagged</code>, positive value = <code>1</code>.
+</p>
 
-**Algorithmic Pricing** (`demo_pricing_data.csv`) — 200 transactions. Rural mobile users charged premium pricing 77% of the time; urban desktop users 24%. ZIP income bracket and device type are confirmed proxies for the pricing decision. Audit config: outcome = `price_tier`, positive value = `0` (standard pricing is the good outcome).
+<p align="justify">
+<b>Algorithmic Pricing</b> (<code>demo_pricing_data.csv</code>) — 200 transactions. Rural mobile users charged premium pricing 77% of the time; urban desktop users 24%. ZIP income bracket and device type are confirmed proxies for the pricing decision. Audit config: outcome = <code>price_tier</code>, positive value = <code>0</code> (standard pricing is the good outcome).
+</p>
 
-**Lending** (`demo_lending_data.csv`) — 200 loan applications. White applicants approved at 96%, Black applicants at 17% with near-identical credit score distributions across groups. Neighborhood risk score flags as a proxy for race. Disparate impact ratio: 0.177.
+<p align="justify">
+<b>Lending</b> (<code>demo_lending_data.csv</code>) — 200 loan applications. White applicants approved at 96%, Black applicants at 17% with near-identical credit score distributions across groups. Neighborhood risk score flags as a proxy for race. Disparate impact ratio: 0.177.
+</p>
 
 ---
 
@@ -96,7 +156,10 @@ Three datasets are included to show FairGuard across different domains. Load any
 | Database | Firebase Firestore — aggregate metrics only, no raw data |
 | Deployment | Vercel |
 
-**Privacy model.** CSV and JSON files are parsed entirely in the browser using PapaParse. Raw data never leaves the user's machine. Only aggregated statistics — group approval rates, metric scores, domain tag — are sent to the API. Gemini receives metric summaries, not individual rows. Firebase stores only the audit summary object, not the underlying dataset.
+
+<p align="justify">
+<b>Privacy model.</b> CSV and JSON files are parsed entirely in the browser using PapaParse. Raw data never leaves the user's machine. Only aggregated statistics — group approval rates, metric scores, domain tag — are sent to the API. Gemini receives metric summaries, not individual rows. Firebase stores only the audit summary object, not the underlying dataset.
+</p>
 
 ---
 
@@ -120,7 +183,7 @@ Create `.env.local` in the project root:
 # ─── Gemini AI ───
 GEMINI_API_KEY=your_gemini_api_key_here
 
-# ─── Firebase (Hosting + Firestore) ───
+# ─── Firebase (Firestore) ───
 NEXT_PUBLIC_FIREBASE_API_KEY=your_firebase_api_key_here
 NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
 NEXT_PUBLIC_FIREBASE_PROJECT_ID=your_firebase_project_id
@@ -137,7 +200,9 @@ GROQ_API_KEY_3_3=your_groq_llama_3_3_api_key_here
 
 ## ✨ Key Features
 
-Our platform operates in **3 distinct modes**, providing full coverage from historical data analysis to live monitoring and proactive penetration testing:
+<p align="justify">
+Our platform operates in <b>3 distinct modes</b>, providing full coverage from historical data analysis to live monitoring and proactive penetration testing:
+</p>
 
 - **🔍 Audit Mode (Static Data Scanning)**
   - Upload any CSV dataset (e.g., hiring decisions).
@@ -159,7 +224,9 @@ Our platform operates in **3 distinct modes**, providing full coverage from hist
 
 ## 🛠️ Tech Stack
 
+<p align="justify">
 FairGuard is built entirely on a modern, serverless Next.js architecture, guaranteeing blazing-fast performance and effortless deployment.
+</p>
 
 **Framework:** Next.js 15 (App Router)
 **Styling & UI:** Tailwind CSS v4, shadcn/ui, Framer Motion
@@ -173,14 +240,18 @@ FairGuard is built entirely on a modern, serverless Next.js architecture, guaran
 
 ## 🚀 Getting Started (Bootstrapping)
 
+<p align="justify">
 To run FairGuard locally, simply follow these steps.
+</p>
 
 ### 1. Clone the Repository
 ```bash
 npm run dev
 ```
 
-Open `http://localhost:3000`. Upload one of the demo CSVs from the `public/` folder to verify everything is working.
+<p align="justify">
+Open <code>http://localhost:3000</code>. Upload one of the demo CSVs from the <code>public/</code> folder to verify everything is working.
+</p>
 
 **To deploy on Vercel:**
 
@@ -189,7 +260,9 @@ npm i -g vercel
 vercel --prod
 ```
 
+<p align="justify">
 Add the same environment variables in the Vercel dashboard under Project → Settings → Environment Variables.
+</p>
 
 ---
 
@@ -229,7 +302,7 @@ fairguard/
 
 ## Built for Google Solution Challenge 2026
 
----
+
 
 ## Contributors
 
@@ -241,5 +314,8 @@ fairguard/
 
 **Khushali Dukhande**
 
+<p align="justify">
 
 > **Our Privacy Promise:** FairGuard processes your sensitive CSV data entirely within your browser (thanks to PapaParse). We only send generic, aggregated statistical summaries to our internal API and Gemini. Your raw data *never* leaves your machine.
+
+</p>
