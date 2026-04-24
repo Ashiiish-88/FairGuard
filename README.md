@@ -1,6 +1,6 @@
 <p align="center">
   <a href="https://fair-guard.vercel.app">
-    <img src="public/Footer_Logo.svg" alt="FairGuard" height="400" style="margin-top: -140px; margin-bottom: -160px; clip-path: inset(30% 0 30% 0);" />
+    <img src="public/Readme_Logo.svg" alt="FairGuard" width="600" />
   </a>
 </p>
 
