@@ -56,7 +56,7 @@ All five metrics feed into a composite Fairness Score (0–100), a letter grade,
 
 ---
 
-## The three modes
+## The 3 modes
 
 ### Audit Mode
 
@@ -222,47 +222,6 @@ Our platform operates in <b>3 distinct modes</b>, providing full coverage from h
 
 ---
 
-## 🛠️ Tech Stack
-
-<p align="justify">
-FairGuard is built entirely on a modern, serverless Next.js architecture, guaranteeing blazing-fast performance and effortless deployment.
-</p>
-
-**Framework:** Next.js 15 (App Router)
-**Styling & UI:** Tailwind CSS v4, shadcn/ui, Framer Motion
-**Data Visualization:** Recharts
-**Data Processing (Privacy-first):** PapaParse (client-side CSV parsing)
-**AI Engine:** Google Gemini (`@google/generative-ai`)
-**Stats/Math Engine:** Pure JavaScript (Zero dependencies needed for complex bias calculations)
-**Deployment:** Vercel (Serverless)
-
----
-
-## 🚀 Getting Started (Bootstrapping)
-
-<p align="justify">
-To run FairGuard locally, simply follow these steps.
-</p>
-
-### 1. Clone the Repository
-```bash
-npm run dev
-```
-
-<p align="justify">
-Open <code>http://localhost:3000</code>. Upload one of the demo CSVs from the <code>public/</code> folder to verify everything is working.
-</p>
-
-**To deploy on Vercel:**
-
-```bash
-npm i -g vercel
-vercel --prod
-```
-
-<p align="justify">
-Add the same environment variables in the Vercel dashboard under Project → Settings → Environment Variables.
-</p>
 
 ---
 
