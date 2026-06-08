@@ -13,12 +13,12 @@ import { getModelDecision, MODEL_LABELS } from "@/lib/gemini";
 
 // Diverse name banks for counterfactual testing
 const NAME_BANKS = {
-  male_western:   ["Brian Thompson", "James Miller", "Robert Davis"],
-  female_western: ["Sarah Johnson", "Emily Williams", "Jessica Brown"],
-  male_indian:    ["Rajesh Kumar", "Arjun Sharma", "Vikram Patel"],
-  female_indian:  ["Priya Sharma", "Ananya Gupta", "Lakshmi Iyer"],
-  male_african:   ["Kwame Asante", "Jamal Washington", "DeShawn Jackson"],
-  female_african: ["Lakisha Williams", "Aisha Mohammed", "Imani Okafor"],
+  male_western:   ["Brian Thompson", "James Miller", "Robert Davis", "Michael Anderson", "David Wilson"],
+  female_western: ["Sarah Johnson", "Emily Williams", "Jessica Brown", "Jennifer Taylor", "Amanda Martinez"],
+  male_indian:    ["Rajesh Kumar", "Arjun Sharma", "Vikram Patel", "Sanjay Mehta", "Rohan Desai"],
+  female_indian:  ["Priya Sharma", "Ananya Gupta", "Lakshmi Iyer", "Kavitha Reddy", "Meera Joshi"],
+  male_african:   ["Kwame Asante", "Jamal Washington", "DeShawn Jackson", "Oluwaseun Adeyemi", "Tendai Moyo"],
+  female_african: ["Lakisha Williams", "Aisha Mohammed", "Imani Okafor", "Fatima Diallo", "Zuri Mwangi"],
 };
 
 // Old biased model fallback (when no API key available)

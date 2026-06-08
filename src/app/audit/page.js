@@ -31,6 +31,8 @@ import BiasChart from "@/components/bias-chart";
 import BiasFingerprint from "@/components/bias-fingerprint";
 import FairnessDebtCard from "@/components/fairness-debt-card";
 import MetricCard from "@/components/metric-card";
+import HumanCostCard from "@/components/human-cost-card";
+import CertificateCard from "@/components/certificate-card";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -1079,6 +1081,13 @@ export default function AuditPage() {
                   <FairnessDebtCard debt={results.fairness_debt} />
                 </motion.div>
 
+                {/* ── Row 3b: Human Cost ──────────────────────────── */}
+                {results.human_cost && (
+                  <motion.div variants={staggerChild}>
+                    <HumanCostCard humanCost={results.human_cost} />
+                  </motion.div>
+                )}
+
                 {/* ── Row 4: Proxy variables ───────────────────────── */}
                 {results.proxies?.length > 0 && (
                   <motion.div variants={staggerChild}>
@@ -1221,6 +1230,11 @@ export default function AuditPage() {
                       )}
                     </div>
                   </div>
+                </motion.div>
+
+                {/* ── Row 6: Bias Certificate ────────────────────── */}
+                <motion.div variants={staggerChild}>
+                  <CertificateCard auditResults={results} />
                 </motion.div>
 
               </motion.div>

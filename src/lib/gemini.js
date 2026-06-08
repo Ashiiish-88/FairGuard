@@ -13,8 +13,30 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 
 let genAI = null;
 let model = null;
+let _vertexModel = null;
+let _usingVertex = false;
 
-function getModel() {
+async function getModel() {
+  // Try Vertex AI first (if GCP project is configured)
+  if (process.env.GOOGLE_CLOUD_PROJECT && !_vertexModel) {
+    try {
+      // Dynamic import for optional dependency
+      const { VertexAI } = await import("@google-cloud/vertexai");
+      const vertexAI = new VertexAI({
+        project: process.env.GOOGLE_CLOUD_PROJECT,
+        location: process.env.GOOGLE_CLOUD_LOCATION || "us-central1",
+      });
+      _vertexModel = vertexAI.getGenerativeModel({ model: "gemini-2.0-flash-001" });
+      _usingVertex = true;
+      return _vertexModel;
+    } catch (e) {
+      console.warn("Vertex AI unavailable, falling back to Gemini SDK:", e.message);
+    }
+  }
+
+  if (_vertexModel) return _vertexModel;
+
+  // Fall back to direct Gemini SDK
   if (!model) {
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey || apiKey === "your_gemini_api_key") {
@@ -22,8 +44,14 @@ function getModel() {
     }
     genAI = new GoogleGenerativeAI(apiKey);
     model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+    _usingVertex = false;
   }
   return model;
+}
+
+// Export so UI can show which provider is active
+export function getAIProvider() {
+  return _usingVertex ? "Vertex AI" : "Gemini API";
 }
 
 function extractJSON(text) {
@@ -121,7 +149,7 @@ function getDomainRecommendationContext(domain) {
 
 // ─── Explain Bias in Plain English ───
 export async function explainBias(metrics) {
-  const m = getModel();
+  const m = await getModel();
   if (!m) {
     return {
       summary: "Bias analysis complete — see metrics for details.",
@@ -178,7 +206,7 @@ Return ONLY valid JSON:
 
 // ─── Legal Compliance Check ───
 export async function checkCompliance(metrics) {
-  const m = getModel();
+  const m = await getModel();
   if (!m) {
     return { regulations: [], overall_risk: "UNKNOWN", error: "No API key" };
   }
@@ -222,7 +250,7 @@ Return ONLY valid JSON:
 
 // ─── Fix Recommendations ───
 export async function getRecommendations(metrics) {
-  const m = getModel();
+  const m = await getModel();
   if (!m) {
     return [{ action: "Review and remove proxy features", feature: "detected proxies", expected_fairness_gain: 20, difficulty: "EASY", explanation: "No API key configured." }];
   }
@@ -254,7 +282,7 @@ Return ONLY valid JSON array:
 
 // ─── Synthetic Candidate Generation ───
 export async function generateSyntheticCandidates(decisionType, count = 100, demographicAxes = ["gender", "age_group"]) {
-  const m = getModel();
+  const m = await getModel();
   if (!m) {
     return generateFallbackCandidates(decisionType, count, demographicAxes);
   }
@@ -392,7 +420,7 @@ export async function getGroqDecision(candidate, decisionType, modelId = "llama-
 // Call this from stress/shield routes: getModelDecision("gemini", candidate, "hiring")
 export async function getModelDecision(provider, candidate, decisionType) {
   if (provider === "gemini") {
-    const m = getModel();
+    const m = await getModel();
     if (!m) return null;
     const prompt = buildDecisionPrompt(candidate, decisionType);
     try {
@@ -410,6 +438,34 @@ export async function getModelDecision(provider, candidate, decisionType) {
   if (provider === "llama-70b") return getGroqDecision(candidate, decisionType, "llama-3.3-70b-versatile");
   // Default: try Gemini
   return getModelDecision("gemini", candidate, decisionType);
+}
+
+// ─── Genome Cache Pre-Warm ───
+// Runs 5 test probes (one per qual level, male_western_young only)
+// to verify API key + warm the model before full 60-probe genome run.
+export async function warmGenomeCache(decisionType = "hiring") {
+  const m = await getModel();
+  if (!m) return { success: false, reason: "no_model" };
+
+  const testProfiles = [
+    { name: "Brian Thompson", gender: "Male", ethnicity: "western", age: 28, qualification_score: 60, experience_years: 2, education: "Bachelors" },
+    { name: "Brian Thompson", gender: "Male", ethnicity: "western", age: 28, qualification_score: 70, experience_years: 4, education: "Bachelors" },
+    { name: "Brian Thompson", gender: "Male", ethnicity: "western", age: 28, qualification_score: 80, experience_years: 8, education: "Masters" },
+    { name: "Brian Thompson", gender: "Male", ethnicity: "western", age: 28, qualification_score: 85, experience_years: 11, education: "Masters" },
+    { name: "Brian Thompson", gender: "Male", ethnicity: "western", age: 28, qualification_score: 90, experience_years: 15, education: "PhD" },
+  ];
+
+  try {
+    const results = [];
+    for (const profile of testProfiles) {
+      const result = await getModelDecision("gemini", profile, decisionType);
+      results.push(result);
+      await new Promise(r => setTimeout(r, 500));
+    }
+    return { success: true, probes: results.length, provider: getAIProvider() };
+  } catch (e) {
+    return { success: false, reason: e.message };
+  }
 }
 
 // ─── Model Labels (for UI display) ───

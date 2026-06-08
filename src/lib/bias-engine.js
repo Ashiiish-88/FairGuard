@@ -740,5 +740,142 @@ export function runFullAnalysis(data, outcomeCol, protectedCols, positiveOutcome
   results.domain = domainInfo;
   results.fairness_debt = computeFairnessDebt(results, domainInfo);
 
+  // NEW v2: Compute Human Cost
+  results.human_cost = computeHumanCost(results);
+
   return results;
+}
+
+// ─────────────────────────────────────────────
+//  BIAS GENOME (v2 — Systematic Probe Analysis)
+// ─────────────────────────────────────────────
+export function computeBiasGenome(probeResults) {
+  // probeResults: array of { qualification, demographic_key, name, gender,
+  //               ethnicity, age_group, decision_numeric, confidence }
+
+  const groupStats = {};
+
+  for (const result of probeResults) {
+    const key = result.demographic_key;
+    if (!groupStats[key]) {
+      groupStats[key] = {
+        approved: 0, total: 0,
+        gender: result.gender,
+        ethnicity: result.ethnicity,
+        age_bracket: result.age_group,
+        name: result.name,
+      };
+    }
+    groupStats[key].total++;
+    if (result.decision_numeric === 1) groupStats[key].approved++;
+  }
+
+  const rates = {};
+  for (const [key, stats] of Object.entries(groupStats)) {
+    rates[key] = {
+      ...stats,
+      approval_rate: stats.approved / stats.total,
+      approval_pct: Math.round(stats.approved / stats.total * 100),
+    };
+  }
+
+  const maxRate = Math.max(...Object.values(rates).map(r => r.approval_rate));
+  const minRate = Math.min(...Object.values(rates).map(r => r.approval_rate));
+
+  for (const key of Object.keys(rates)) {
+    rates[key].bias_index = maxRate > 0
+      ? Math.round((1 - rates[key].approval_rate / maxRate) * 100) / 100
+      : 0;
+  }
+
+  // Borderline analysis — does bias increase at mid-qualification scores?
+  const byQualification = {};
+  for (const result of probeResults) {
+    const q = result.qualification_score ?? result._qual_level;
+    if (q == null) continue;
+    if (!byQualification[q]) byQualification[q] = { approved: 0, total: 0, rates_by_group: {} };
+    byQualification[q].total++;
+    if (result.decision_numeric === 1) byQualification[q].approved++;
+    const dk = result.demographic_key;
+    if (!byQualification[q].rates_by_group[dk]) byQualification[q].rates_by_group[dk] = { approved: 0, total: 0 };
+    byQualification[q].rates_by_group[dk].total++;
+    if (result.decision_numeric === 1) byQualification[q].rates_by_group[dk].approved++;
+  }
+
+  // Compute spread per qualification level
+  for (const q of Object.keys(byQualification)) {
+    const groupRates = Object.values(byQualification[q].rates_by_group).map(g => g.total > 0 ? g.approved / g.total : 0);
+    byQualification[q].max_rate = groupRates.length > 0 ? Math.max(...groupRates) : 0;
+    byQualification[q].min_rate = groupRates.length > 0 ? Math.min(...groupRates) : 0;
+    byQualification[q].spread = byQualification[q].max_rate - byQualification[q].min_rate;
+    byQualification[q].overall_rate = byQualification[q].total > 0 ? byQualification[q].approved / byQualification[q].total : 0;
+  }
+
+  const borderlineQuals = [80, 85].filter(q => byQualification[q]);
+  const borderlineBias = borderlineQuals.length > 0
+    ? borderlineQuals.reduce((sum, q) => sum + byQualification[q].spread, 0) / borderlineQuals.length
+    : 0;
+  const highQualBias = byQualification[90]?.spread || 0;
+  const borderlineAmplification = borderlineBias > highQualBias && borderlineBias > 0.1;
+
+  const worstGroup = Object.entries(rates).reduce((a, b) => b[1].bias_index > a[1].bias_index ? b : a);
+  const bestGroup = Object.entries(rates).reduce((a, b) => b[1].approval_rate > a[1].approval_rate ? b : a);
+
+  return {
+    group_rates: rates,
+    by_qualification: byQualification,
+    worst_group: { key: worstGroup[0], ...worstGroup[1] },
+    best_group: { key: bestGroup[0], ...bestGroup[1] },
+    overall_bias_spread: Math.round((maxRate - minRate) * 100) / 100,
+    borderline_amplification: borderlineAmplification,
+    borderline_amplification_note: borderlineAmplification
+      ? "Bias is HIGHER at borderline qualifications (75-85) than at high qualifications. The AI discriminates most when the decision is hardest."
+      : "Bias is consistent across qualification levels.",
+    genome_severity: (maxRate - minRate) > 0.5 ? "CRITICAL" : (maxRate - minRate) > 0.3 ? "HIGH" : "MODERATE",
+  };
+}
+
+// ─────────────────────────────────────────────
+//  HUMAN COST ENGINE (v2)
+// ─────────────────────────────────────────────
+export function computeHumanCost(analysisResults) {
+  const score = analysisResults.fairness_score?.score ?? 100;
+  if (score >= 90) {
+    return { people_harmed: 0, career_delay_years: 0, total_career_years_lost: 0, income_loss_inr: 0, headline: null };
+  }
+
+  const totalRows = analysisResults.dataset_info?.total_rows ?? 0;
+  const biasSeverity = Math.max(0, (100 - score) / 100);
+
+  // Estimated people unjustly rejected:
+  // bias_severity × total_rows × 0.35 (proportion receiving negative outcome from bias)
+  const peopleHarmed = Math.round(totalRows * biasSeverity * 0.35);
+
+  // Career delay:
+  // Average job search extension for qualified-but-rejected: 4-6 months
+  // Career trajectory impact (missed promotions, experience gaps): 1.5-2 years
+  // Total coefficient: 2.3 years (hardcoded, labeled "estimated")
+  const careerDelayYears = 2.3;
+  const totalCareerYearsLost = Math.round(peopleHarmed * careerDelayYears * 10) / 10;
+
+  // Income loss:
+  // Average monthly salary in India × job search months × people_harmed
+  // Using ₹45,000/month average × 5 months search × people_harmed
+  const incomeLossInr = Math.round(peopleHarmed * 45000 * 5);
+
+  const headline = peopleHarmed > 0
+    ? `${peopleHarmed.toLocaleString()} people may have waited ${careerDelayYears} extra years because of this bias`
+    : null;
+
+  return {
+    people_harmed: peopleHarmed,
+    career_delay_years: careerDelayYears,
+    total_career_years_lost: totalCareerYearsLost,
+    income_loss_inr: incomeLossInr,
+    income_loss_formatted: incomeLossInr >= 10000000
+      ? `₹${(incomeLossInr / 10000000).toFixed(1)} Cr`
+      : `₹${(incomeLossInr / 100000).toFixed(1)} L`,
+    headline,
+    disclaimer: "Statistical estimates based on measured bias severity. Actual impact varies.",
+  };
 }

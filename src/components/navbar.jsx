@@ -13,6 +13,8 @@ import {
   ScanLine,
   Menu,
   X,
+  Dna,
+  GitCompare,
 } from "lucide-react";
 
 // ─── Nav link definitions ─────────────────────────────────────────────────────
@@ -32,6 +34,16 @@ const NAV_LINKS = [
     href:   "/stress",
     label:  "STRESS TEST",
     icon:   <FlaskConical className="w-3 h-3" />,
+  },
+  {
+    href:   "/genome",
+    label:  "GENOME",
+    icon:   <Dna className="w-3 h-3" />,
+  },
+  {
+    href:   "/compare",
+    label:  "COMPARE",
+    icon:   <GitCompare className="w-3 h-3" />,
   },
   {
     href:   "/history",
