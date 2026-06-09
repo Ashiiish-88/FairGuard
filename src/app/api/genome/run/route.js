@@ -12,7 +12,11 @@ import { getModelDecision, MODEL_LABELS, warmGenomeCache } from "@/lib/gemini";
 import { computeBiasGenome } from "@/lib/bias-engine";
 
 export const dynamic = "force-dynamic";
-export const maxDuration = 300; // 5 minutes for 60 API calls
+export const maxDuration = 300; // 5-min limit — respected on Pro; free tier uses DEMO_MODE
+
+// Demo mode: 3 qual levels × 12 groups = 36 probes (~43 sec, fits Vercel free tier 60s limit)
+// Full mode: 5 qual levels × 12 groups = 60 probes (~75 sec, needs Vercel Pro or self-host)
+// Set GENOME_DEMO_MODE=true in .env.local / Vercel dashboard for free tier deployments.
 
 const PROBE_MATRIX = {
   male_western_young:    { name: "Brian Thompson",   gender: "Male",   ethnicity: "western", age_group: "25-35", age: 28 },
@@ -37,18 +41,27 @@ export async function POST(request) {
   try {
     const { ai_model = "gemini", decision_type = "hiring" } = await request.json();
 
-    // Pre-warm the model with 5 quick probes
-    await warmGenomeCache(decision_type);
+    // Demo mode: 36 probes instead of 60 to fit Vercel free tier 60-second limit
+    const DEMO_MODE = process.env.GENOME_DEMO_MODE === "true";
+    const qualLevels = DEMO_MODE
+      ? [60, 80, 90]           // 3 levels × 12 groups = 36 probes (~43 seconds)
+      : [60, 70, 80, 85, 90];  // 5 levels × 12 groups = 60 probes (~75 seconds)
 
-    // Build all 60 probe candidates
+    // Pre-warm the Gemini model before the full probe run
+    // (Groq/Llama models don't need warm-up)
+    if (ai_model === "gemini") {
+      await warmGenomeCache(decision_type);
+    }
+
+    // Build all probe candidates (qualLevels varies by DEMO_MODE)
     const allCandidates = [];
-    for (const qual of QUAL_LEVELS) {
+    for (const qual of qualLevels) {
       for (const [demoKey, demoInfo] of Object.entries(PROBE_MATRIX)) {
         allCandidates.push({
           qualification_score: qual,
           experience_years: QUAL_TO_EXPERIENCE[qual],
           education: QUAL_TO_EDUCATION[qual],
-          skill_score: Math.round((qual / 100) * 0.4 + 0.5),
+          skill_score: parseFloat(((qual / 100) * 0.4 + 0.5).toFixed(2)),
           ...demoInfo,
           demographic_key: demoKey,
           _qual_level: qual,
@@ -105,6 +118,8 @@ export async function POST(request) {
       model_label: MODEL_LABELS[ai_model] || ai_model,
       decision_type,
       total_probes: results.length,
+      qual_levels_used: qualLevels,
+      demo_mode: DEMO_MODE,
       used_real_model: usedRealModel,
       probe_results: results,
       genome,

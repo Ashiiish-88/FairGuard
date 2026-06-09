@@ -9,6 +9,7 @@ import { NextResponse } from "next/server";
 import { getFirestore } from "firebase-admin/firestore";
 import crypto from "crypto";
 import { initFirebaseAdmin } from "@/lib/firebase-admin";
+import { getAIProvider } from "@/lib/gemini";
 
 function generateCertId(domain) {
   const year = new Date().getFullYear();
@@ -80,7 +81,7 @@ export async function POST(request) {
           results_hash: resultsHash,
           previous_audit_hash: null,
           status: "VALID",
-          model_used: "Gemini 2.5 Flash",
+          model_used: `Gemini 2.5 Flash (${getAIProvider()})`,
         },
       });
     }
@@ -136,7 +137,7 @@ export async function POST(request) {
       di_ratio: metricsSnapshot.di_ratio,
       dp_diff: metricsSnapshot.dp_diff,
       proxy_contamination: (audit_results.proxies?.length ?? 0) === 0 ? "none" : `${audit_results.proxies.length} proxies detected`,
-      model_used: "Gemini 2.5 Flash",
+      model_used: `Gemini 2.5 Flash (${getAIProvider()})`,
       results_hash: resultsHash,
       previous_audit_hash: previousAuditHash,
       status: "VALID",

@@ -16,18 +16,25 @@ let model = null;
 let _vertexModel = null;
 let _usingVertex = false;
 
+// Check if Vertex AI is configured (treat empty string same as missing)
+function isVertexConfigured() {
+  const project = process.env.GOOGLE_CLOUD_PROJECT?.trim();
+  return Boolean(project && project.length > 0);
+}
+
 async function getModel() {
-  // Try Vertex AI first (if GCP project is configured)
-  if (process.env.GOOGLE_CLOUD_PROJECT && !_vertexModel) {
+  // Try Vertex AI first (if GCP project is configured and non-empty)
+  if (isVertexConfigured() && !_vertexModel) {
     try {
       // Dynamic import for optional dependency
       const { VertexAI } = await import("@google-cloud/vertexai");
       const vertexAI = new VertexAI({
-        project: process.env.GOOGLE_CLOUD_PROJECT,
-        location: process.env.GOOGLE_CLOUD_LOCATION || "us-central1",
+        project: process.env.GOOGLE_CLOUD_PROJECT.trim(),
+        location: (process.env.GOOGLE_CLOUD_LOCATION || "us-central1").trim(),
       });
       _vertexModel = vertexAI.getGenerativeModel({ model: "gemini-2.0-flash-001" });
       _usingVertex = true;
+      console.log("Using Vertex AI for gemini");
       return _vertexModel;
     } catch (e) {
       console.warn("Vertex AI unavailable, falling back to Gemini SDK:", e.message);
@@ -49,9 +56,11 @@ async function getModel() {
   return model;
 }
 
-// Export so UI can show which provider is active
+// Export so UI can show which provider is active.
+// Uses env var check directly (not internal state) so it's reliable
+// even when called from modules that haven't initialized the model yet.
 export function getAIProvider() {
-  return _usingVertex ? "Vertex AI" : "Gemini API";
+  return isVertexConfigured() ? "Vertex AI" : "Gemini API";
 }
 
 function extractJSON(text) {
