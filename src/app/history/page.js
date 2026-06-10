@@ -1,4 +1,4 @@
-// app/history/page.tsx
+// app/history/page.js
 "use client";
 
 import { useState, useEffect } from "react";
@@ -19,6 +19,8 @@ import {
   Shield,
   BarChart3,
   Info,
+  Sparkles,
+  Zap,
 } from "lucide-react";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -174,9 +176,10 @@ function FlagPill({ label }) {
 // ─── Main page ────────────────────────────────────────────────────────────────
 
 export default function HistoryPage() {
-  const [audits,  setAudits]  = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [storage, setStorage] = useState("");
+  const [audits,   setAudits]   = useState([]);
+  const [loading,  setLoading]  = useState(true);
+  const [storage,  setStorage]  = useState("");
+  const [bqTrends, setBqTrends] = useState(null); // BigQuery trend data (null = loading)
 
   const loadAudits = async () => {
     setLoading(true);
@@ -192,7 +195,21 @@ export default function HistoryPage() {
     }
   };
 
-  useEffect(() => { loadAudits(); }, []);
+  // Load BigQuery trends in parallel (additive — never blocks main content)
+  const loadBqTrends = async () => {
+    try {
+      const res  = await fetch("/api/history/trends");
+      const json = await res.json();
+      setBqTrends(json);
+    } catch {
+      setBqTrends({ available: false, trends: [] });
+    }
+  };
+
+  useEffect(() => {
+    loadAudits();
+    loadBqTrends();
+  }, []);
 
   // ── Computed stats ──────────────────────────────────────────────────────────
   const avgScore = audits.length > 0
@@ -322,6 +339,108 @@ export default function HistoryPage() {
             animate="animate"
             className="space-y-6"
           >
+
+            {/* ── BigQuery Trend Panel (additive — only shown when BQ configured) ── */}
+            {bqTrends?.available && bqTrends.trends?.length > 0 && (
+              <motion.div variants={staggerChild}>
+                <div className="rounded-xl border border-[#caff3d]/20 bg-[#caff3d]/4 overflow-hidden">
+                  <div className="flex items-center gap-3 px-5 py-3.5 border-b border-[#caff3d]/15">
+                    <div className="flex items-stretch rounded-md overflow-hidden flex-shrink-0">
+                      <div className="bg-[#caff3d] w-6 h-6 flex items-center justify-center">
+                        <Sparkles className="w-3.5 h-3.5 text-black" />
+                      </div>
+                      <div className="bg-black w-0.5" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm font-semibold text-foreground">BigQuery Trend Analytics</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        {bqTrends.total_records} audit events synced · live data from Google BigQuery
+                      </p>
+                    </div>
+                    <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#caff3d]/15 border border-[#caff3d]/30 text-black">
+                      <Zap className="w-2.5 h-2.5" />
+                      LIVE
+                    </span>
+                  </div>
+
+                  <div className="p-5">
+                    {/* Domain score averages */}
+                    {bqTrends.domain_summary && Object.keys(bqTrends.domain_summary).length > 0 && (
+                      <div className="space-y-2.5">
+                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-3">
+                          Average score by domain
+                        </p>
+                        {Object.entries(bqTrends.domain_summary)
+                          .sort((a, b) => a[1].avg - b[1].avg)
+                          .map(([domain, stats]) => {
+                            const barColor =
+                              stats.avg >= 70 ? "#caff3d"
+                              : stats.avg >= 50 ? "#ff8c42"
+                              : "#ff6b7a";
+                            return (
+                              <div key={domain} className="flex items-center gap-3">
+                                <span className="text-xs font-medium text-foreground capitalize w-28 flex-shrink-0">
+                                  {domain.replace(/_/g, " ")}
+                                </span>
+                                <div className="flex-1 h-4 bg-muted rounded-sm overflow-hidden relative">
+                                  <motion.div
+                                    initial={{ width: 0 }}
+                                    animate={{ width: `${stats.avg}%` }}
+                                    transition={{ duration: 0.8, ease: "easeOut" }}
+                                    className="h-full rounded-sm"
+                                    style={{ background: barColor }}
+                                  />
+                                </div>
+                                <span className="text-xs font-bold font-mono w-12 text-right"
+                                  style={{ color: barColor }}>
+                                  {stats.avg}/100
+                                </span>
+                                <span className="text-[10px] text-muted-foreground w-16 text-right">
+                                  {stats.count} audit{stats.count !== 1 ? "s" : ""}
+                                </span>
+                              </div>
+                            );
+                          })}
+                      </div>
+                    )}
+
+                    {/* Recent trend sparkline (last 10 audits as dots) */}
+                    {bqTrends.trends.length >= 3 && (
+                      <div className="mt-5 pt-4 border-t border-border">
+                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-3">
+                          Recent score trend
+                        </p>
+                        <div className="flex items-end gap-1 h-10">
+                          {bqTrends.trends.slice(0, 20).reverse().map((t, i) => {
+                            const score = t.fairness_score ?? 0;
+                            const heightPct = Math.max(8, Math.min(100, score));
+                            const dotColor =
+                              score >= 70 ? "#caff3d"
+                              : score >= 50 ? "#ff8c42"
+                              : "#ff6b7a";
+                            return (
+                              <motion.div
+                                key={i}
+                                title={`${t.domain} — ${score}/100`}
+                                initial={{ height: 0 }}
+                                animate={{ height: `${heightPct}%` }}
+                                transition={{ duration: 0.5, delay: i * 0.03 }}
+                                className="flex-1 rounded-sm min-h-[3px] cursor-help"
+                                style={{ background: dotColor, opacity: 0.8 }}
+                              />
+                            );
+                          })}
+                        </div>
+                        <div className="flex justify-between mt-1.5">
+                          <span className="text-[9px] text-muted-foreground">Oldest</span>
+                          <span className="text-[9px] text-muted-foreground">Most recent</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </motion.div>
+            )}
 
             {/* ── Summary stats ──────────────────────────────────── */}
             <motion.div
