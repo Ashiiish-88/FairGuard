@@ -10,6 +10,8 @@ import { getFirestore } from "firebase-admin/firestore";
 import crypto from "crypto";
 import { initFirebaseAdmin } from "@/lib/firebase-admin";
 import { getAIProvider } from "@/lib/gemini";
+import { buildLegalComplianceMapping } from "@/lib/regulation-db";
+import { gcpLog } from "@/lib/gcp-logger";
 
 function generateCertId(domain) {
   const year = new Date().getFullYear();
@@ -63,27 +65,31 @@ export async function POST(request) {
         .update(JSON.stringify(metricsSnapshot))
         .digest("hex");
 
-      return NextResponse.json({
-        status: "issued",
-        storage: "memory",
-        certificate: {
-          certificate_id: certId,
-          issued_at: issuedAt,
-          valid_until: validUntil,
-          organization_name: organization_name || "Organization",
-          system_name: system_name || "AI System",
-          deployment_context: deployment_context || audit_results.domain?.domain || "general",
-          dataset_period: dataset_period || "Not specified",
-          auditor_name: auditor_name || "FairGuard User",
-          fairness_score: score,
-          letter_grade: audit_results.fairness_score?.grade,
-          dimensions_checked: Object.keys(audit_results.per_attribute || {}),
-          results_hash: resultsHash,
-          previous_audit_hash: null,
-          status: "VALID",
-          model_used: `Gemini 2.5 Flash (${getAIProvider()})`,
-        },
+      gcpLog.warn("Firebase", "getFirestore", "Firestore unavailable — issuing certificate in memory only", {
+        error: e.message,
+        certId,
       });
+
+      const memCert = {
+        certificate_id: certId,
+        issued_at: issuedAt,
+        valid_until: validUntil,
+        organization_name: organization_name || "Organization",
+        system_name: system_name || "AI System",
+        deployment_context: deployment_context || audit_results.domain?.domain || "general",
+        dataset_period: dataset_period || "Not specified",
+        auditor_name: auditor_name || "FairGuard User",
+        fairness_score: score,
+        letter_grade: audit_results.fairness_score?.grade,
+        dimensions_checked: Object.keys(audit_results.per_attribute || {}),
+        results_hash: resultsHash,
+        previous_audit_hash: null,
+        status: "VALID",
+        model_used: `Gemini 2.5 Flash (${getAIProvider()})`,
+        legal_compliance_mapping: buildLegalComplianceMapping(audit_results),
+      };
+
+      return NextResponse.json({ status: "issued", storage: "memory", certificate: memCert });
     }
 
     // Get previous audit hash for chain
@@ -141,9 +147,16 @@ export async function POST(request) {
       results_hash: resultsHash,
       previous_audit_hash: previousAuditHash,
       status: "VALID",
+      legal_compliance_mapping: buildLegalComplianceMapping(audit_results),
     };
 
-    await db.collection("certificates").doc(certId).set(certificate);
+    try {
+      await db.collection("certificates").doc(certId).set(certificate);
+      gcpLog.info("Firebase", "Firestore.set", "Certificate persisted to Firestore", { certId });
+    } catch (firestoreErr) {
+      gcpLog.error("Firebase", "Firestore.set", firestoreErr, { certId, action: "certificate_persist_failed" });
+      // Return the certificate anyway — persistence failure should not block issuance
+    }
 
     return NextResponse.json({ status: "issued", certificate });
   } catch (e) {

@@ -11,6 +11,7 @@
  */
 
 import { initializeApp, getApps, cert } from "firebase-admin/app";
+import { gcpLog } from "@/lib/gcp-logger";
 
 export function initFirebaseAdmin() {
   if (getApps().length > 0) return;
@@ -20,8 +21,11 @@ export function initFirebaseAdmin() {
   const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, "\n");
 
   if (!projectId || !clientEmail || !privateKey) {
-    console.warn("[FairGuard] Firebase Admin not configured — certificate features unavailable");
-    // Initialize with default project ID at minimum for fallback
+    gcpLog.warn("Firebase", "initAdmin", "Firebase Admin not fully configured — certificate persistence unavailable", {
+      projectId: projectId || "MISSING",
+      clientEmail: clientEmail ? "set" : "MISSING",
+      privateKey: privateKey ? "set" : "MISSING",
+    });
     if (projectId) {
       initializeApp({ projectId });
     }

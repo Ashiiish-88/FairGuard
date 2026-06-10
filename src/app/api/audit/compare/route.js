@@ -81,17 +81,26 @@ export async function POST(request) {
     }
 
     // Summary
+    const totalDimensions = Object.keys(diff.per_attribute_diff).length;
     const improvements = Object.values(diff.per_attribute_diff).filter(d => d.verdict === "IMPROVED").length;
     const regressions = Object.values(diff.per_attribute_diff).filter(d => d.verdict === "REGRESSED").length;
+    
+    let headline = "Minimal change in bias across model versions.";
+    if (regressions > 0) {
+      headline = `${improvements} dimension(s) improved, but ${regressions} dimension(s) got WORSE. Review regressions before deploying.`;
+    } else if (improvements > 0) {
+      if (improvements === totalDimensions) {
+        headline = `All ${improvements} dimension(s) improved. Model update shows clear fairness progress.`;
+      } else {
+        headline = `${improvements} out of ${totalDimensions} dimension(s) improved, with the rest stable. Model update shows fairness progress.`;
+      }
+    }
+
     diff.summary = {
       attributes_improved: improvements,
       attributes_regressed: regressions,
       overall_verdict: diff.score_delta > 5 ? "NET IMPROVEMENT" : diff.score_delta < -5 ? "NET REGRESSION" : "MIXED",
-      headline: regressions > 0
-        ? `${improvements} dimension(s) improved, but ${regressions} dimension(s) got WORSE. Review regressions before deploying.`
-        : improvements > 0
-          ? `All ${improvements} dimension(s) improved. Model update shows clear fairness progress.`
-          : "Minimal change in bias across model versions.",
+      headline,
     };
 
     return NextResponse.json({

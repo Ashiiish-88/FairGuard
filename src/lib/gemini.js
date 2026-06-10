@@ -10,11 +10,13 @@
  */
 
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { gcpLog } from "@/lib/gcp-logger";
 
 let genAI = null;
 let model = null;
 let _vertexModel = null;
 let _usingVertex = false;
+let _vertexAuthFailed = false; // set permanently after first GoogleAuthError — prevents re-init spam
 
 // Check if Vertex AI is configured (treat empty string same as missing)
 function isVertexConfigured() {
@@ -23,10 +25,9 @@ function isVertexConfigured() {
 }
 
 async function getModel() {
-  // Try Vertex AI first (if GCP project is configured and non-empty)
-  if (isVertexConfigured() && !_vertexModel) {
+  // Try Vertex AI first — skip if GCP project not configured OR auth already failed
+  if (isVertexConfigured() && !_vertexModel && !_vertexAuthFailed) {
     try {
-      // Dynamic import for optional dependency
       const { VertexAI } = await import("@google-cloud/vertexai");
       const vertexAI = new VertexAI({
         project: process.env.GOOGLE_CLOUD_PROJECT.trim(),
@@ -34,33 +35,86 @@ async function getModel() {
       });
       _vertexModel = vertexAI.getGenerativeModel({ model: "gemini-2.0-flash-001" });
       _usingVertex = true;
-      console.log("Using Vertex AI for gemini");
-      return _vertexModel;
+      gcpLog.info("VertexAI", "init", "Vertex AI initialized — will verify auth on first call", {
+        project: process.env.GOOGLE_CLOUD_PROJECT.trim(),
+        location: process.env.GOOGLE_CLOUD_LOCATION || "us-central1",
+        model: "gemini-2.0-flash-001",
+        deprecation_note: "VertexAI SDK deprecated June 2025; migrate to @google/genai before June 2026",
+      });
     } catch (e) {
-      console.warn("Vertex AI unavailable, falling back to Gemini SDK:", e.message);
+      _vertexAuthFailed = true;
+      _usingVertex = false;
+      gcpLog.error("VertexAI", "init", e, {
+        project: process.env.GOOGLE_CLOUD_PROJECT?.trim(),
+        fallback: "Gemini API SDK",
+        hint: "Ensure GOOGLE_APPLICATION_CREDENTIALS or ADC is configured",
+      });
+      gcpLog.fallback("VertexAI", "Gemini API SDK", e.message);
     }
   }
 
-  if (_vertexModel) return _vertexModel;
-
-  // Fall back to direct Gemini SDK
+  // Ensure direct Gemini SDK is prepared as fallback or primary
   if (!model) {
     const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey || apiKey === "your_gemini_api_key") {
-      return null; // No API key configured
+    if (apiKey && apiKey !== "your_gemini_api_key") {
+      genAI = new GoogleGenerativeAI(apiKey);
+      model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+      if (!_usingVertex) {
+        gcpLog.info("GeminiAPI", "init", "Using direct Gemini API SDK (Vertex AI not active)", { model: "gemini-2.5-flash" });
+      }
+    } else {
+      gcpLog.warn("GeminiAPI", "init", "GEMINI_API_KEY not set — AI features unavailable");
     }
-    genAI = new GoogleGenerativeAI(apiKey);
-    model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
-    _usingVertex = false;
   }
-  return model;
+
+  // Return wrapper with robust error-catching fallback
+  return {
+    generateContent: async (prompt) => {
+      if (_usingVertex && _vertexModel && !_vertexAuthFailed) {
+        try {
+          const res = await _vertexModel.generateContent(prompt);
+          return res;
+        } catch (e) {
+          // Distinguish auth errors (permanent) from transient errors (retry-able)
+          const isAuthError = e.message?.includes("GoogleAuthError") || e.message?.includes("authenticate") || e.constructor?.name === "GoogleAuthError";
+          if (isAuthError) {
+            // Auth will never succeed without credential changes — permanently skip Vertex AI
+            _vertexAuthFailed = true;
+            _vertexModel = null;
+            gcpLog.error("VertexAI", "generateContent", e, {
+              permanent: true,
+              action: "vertex_ai_permanently_disabled_for_this_session",
+              fallback: "Gemini API SDK",
+            });
+            gcpLog.fallback("VertexAI", "Gemini API SDK", "Auth error — Vertex AI disabled for this session");
+          } else {
+            // Transient error — allow retry next call but fall back now
+            gcpLog.error("VertexAI", "generateContent", e, {
+              transient: true,
+              fallback: "Gemini API SDK",
+            });
+          }
+          _usingVertex = false;
+        }
+      }
+      if (model) {
+        return await model.generateContent(prompt);
+      }
+      gcpLog.critical("GeminiAPI", "generateContent", new Error("No active AI model provider"), {
+        vertexConfigured: isVertexConfigured(),
+        vertexAuthFailed: _vertexAuthFailed,
+        geminiKeySet: Boolean(process.env.GEMINI_API_KEY),
+      });
+      throw new Error("No active AI model provider configured or all failed.");
+    }
+  };
 }
 
 // Export so UI can show which provider is active.
-// Uses env var check directly (not internal state) so it's reliable
-// even when called from modules that haven't initialized the model yet.
 export function getAIProvider() {
-  return isVertexConfigured() ? "Vertex AI" : "Gemini API";
+  if (_usingVertex && !_vertexAuthFailed) return "Vertex AI";
+  if (_vertexAuthFailed) return "Gemini API (Vertex AI auth failed \u2014 using direct SDK)";
+  return "Gemini API";
 }
 
 function extractJSON(text) {

@@ -78,8 +78,7 @@ export default function HumanCostCard({ humanCost }) {
           {humanCost.headline && (
             <div className="text-center py-4 px-6 mb-4 rounded-lg bg-[#ff6b7a]/5 border border-[#ff6b7a]/15">
               <p className="text-sm font-semibold text-foreground leading-relaxed">
-                &ldquo;{humanCost.people_harmed.toLocaleString()} people may have waited{" "}
-                {humanCost.career_delay_years} extra years because of a bias that took 60 seconds to detect.&rdquo;
+                {`“${humanCost.people_harmed.toLocaleString()} people may have waited ${humanCost.career_delay_years} extra years because of a bias that took 60 seconds to detect.”`}
               </p>
             </div>
           )}

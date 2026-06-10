@@ -10,6 +10,7 @@
 import { NextResponse } from "next/server";
 import { disparateImpactRatio, demographicParityDiff, intersectionalAnalysis } from "@/lib/bias-engine";
 import { getModelDecision, MODEL_LABELS } from "@/lib/gemini";
+import { gcpLog } from "@/lib/gcp-logger";
 
 // Diverse name banks for counterfactual testing
 const NAME_BANKS = {
@@ -144,17 +145,18 @@ export async function POST(request) {
               decision: modelResult.decision === 1 ? "Approved" : "Rejected",
               decision_numeric: modelResult.decision,
               confidence: modelResult.confidence,
+              raw_response: modelResult.raw_response,   // explicit passthrough for UI
               gemini_response: modelResult.raw_response,
               model_used: modelResult.model,
             };
           } else {
-            // Fallback: local biased model (no API key)
             const fb = runFallbackBiasedModel(candidate);
             return {
               ...candidate,
               decision: fb.decision === 1 ? "Approved" : "Rejected",
               decision_numeric: fb.decision,
               confidence: fb.confidence,
+              raw_response: fb.raw_response,
               gemini_response: fb.raw_response,
               model_used: "fallback_simulation",
             };
@@ -204,6 +206,28 @@ export async function POST(request) {
     }
     analysis.counterfactual_pairs = Object.values(profileGroups);
 
+    // ── Model Comparison Summary — approval rate by demographic group ──
+    // Used by UI to render the cross-model comparison table
+    const modelComparisonGroups = {};
+    for (const r of results) {
+      const key = r.name;
+      if (!modelComparisonGroups[key]) {
+        modelComparisonGroups[key] = {
+          name: r.name, gender: r.gender, ethnicity: r.ethnicity,
+          approved: 0, total: 0,
+        };
+      }
+      modelComparisonGroups[key].total++;
+      if (r.decision_numeric === 1) modelComparisonGroups[key].approved++;
+    }
+    const modelComparisonSummary = Object.values(modelComparisonGroups).map(g => ({
+      name: g.name, gender: g.gender, ethnicity: g.ethnicity,
+      approval_rate: g.total > 0 ? Math.round(g.approved / g.total * 100) : 0,
+      approved: g.approved, total: g.total,
+      model: ai_model, model_label: MODEL_LABELS[ai_model] || ai_model,
+    }));
+    analysis.model_comparison_summary = modelComparisonSummary;
+
     const overallRate = results.filter(r => r.decision_numeric === 1).length / results.length;
     analysis.summary = {
       total_candidates: results.length,
@@ -237,6 +261,7 @@ export async function POST(request) {
       explanation,
     });
   } catch (e) {
+    gcpLog.error("StressTest", "run", e, { action: "stress_test_failed" });
     return NextResponse.json({ error: `Stress test failed: ${e.message}` }, { status: 500 });
   }
 }

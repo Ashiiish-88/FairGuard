@@ -39,7 +39,26 @@ const QUAL_TO_EDUCATION  = { 60: "Bachelors", 70: "Bachelors", 80: "Masters", 85
 
 export async function POST(request) {
   try {
-    const { ai_model = "gemini", decision_type = "hiring" } = await request.json();
+    const { ai_model = "gemini", decision_type = "hiring", bypass_cache = false } = await request.json();
+
+    // Try reading cache first to prevent rate limits / speed up demo runs
+    if (!bypass_cache) {
+      try {
+        const fs = await import("fs");
+        const path = await import("path");
+        const cachePath = path.join(process.cwd(), "public", "genome_cache.json");
+        if (fs.existsSync(cachePath)) {
+          const cacheData = JSON.parse(fs.readFileSync(cachePath, "utf8"));
+          const cacheKey = `${decision_type}_${ai_model}`;
+          if (cacheData[cacheKey]) {
+            console.log(`[Genome API] Returning cached results for key: ${cacheKey}`);
+            return NextResponse.json(cacheData[cacheKey]);
+          }
+        }
+      } catch (e) {
+        console.warn("[Genome API] Cache lookup skipped/failed:", e.message);
+      }
+    }
 
     // Demo mode: 36 probes instead of 60 to fit Vercel free tier 60-second limit
     const DEMO_MODE = process.env.GENOME_DEMO_MODE === "true";

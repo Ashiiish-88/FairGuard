@@ -49,10 +49,20 @@ const riskStyle = (r) => ({
   LOW:      "bg-[#caff3d]/8  text-black     border-[#caff3d]/20",
 }[r] ?? "bg-muted text-muted-foreground border-border");
 
+function parseTimestamp(ts) {
+  if (!ts) return null;
+  if (typeof ts === "string") return new Date(ts);
+  if (typeof ts === "number") return new Date(ts);
+  if (ts.seconds !== undefined) return new Date(ts.seconds * 1000);
+  if (ts._seconds !== undefined) return new Date(ts._seconds * 1000);
+  return new Date(ts);
+}
+
 function formatDate(ts) {
   if (!ts) return "—";
   try {
-    const d = new Date(ts);
+    const d = parseTimestamp(ts);
+    if (!d || isNaN(d.getTime())) return "—";
     return d.toLocaleDateString(undefined, {
       month: "short", day: "numeric", year: "numeric",
     });
@@ -62,7 +72,8 @@ function formatDate(ts) {
 function formatTime(ts) {
   if (!ts) return "";
   try {
-    const d = new Date(ts);
+    const d = parseTimestamp(ts);
+    if (!d || isNaN(d.getTime())) return "";
     return d.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" });
   } catch { return ""; }
 }
