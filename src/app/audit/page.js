@@ -33,6 +33,7 @@ import FairnessDebtCard from "@/components/fairness-debt-card";
 import MetricCard from "@/components/metric-card";
 import HumanCostCard from "@/components/human-cost-card";
 import CertificateCard from "@/components/certificate-card";
+import RegulationPanel from "@/components/regulation-panel";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -1010,19 +1011,38 @@ export default function AuditPage() {
                       value={`${results.dataset_info?.total_rows?.toLocaleString()} rows`}
                       subtitle={`${results.dataset_info?.total_columns} columns`}
                     />
-                    <MetricCard
-                      icon={<Scale className="w-4 h-4" />}
-                      title="Disparate Impact"
-                      value={
-                        (Object.values(results.per_attribute || {})[0])
-                          ?.disparate_impact?.ratio?.toFixed(4) ?? "N/A"
-                      }
-                      severity={
-                        (Object.values(results.per_attribute || {})[0])
-                          ?.disparate_impact?.severity
-                      }
-                      subtitle="EEOC 80% Rule threshold"
-                    />
+                    <div className="space-y-1">
+                      <MetricCard
+                        icon={<Scale className="w-4 h-4" />}
+                        title="Disparate Impact"
+                        value={
+                          (Object.values(results.per_attribute || {})[0])
+                            ?.disparate_impact?.ratio?.toFixed(4) ?? "N/A"
+                        }
+                        severity={
+                          (Object.values(results.per_attribute || {})[0])
+                            ?.disparate_impact?.severity
+                        }
+                        subtitle="EEOC 80% Rule threshold"
+                      />
+                      {/* p-value display — the one line that ends every accuracy challenge */}
+                      {(() => {
+                        const sig = Object.values(results.per_attribute || {})[0]
+                          ?.disparate_impact?.statistical_significance;
+                        if (!sig) return null;
+                        return (
+                          <p className={`text-[10px] font-mono px-3 py-1 rounded border ${
+                            sig.is_highly_significant
+                              ? "text-red-400 bg-red-500/5 border-red-500/20"
+                              : sig.is_significant
+                              ? "text-orange-400 bg-orange-500/5 border-orange-500/20"
+                              : "text-muted-foreground bg-muted border-border"
+                          }`}>
+                            {sig.p_value_display} · Fisher&apos;s Exact · n={sig.sample_size}
+                          </p>
+                        );
+                      })()}
+                    </div>
                     <MetricCard
                       icon={<BarChart3 className="w-4 h-4" />}
                       title="Demographic Parity"
@@ -1079,6 +1099,11 @@ export default function AuditPage() {
                 {/* ── Row 3: Fairness Debt ─────────────────────────── */}
                 <motion.div variants={staggerChild}>
                   <FairnessDebtCard debt={results.fairness_debt} />
+                </motion.div>
+
+                {/* ── Row 3a: Regulation Reference Panel ──────────── */}
+                <motion.div variants={staggerChild}>
+                  <RegulationPanel auditResults={results} />
                 </motion.div>
 
                 {/* ── Row 3b: Human Cost ──────────────────────────── */}

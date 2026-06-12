@@ -2,6 +2,7 @@
 "use client";
 
 import { useState, useEffect, use } from "react";
+import Link from "next/link";
 import {
   Shield,
   XCircle,
@@ -19,10 +20,7 @@ import {
   Link2,
 } from "lucide-react";
 
-const COMPLIANCE_BADGES = [
-  { label: "EU AI Act Art. 9", description: "Bias testing documentation requirement" },
-  { label: "GDPR Art. 22", description: "Automated decision-making documentation" },
-];
+
 
 export default function VerifyPage({ params }) {
   const { id } = use(params);
@@ -225,24 +223,78 @@ export default function VerifyPage({ params }) {
                 </div>
               )}
 
-              {/* Compliance badges */}
-              <div className="pt-4 border-t border-border">
-                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-2.5">
-                  Compliance Standards Met
-                </p>
-                <div className="flex items-center gap-2 flex-wrap">
-                  {COMPLIANCE_BADGES.map(badge => (
-                    <span
-                      key={badge.label}
-                      className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-md bg-[#0057ff]/8 text-[#0057ff] border border-[#0057ff]/20"
-                      title={badge.description}
-                    >
-                      <Scale className="w-3 h-3" />
-                      {badge.label}
-                    </span>
-                  ))}
+              {/* Legal compliance checklist from mapping */}
+              {cert.legal_compliance_mapping && Object.keys(cert.legal_compliance_mapping).length > 0 ? (
+                <div className="pt-4 border-t border-border">
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-3">
+                    Legal Compliance Checklist
+                  </p>
+                  <div className="space-y-2">
+                    {Object.values(cert.legal_compliance_mapping).map((item, i) => {
+                      const satisfied = item.satisfied || item.satisfied_label?.includes("✓") || item.satisfied_label?.includes("COMPLIANT") || item.satisfied_label?.includes("DOCUMENTED") || item.satisfied_label?.includes("COMPLETED") || item.satisfied_label?.includes("NO PROXY");
+                      return (
+                        <div key={i} className={`p-3 rounded-lg border ${
+                          satisfied ? "bg-emerald-500/5 border-emerald-500/20" : "bg-red-500/5 border-red-500/20"
+                        }`}>
+                          <div className="flex items-start gap-2">
+                            {satisfied ? (
+                              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0 mt-0.5" />
+                            ) : (
+                              <XCircle className="w-3.5 h-3.5 text-red-400 flex-shrink-0 mt-0.5" />
+                            )}
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span className="text-xs font-semibold text-foreground">{item.regulation}</span>
+                                <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
+                                  satisfied ? "bg-emerald-500/15 text-emerald-400" : "bg-red-500/15 text-red-400"
+                                }`}>{item.satisfied_label}</span>
+                              </div>
+                              {item.requirement && (
+                                <p className="text-[10px] text-muted-foreground mt-0.5">{item.requirement}</p>
+                              )}
+                              {item.evidence && (
+                                <p className="text-[10px] text-muted-foreground/80 mt-1 italic">{item.evidence}</p>
+                              )}
+                              {item.legal_risk && (
+                                <p className="text-[10px] text-orange-400 mt-1">⚠️ {item.legal_risk}</p>
+                              )}
+                              {item.source_url && (
+                                <a
+                                  href={item.source_url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-1 text-[10px] text-[#0057ff] hover:underline mt-1"
+                                >
+                                  {item.source}
+                                  <ExternalLink className="w-2.5 h-2.5" />
+                                </a>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
+              ) : (
+                /* Fallback: static badges */
+                <div className="pt-4 border-t border-border">
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-2.5">
+                    Compliance Standards Met
+                  </p>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {["EU AI Act Art. 9", "GDPR Art. 22"].map(label => (
+                      <span
+                        key={label}
+                        className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-md bg-[#0057ff]/8 text-[#0057ff] border border-[#0057ff]/20"
+                      >
+                        <Scale className="w-3 h-3" />
+                        {label}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* Model used */}
               <div className="pt-3 border-t border-border">
@@ -260,13 +312,13 @@ export default function VerifyPage({ params }) {
           <p className="text-xs text-muted-foreground">
             Verified by FairGuard — The AI Bias Observatory
           </p>
-          <a
+          <Link
             href="/"
             className="inline-flex items-center gap-1.5 text-xs font-medium text-[#0057ff] mt-2 hover:underline"
           >
             <ExternalLink className="w-3 h-3" />
             fairguard.vercel.app
-          </a>
+          </Link>
         </div>
       </div>
     </div>

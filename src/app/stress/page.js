@@ -1,4 +1,4 @@
-// app/stress/page.tsx
+// app/stress/page.js
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
@@ -19,6 +19,8 @@ import {
   XCircle,
   AlertTriangle,
   ChevronRight,
+  ChevronDown,
+  ChevronUp,
   Sparkles,
   Scale,
   ArrowRight,
@@ -27,6 +29,7 @@ import {
   FileText,
   Trash2,
   Info,
+  MessageSquare,
 } from "lucide-react";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -147,6 +150,7 @@ export default function StressTestPage() {
   const [results,        setResults]        = useState(null);
   const [error,          setError]          = useState(null);
   const [selectedModel,  setSelectedModel]  = useState("gemini");
+  const [expandedRaw,    setExpandedRaw]    = useState({}); // { "gi-pi": true }
 
   // ── Data source state ──────────────────────────────────────────────────────
   const [sourceDataInfo, setSourceDataInfo] = useState(null); // { rowCount, cols, from: "audit"|"upload" }
@@ -793,11 +797,14 @@ export default function StressTestPage() {
 
                             {/* Persons in this group */}
                             <div className="divide-y divide-border/50">
-                              {group.map((person, pi) => {
+                                {group.map((person, pi) => {
                                 const approved = person.decision === "Approved";
+                                const rawKey = `${gi}-${pi}`;
+                                const rawOpen = expandedRaw[rawKey];
+                                const hasRaw = person.raw_response && person.raw_response !== "fallback_model";
                                 return (
+                                  <div key={pi}>
                                   <div
-                                    key={pi}
                                     className={[
                                       "flex items-center gap-4 px-5 py-3.5 transition-colors",
                                       "hover:bg-muted/20",
@@ -851,6 +858,41 @@ export default function StressTestPage() {
                                       )}
                                       {person.decision}
                                     </span>
+
+                                    {/* Raw response toggle */}
+                                    {hasRaw && (
+                                      <button
+                                        onClick={() => setExpandedRaw(prev => ({ ...prev, [rawKey]: !rawOpen }))}
+                                        className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors flex-shrink-0"
+                                        title="See raw model response"
+                                      >
+                                        <MessageSquare className="w-3 h-3" />
+                                        {rawOpen ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                                      </button>
+                                    )}
+                                  </div>
+
+                                  {/* Raw response expanded */}
+                                  <AnimatePresence>
+                                    {rawOpen && hasRaw && (
+                                      <motion.div
+                                        initial={{ height: 0, opacity: 0 }}
+                                        animate={{ height: "auto", opacity: 1 }}
+                                        exit={{ height: 0, opacity: 0 }}
+                                        transition={{ duration: 0.15 }}
+                                        className="overflow-hidden"
+                                      >
+                                        <div className="mx-5 mb-3 px-4 py-3 rounded-lg bg-muted/40 border border-border">
+                                          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1.5">
+                                            Raw model response — {person.name}
+                                          </p>
+                                          <code className="text-xs font-mono text-foreground leading-relaxed whitespace-pre-wrap break-words">
+                                            {person.raw_response}
+                                          </code>
+                                        </div>
+                                      </motion.div>
+                                    )}
+                                  </AnimatePresence>
                                   </div>
                                 );
                               })}
@@ -858,6 +900,66 @@ export default function StressTestPage() {
                           </div>
                         )
                       )}
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+
+              {/* ── Model Comparison Summary Table ─────────────────── */}
+              {results.analysis?.model_comparison_summary?.length > 0 && (
+                <motion.div variants={staggerChild}>
+                  <div className="bg-card rounded-xl border border-border overflow-hidden">
+                    <div className="flex items-center gap-3 px-5 py-4 border-b border-border bg-[#9a77f8]/4">
+                      <div className="flex items-stretch rounded-md overflow-hidden flex-shrink-0">
+                        <div className="bg-[#9a77f8] w-7 h-7 flex items-center justify-center">
+                          <Cpu className="w-3.5 h-3.5 text-white" />
+                        </div>
+                        <div className="bg-black w-0.5" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-sm font-semibold text-foreground">Model Approval Rate by Group</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          Approval % for each demographic · model: {usedRealModel ? modelLabel : "simulated"}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-xs">
+                        <thead>
+                          <tr className="border-b border-border bg-muted/30">
+                            <th className="text-left px-5 py-2.5 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Name</th>
+                            <th className="text-left px-4 py-2.5 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Gender</th>
+                            <th className="text-left px-4 py-2.5 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Ethnicity</th>
+                            <th className="text-right px-5 py-2.5 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Approval %</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-border/50">
+                          {results.analysis.model_comparison_summary
+                            .sort((a, b) => b.approval_rate - a.approval_rate)
+                            .map((row, i) => {
+                              const pct = row.approval_rate;
+                              const color = pct >= 70 ? "text-emerald-400" : pct >= 50 ? "text-yellow-400" : "text-red-400";
+                              return (
+                                <tr key={i} className="hover:bg-muted/10 transition-colors">
+                                  <td className="px-5 py-2.5 font-semibold text-foreground">{row.name}</td>
+                                  <td className="px-4 py-2.5 text-muted-foreground">{row.gender}</td>
+                                  <td className="px-4 py-2.5 text-muted-foreground capitalize">{row.ethnicity}</td>
+                                  <td className="px-5 py-2.5 text-right">
+                                    <span className={`font-bold font-mono ${color}`}>{pct}%</span>
+                                    <div className="mt-1 h-1 rounded-full bg-muted overflow-hidden">
+                                      <div
+                                        className={`h-full rounded-full ${
+                                          pct >= 70 ? "bg-emerald-400" : pct >= 50 ? "bg-yellow-400" : "bg-red-400"
+                                        }`}
+                                        style={{ width: `${pct}%` }}
+                                      />
+                                    </div>
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                        </tbody>
+                      </table>
                     </div>
                   </div>
                 </motion.div>

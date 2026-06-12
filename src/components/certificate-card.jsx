@@ -18,10 +18,7 @@ import {
   ExternalLink,
 } from "lucide-react";
 
-const COMPLIANCE_BADGES = [
-  { label: "EU AI Act Art. 9", description: "Bias testing documentation" },
-  { label: "GDPR Art. 22", description: "Automated decision documentation" },
-];
+
 
 export default function CertificateCard({ auditResults }) {
   const [state, setState] = useState("form"); // "form" | "loading" | "issued" | "ineligible"
@@ -268,18 +265,45 @@ export default function CertificateCard({ auditResults }) {
                   </code>
                 </div>
 
-                {/* Compliance badges */}
+                {/* Legal compliance checklist */}
                 <div className="flex items-center gap-2 flex-wrap">
-                  {COMPLIANCE_BADGES.map(badge => (
-                    <span
-                      key={badge.label}
-                      className="inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-md bg-[#0057ff]/8 text-[#0057ff] border border-[#0057ff]/20"
-                      title={badge.description}
-                    >
-                      <Scale className="w-3 h-3" />
-                      {badge.label}
-                    </span>
-                  ))}
+                  {cert.legal_compliance_mapping && Object.keys(cert.legal_compliance_mapping).length > 0 ? (
+                    <div className="w-full space-y-1.5">
+                      {Object.values(cert.legal_compliance_mapping).map((item, i) => {
+                        const ok = item.satisfied || item.satisfied_label?.includes("✓") || item.satisfied_label?.includes("COMPLIANT") || item.satisfied_label?.includes("DOCUMENTED") || item.satisfied_label?.includes("COMPLETED") || item.satisfied_label?.includes("NO PROXY");
+                        return (
+                          <div key={i} className="flex items-center gap-2">
+                            {ok ? (
+                              <CheckCircle2 className="w-3 h-3 text-emerald-400 flex-shrink-0" />
+                            ) : (
+                              <XCircle className="w-3 h-3 text-red-400 flex-shrink-0" />
+                            )}
+                            <span className="text-xs font-medium text-foreground">{item.regulation}</span>
+                            <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
+                              ok ? "bg-emerald-500/15 text-emerald-400" : "bg-red-500/15 text-red-400"
+                            }`}>{item.satisfied_label}</span>
+                            {item.source_url && (
+                              <a href={item.source_url} target="_blank" rel="noopener noreferrer"
+                                className="inline-flex items-center gap-0.5 text-[10px] text-[#0057ff] hover:underline ml-auto"
+                              >
+                                <ExternalLink className="w-2.5 h-2.5" />
+                              </a>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    ["EU AI Act Art. 9", "GDPR Art. 22"].map(label => (
+                      <span
+                        key={label}
+                        className="inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-md bg-[#0057ff]/8 text-[#0057ff] border border-[#0057ff]/20"
+                      >
+                        <Scale className="w-3 h-3" />
+                        {label}
+                      </span>
+                    ))
+                  )}
                 </div>
 
                 {/* Actions */}
