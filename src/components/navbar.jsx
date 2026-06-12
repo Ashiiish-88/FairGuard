@@ -22,12 +22,12 @@ import {
 const NAV_LINKS = [
   {
     href:   "/audit",
-    label:  "AUDIT",
+    label:  "AUDIT MODE",
     icon:   <ScanLine className="w-3 h-3" />,
   },
   {
     href:   "/shield",
-    label:  "SHIELD",
+    label:  "SHIELD MODE",
     icon:   <Radio className="w-3 h-3" />,
   },
   {
@@ -76,14 +76,11 @@ export default function Navbar() {
   }, [pathname]);
 
   // Determine CTA state based on current page
-  const isOnAudit    = pathname === "/audit";
   const isOnApp      = NAV_LINKS.some((l) => pathname.startsWith(l.href));
   const isOnLanding  = !isOnApp;
 
   // CTA config
-  const ctaConfig = isOnAudit
-    ? null // hide CTA on audit page — user is already there
-    : isOnApp
+  const ctaConfig = isOnApp
     ? {
         // Inside the app — contextual action
         href:  "/audit",
@@ -138,13 +135,8 @@ export default function Navbar() {
                       : "text-muted-foreground hover:text-foreground",
                   ].join(" ")}
                 >
-                  {/* Icon — only show on active or hover */}
-                  <span
-                    className={[
-                      "transition-opacity duration-150",
-                      isActive ? "opacity-100" : "opacity-0 group-hover:opacity-100",
-                    ].join(" ")}
-                  >
+                  {/* Icon — always visible for layout consistency */}
+                  <span className="flex-shrink-0">
                     {link.icon}
                   </span>
                   {link.label}

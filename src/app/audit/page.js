@@ -568,7 +568,7 @@ export default function AuditPage() {
             <div>
               <div className="flex items-center gap-2.5 flex-wrap">
                 <h1 className="text-2xl font-bold text-foreground tracking-tight">
-                  Bias Audit
+                  Audit Mode
                 </h1>
                 {domainInfo && (
                   <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-muted border border-border text-xs font-medium text-muted-foreground">

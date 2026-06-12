@@ -882,7 +882,7 @@ names = [<span style="color:#04cfff">"Brian"</span>, <span style="color:#04cfff"
           <div className="font-mono p-10 border-r border-[#3A3E49]">
             <h4 className="text-[11px] font-bold tracking-[0.18em] uppercase text-[#64748b] mb-6">TOOLS</h4>
             <div className="flex flex-col gap-4">
-              <Link href="/audit" className="text-[14px] text-[#d1d5db] hover:text-white transition-colors">Bias Audit</Link>
+              <Link href="/audit" className="text-[14px] text-[#d1d5db] hover:text-white transition-colors">Audit Mode</Link>
               <Link href="/shield" className="text-[14px] text-[#d1d5db] hover:text-white transition-colors">Shield Mode</Link>
               <Link href="/stress" className="text-[14px] text-[#d1d5db] hover:text-white transition-colors">Stress Test</Link>
               <Link href="/history" className="text-[14px] text-[#d1d5db] hover:text-white transition-colors">Audit History</Link>

@@ -3,6 +3,7 @@
     "allowJs": true,
     "checkJs": true,
     "strict": false,
+    "jsx": "react-jsx",
     "paths": {
       "@/*": ["./src/*"]
     }

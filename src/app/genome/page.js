@@ -274,7 +274,7 @@ export default function GenomePage() {
                     key={q}
                     initial={{ opacity: 0, x: -8 }}
                     animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: i * 20, duration: 0.25 }}
+                    transition={{ delay: i * 0.28, duration: 0.25 }}
                     className="flex items-center gap-2.5"
                   >
                     <Loader2 className="w-3 h-3 text-[#9a77f8] animate-spin flex-shrink-0" />
