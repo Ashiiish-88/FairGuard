@@ -9,37 +9,80 @@
  * content moderation, pricing, lending, etc.).
  */
 
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleGenAI } from "@google/genai";
 import { gcpLog } from "@/lib/gcp-logger";
 
-let genAI = null;
-let model = null;
-let _vertexModel = null;
+let _vertexClient = null;
+let _directClient = null;
 let _usingVertex = false;
 let _vertexAuthFailed = false; // set permanently after first GoogleAuthError — prevents re-init spam
 
-// Check if Vertex AI is configured (treat empty string same as missing)
-function isVertexConfigured() {
-  const project = process.env.GOOGLE_CLOUD_PROJECT?.trim();
-  return Boolean(project && project.length > 0);
+// Helper to safely clean keys and emails loaded from environment variables
+function cleanEnvValue(value) {
+  if (!value) return "";
+  let cleaned = value.trim();
+  if (cleaned.startsWith('"') && cleaned.endsWith('"')) {
+    cleaned = cleaned.slice(1, -1);
+  }
+  if (cleaned.startsWith("'") && cleaned.endsWith("'")) {
+    cleaned = cleaned.slice(1, -1);
+  }
+  return cleaned;
 }
 
-async function getModel() {
-  // Try Vertex AI first — skip if GCP project not configured OR auth already failed
-  if (isVertexConfigured() && !_vertexModel && !_vertexAuthFailed) {
+function cleanPrivateKey(key) {
+  const cleaned = cleanEnvValue(key);
+  return cleaned.replace(/\\n/g, "\n");
+}
+
+// Check if Vertex AI is configured (requires project, location, client email, and private key)
+function isVertexConfigured() {
+  const project = cleanEnvValue(process.env.GOOGLE_CLOUD_PROJECT);
+  const email = cleanEnvValue(process.env.GCP_CLIENT_EMAIL);
+  const key = cleanEnvValue(process.env.GCP_PRIVATE_KEY);
+  return Boolean(project && email && key);
+}
+
+// Helper to create an object that can be called as a function text() OR accessed as a string text
+function createAdaptableString(str) {
+  const fn = () => str;
+  fn.toString = () => str;
+  fn.valueOf = () => str;
+  for (const key of Object.getOwnPropertyNames(String.prototype)) {
     try {
-      const { VertexAI } = await import("@google-cloud/vertexai");
-      const vertexAI = new VertexAI({
-        project: process.env.GOOGLE_CLOUD_PROJECT.trim(),
-        location: (process.env.GOOGLE_CLOUD_LOCATION || "us-central1").trim(),
+      if (typeof String.prototype[key] === "function" && key !== "constructor") {
+        fn[key] = String.prototype[key].bind(str);
+      }
+    } catch (_) {}
+  }
+  return fn;
+}
+
+export async function getModel() {
+  // Try Vertex AI first — skip if GCP project not configured OR auth already failed
+  if (isVertexConfigured() && !_vertexClient && !_vertexAuthFailed) {
+    try {
+      const project = cleanEnvValue(process.env.GOOGLE_CLOUD_PROJECT);
+      const location = cleanEnvValue(process.env.GOOGLE_CLOUD_LOCATION || "us-central1");
+      const clientEmail = cleanEnvValue(process.env.GCP_CLIENT_EMAIL);
+      const privateKey = cleanPrivateKey(process.env.GCP_PRIVATE_KEY);
+
+      _vertexClient = new GoogleGenAI({
+        vertexai: true,
+        project,
+        location,
+        googleAuthOptions: {
+          credentials: {
+            client_email: clientEmail,
+            private_key: privateKey,
+          },
+        },
       });
-      _vertexModel = vertexAI.getGenerativeModel({ model: "gemini-2.0-flash-001" });
       _usingVertex = true;
-      gcpLog.info("VertexAI", "init", "Vertex AI initialized — will verify auth on first call", {
-        project: process.env.GOOGLE_CLOUD_PROJECT.trim(),
-        location: process.env.GOOGLE_CLOUD_LOCATION || "us-central1",
-        model: "gemini-2.0-flash-001",
-        deprecation_note: "VertexAI SDK deprecated June 2025; migrate to @google/genai before June 2026",
+      gcpLog.info("VertexAI", "init", "Vertex AI initialized via unified @google/genai SDK", {
+        project,
+        location,
+        model: "gemini-2.5-flash",
       });
     } catch (e) {
       _vertexAuthFailed = true;
@@ -47,18 +90,16 @@ async function getModel() {
       gcpLog.error("VertexAI", "init", e, {
         project: process.env.GOOGLE_CLOUD_PROJECT?.trim(),
         fallback: "Gemini API SDK",
-        hint: "Ensure GOOGLE_APPLICATION_CREDENTIALS or ADC is configured",
       });
       gcpLog.fallback("VertexAI", "Gemini API SDK", e.message);
     }
   }
 
   // Ensure direct Gemini SDK is prepared as fallback or primary
-  if (!model) {
-    const apiKey = process.env.GEMINI_API_KEY;
+  if (!_directClient) {
+    const apiKey = cleanEnvValue(process.env.GEMINI_API_KEY);
     if (apiKey && apiKey !== "your_gemini_api_key") {
-      genAI = new GoogleGenerativeAI(apiKey);
-      model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+      _directClient = new GoogleGenAI({ apiKey });
       if (!_usingVertex) {
         gcpLog.info("GeminiAPI", "init", "Using direct Gemini API SDK (Vertex AI not active)", { model: "gemini-2.5-flash" });
       }
@@ -70,17 +111,38 @@ async function getModel() {
   // Return wrapper with robust error-catching fallback
   return {
     generateContent: async (prompt) => {
-      if (_usingVertex && _vertexModel && !_vertexAuthFailed) {
+      // 1. Try Vertex AI client
+      if (_usingVertex && _vertexClient && !_vertexAuthFailed) {
         try {
-          const res = await _vertexModel.generateContent(prompt);
-          return res;
+          const res = await _vertexClient.models.generateContent({
+            model: "gemini-2.5-flash",
+            contents: prompt,
+          });
+          const textVal = res.text || "";
+          return {
+            text: createAdaptableString(textVal),
+            response: {
+              text: createAdaptableString(textVal),
+            },
+            candidates: res.candidates || [
+              {
+                content: {
+                  parts: [{ text: textVal }],
+                },
+              },
+            ],
+          };
         } catch (e) {
           // Distinguish auth errors (permanent) from transient errors (retry-able)
-          const isAuthError = e.message?.includes("GoogleAuthError") || e.message?.includes("authenticate") || e.constructor?.name === "GoogleAuthError";
+          const isAuthError =
+            e.message?.includes("GoogleAuthError") ||
+            e.message?.includes("authenticate") ||
+            e.constructor?.name === "GoogleAuthError" ||
+            e.status === 401 ||
+            e.status === 403;
           if (isAuthError) {
-            // Auth will never succeed without credential changes — permanently skip Vertex AI
             _vertexAuthFailed = true;
-            _vertexModel = null;
+            _vertexClient = null;
             gcpLog.error("VertexAI", "generateContent", e, {
               permanent: true,
               action: "vertex_ai_permanently_disabled_for_this_session",
@@ -88,7 +150,6 @@ async function getModel() {
             });
             gcpLog.fallback("VertexAI", "Gemini API SDK", "Auth error — Vertex AI disabled for this session");
           } else {
-            // Transient error — allow retry next call but fall back now
             gcpLog.error("VertexAI", "generateContent", e, {
               transient: true,
               fallback: "Gemini API SDK",
@@ -97,29 +158,57 @@ async function getModel() {
           _usingVertex = false;
         }
       }
-      if (model) {
-        return await model.generateContent(prompt);
+
+      // 2. Fall back to Direct client
+      if (_directClient) {
+        try {
+          const res = await _directClient.models.generateContent({
+            model: "gemini-2.5-flash",
+            contents: prompt,
+          });
+          const textVal = res.text || "";
+          return {
+            text: createAdaptableString(textVal),
+            response: {
+              text: createAdaptableString(textVal),
+            },
+            candidates: res.candidates || [
+              {
+                content: {
+                  parts: [{ text: textVal }],
+                },
+              },
+            ],
+          };
+        } catch (e) {
+          gcpLog.error("GeminiAPI", "generateContent", e, {
+            promptLength: typeof prompt === "string" ? prompt.length : JSON.stringify(prompt).length,
+          });
+          throw e;
+        }
       }
+
       gcpLog.critical("GeminiAPI", "generateContent", new Error("No active AI model provider"), {
         vertexConfigured: isVertexConfigured(),
         vertexAuthFailed: _vertexAuthFailed,
         geminiKeySet: Boolean(process.env.GEMINI_API_KEY),
       });
       throw new Error("No active AI model provider configured or all failed.");
-    }
+    },
   };
 }
 
 // Export so UI can show which provider is active.
 export function getAIProvider() {
   if (_usingVertex && !_vertexAuthFailed) return "Vertex AI";
-  if (_vertexAuthFailed) return "Gemini API (Vertex AI auth failed \u2014 using direct SDK)";
+  if (_vertexAuthFailed) return "Gemini API (Vertex AI auth failed — using direct SDK)";
   return "Gemini API";
 }
 
 function extractJSON(text) {
   // Try to extract JSON from Gemini's response (may be wrapped in ```json blocks)
-  let cleaned = text.trim();
+  const str = String(text);
+  let cleaned = str.trim();
   if (cleaned.includes("```json")) {
     cleaned = cleaned.split("```json")[1].split("```")[0].trim();
   } else if (cleaned.includes("```")) {

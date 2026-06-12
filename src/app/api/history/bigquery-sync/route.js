@@ -37,7 +37,13 @@ export async function POST(request) {
 
     // Dynamic import — only loads if @google-cloud/bigquery is installed
     const { BigQuery } = await import("@google-cloud/bigquery");
-    const bigquery = new BigQuery({ projectId });
+    const bigquery = new BigQuery({ 
+      projectId,
+      credentials: {
+        client_email: process.env.GCP_CLIENT_EMAIL,
+        private_key: process.env.GCP_PRIVATE_KEY?.replace(/\\n/g, "\n"),
+      }
+    });
 
     const row = {
       audit_id:         audit_summary.id || audit_summary.audit_id || `fg-${Date.now()}`,
