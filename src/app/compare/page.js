@@ -487,18 +487,18 @@ export default function ComparePage() {
                           <div key={group} className="flex items-center gap-4 px-5 py-3">
                             <span className="text-sm font-medium text-foreground w-28 flex-shrink-0">{group}</span>
                             <span className="text-xs font-mono text-muted-foreground w-16 text-right">
-                              {(change.rate_a * 100).toFixed(1)}%
+                              {((change.rate_a ?? 0) * 100).toFixed(1)}%
                             </span>
                             <ArrowRight className="w-3 h-3 text-muted-foreground flex-shrink-0" />
                             <span className="text-xs font-mono text-foreground w-16">
-                              {(change.rate_b * 100).toFixed(1)}%
+                              {((change.rate_b ?? 0) * 100).toFixed(1)}%
                             </span>
                             <span className={[
                               "text-xs font-bold font-mono",
                               change.direction === "improved" ? "text-[#caff3d]" :
                               change.direction === "regressed" ? "text-[#ff6b7a]" : "text-muted-foreground",
                             ].join(" ")}>
-                              {change.delta > 0 ? "+" : ""}{(change.delta * 100).toFixed(1)}%
+                              {(change.delta ?? 0) > 0 ? "+" : ""}{((change.delta ?? 0) * 100).toFixed(1)}%
                             </span>
                           </div>
                         ))}
@@ -519,7 +519,7 @@ export default function ComparePage() {
                             {attr} bias INCREASED
                           </p>
                           <p className="text-xs text-muted-foreground mt-1">
-                            Disparate impact delta: {(d.di_delta * 100).toFixed(2)}%. Review this regression before deploying.
+                            Disparate impact delta: {((d.di_delta ?? 0) * 100).toFixed(2)}%. Review this regression before deploying.
                           </p>
                         </div>
                       </div>

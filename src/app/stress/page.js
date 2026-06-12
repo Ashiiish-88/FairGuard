@@ -945,7 +945,6 @@ export default function StressTestPage() {
 
                           {/* Tested domain badge */}
                           <span className="inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full bg-muted text-muted-foreground border border-border">
-                            {DECISION_TYPES.find((d) => d.id === decisionType)?.icon}{" "}
                             {DECISION_TYPES.find((d) => d.id === decisionType)?.label}
                           </span>
                         </div>

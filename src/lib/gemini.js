@@ -148,7 +148,7 @@ export async function getModel() {
               action: "vertex_ai_permanently_disabled_for_this_session",
               fallback: "Gemini API SDK",
             });
-            gcpLog.fallback("VertexAI", "Gemini API SDK", "Auth error — Vertex AI disabled for this session");
+            gcpLog.fallback("VertexAI", "Gemini API SDK", `Permanent error — Vertex AI disabled: ${e.message}`);
           } else {
             gcpLog.error("VertexAI", "generateContent", e, {
               transient: true,
@@ -215,6 +215,29 @@ function extractJSON(text) {
     cleaned = cleaned.split("```")[1].split("```")[0].trim();
   }
   return JSON.parse(cleaned);
+}
+
+function getResponseText(result) {
+  if (!result) return "";
+  const response = result.response;
+  if (!response) return "";
+  if (typeof response.text === "function") {
+    try {
+      return response.text();
+    } catch (e) {
+      // Direct SDK can occasionally throw if safety blocks text
+      console.warn("[gemini.js] failed to call response.text():", e.message);
+    }
+  }
+  // Fallback for Vertex AI raw JSON structure
+  const candidates = response.candidates;
+  if (Array.isArray(candidates) && candidates.length > 0) {
+    const parts = candidates[0].content?.parts;
+    if (Array.isArray(parts) && parts.length > 0) {
+      return parts[0].text || "";
+    }
+  }
+  return "";
 }
 
 // ─── Domain-Aware Audience Label ───
@@ -344,7 +367,7 @@ Return ONLY valid JSON:
 
   try {
     const result = await m.generateContent(prompt);
-    return extractJSON(result.response.text());
+    return extractJSON(getResponseText(result));
   } catch (e) {
     return {
       summary: "Bias analysis complete — see metrics for details.",
@@ -394,7 +417,7 @@ Return ONLY valid JSON:
 
   try {
     const result = await m.generateContent(prompt);
-    return extractJSON(result.response.text());
+    return extractJSON(getResponseText(result));
   } catch (e) {
     return { regulations: [], overall_risk: "UNKNOWN", error: e.message };
   }
@@ -426,7 +449,7 @@ Return ONLY valid JSON array:
 
   try {
     const result = await m.generateContent(prompt);
-    return extractJSON(result.response.text());
+    return extractJSON(getResponseText(result));
   } catch (e) {
     return [{ action: "Review proxy features", feature: "detected proxies", expected_fairness_gain: 20, difficulty: "EASY", explanation: `AI unavailable: ${e.message}` }];
   }
@@ -454,7 +477,7 @@ Return ONLY a JSON array of objects. No other text.`;
 
   try {
     const result = await m.generateContent(prompt);
-    return extractJSON(result.response.text());
+    return extractJSON(getResponseText(result));
   } catch {
     return generateFallbackCandidates(decisionType, count, demographicAxes);
   }
@@ -564,7 +587,8 @@ export async function getGroqDecision(candidate, decisionType, modelId = "llama-
     const confidence = confMatch ? Math.min(1, Math.max(0, parseFloat(confMatch[0]))) : 0.5;
     return { decision: isApproved ? 1 : 0, confidence, raw_response: text, model: modelId };
   } catch (e) {
-    return { decision: 0, confidence: 0.5, raw_response: `Groq error: ${e.message}`, model: modelId };
+    gcpLog.error("GroqAPI", "getGroqDecision", e, { candidate, decisionType, modelId });
+    return null;
   }
 }
 
@@ -577,13 +601,14 @@ export async function getModelDecision(provider, candidate, decisionType) {
     const prompt = buildDecisionPrompt(candidate, decisionType);
     try {
       const result = await m.generateContent(prompt);
-      const text = result.response.text().trim();
+      const text = getResponseText(result).trim();
       const isApproved = text.toUpperCase().startsWith("APPROVE");
       const confMatch = text.match(/[\d.]+/);
       const confidence = confMatch ? Math.min(1, Math.max(0, parseFloat(confMatch[0]))) : 0.5;
       return { decision: isApproved ? 1 : 0, confidence, raw_response: text, model: "gemini-2.5-flash" };
     } catch (e) {
-      return { decision: 0, confidence: 0.5, raw_response: `Gemini error: ${e.message}`, model: "gemini-2.5-flash" };
+      gcpLog.error("GeminiAPI", "getModelDecision", e, { candidate, decisionType });
+      return null;
     }
   }
   if (provider === "llama-8b")  return getGroqDecision(candidate, decisionType, "llama-3.1-8b-instant");

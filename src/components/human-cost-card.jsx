@@ -53,7 +53,7 @@ export default function HumanCostCard({ humanCost }) {
                 <Clock className="w-4 h-4 text-[#ff8c42]" />
               </div>
               <p className="text-3xl font-bold text-foreground font-mono tracking-tight leading-none">
-                {humanCost.career_delay_years}
+                {humanCost.career_delay_years ?? 0}
               </p>
               <p className="text-[10px] text-muted-foreground mt-1.5 uppercase tracking-wider font-semibold leading-tight">
                 years avg career<br />delay per person
@@ -66,7 +66,7 @@ export default function HumanCostCard({ humanCost }) {
                 <TrendingDown className="w-4 h-4 text-[#ff6b7a]" />
               </div>
               <p className="text-3xl font-bold text-foreground font-mono tracking-tight leading-none">
-                {humanCost.total_career_years_lost.toLocaleString()}
+                {(humanCost.total_career_years_lost ?? 0).toLocaleString()}
               </p>
               <p className="text-[10px] text-muted-foreground mt-1.5 uppercase tracking-wider font-semibold leading-tight">
                 total career<br />years lost
@@ -78,7 +78,7 @@ export default function HumanCostCard({ humanCost }) {
           {humanCost.headline && (
             <div className="text-center py-4 px-6 mb-4 rounded-lg bg-[#ff6b7a]/5 border border-[#ff6b7a]/15">
               <p className="text-sm font-semibold text-foreground leading-relaxed">
-                {`“${humanCost.people_harmed.toLocaleString()} people may have waited ${humanCost.career_delay_years} extra years because of a bias that took 60 seconds to detect.”`}
+                {`“${humanCost.people_harmed.toLocaleString()} people may have waited ${humanCost.career_delay_years ?? 0} extra years because of a bias that took 60 seconds to detect.”`}
               </p>
             </div>
           )}

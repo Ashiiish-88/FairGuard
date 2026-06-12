@@ -58,7 +58,7 @@ export function disparateImpactRatio(data, outcomeCol, groupCol, positiveOutcome
   }
 
   if (Object.keys(rates).length === 0) {
-    return { ratio: null, rates: {}, violation: false };
+    return { ratio: null, rates: {}, violation: false, severity: "OK" };
   }
 
   const maxRate = Math.max(...Object.values(rates));
@@ -120,7 +120,7 @@ export function demographicParityDiff(data, outcomeCol, groupCol, positiveOutcom
   }
 
   if (Object.keys(rates).length < 2) {
-    return { difference: 0, rates };
+    return { difference: 0, rates, severity: "OK" };
   }
 
   const sorted = Object.entries(rates).sort((a, b) => a[1] - b[1]);
@@ -157,7 +157,7 @@ export function equalizedOddsDiff(data, outcomeCol, groupCol, qualCol = null, po
     }
 
     if (Object.keys(qualifiedRates).length < 2) {
-      return { difference: 0, qualified_rates: qualifiedRates };
+      return { difference: 0, qualified_rates: qualifiedRates, severity: "OK" };
     }
 
     const vals = Object.values(qualifiedRates);
@@ -627,8 +627,16 @@ export function computeFairnessDebt(analysisResults, domainInfo) {
   const affectedEstimate = Math.round(totalRejected * severityMultiplier);
 
   if (score >= 90) {
-    return { debts: [], severity_multiplier: 0, di_ratio_used: di, affected_people_estimate: 0, risk_level: "LOW",
-      disclaimer: "System within acceptable fairness thresholds. No significant legal exposure detected." };
+    return {
+      debts: [],
+      regulations: [],
+      total_exposure: { inr: 0, usd: 0, eur: 0 },
+      severity_multiplier: 0,
+      di_ratio_used: di,
+      affected_people_estimate: 0,
+      risk_level: "LOW",
+      disclaimer: "System within acceptable fairness thresholds. No significant legal exposure detected."
+    };
   }
 
   const debts = [];
@@ -735,8 +743,52 @@ export function computeFairnessDebt(analysisResults, domainInfo) {
 
   const riskLevel = score < 50 ? "CRITICAL" : score < 70 ? "HIGH" : "MODERATE";
 
+  // Compute total exposure by currency
+  let totalInr = 0;
+  let totalUsd = 0;
+  let totalEur = 0;
+
+  for (const d of debts) {
+    const item = /** @type {any} */ (d);
+    if (item.estimated_exposure_inr) totalInr += item.estimated_exposure_inr;
+    if (item.estimated_exposure_eur) totalEur += item.estimated_exposure_eur;
+    if (item.estimated_exposure_usd) totalUsd += item.estimated_exposure_usd;
+    if (item.estimated_back_pay_usd) totalUsd += item.estimated_back_pay_usd;
+  }
+
+  // Map to regulations format expected by the frontend
+  const regulations = debts.map(d => {
+    let status = "WARNING";
+    if (d.regulation.includes("EU AI Act") && di < 0.6) {
+      status = "NON-COMPLIANT";
+    } else if (d.regulation.includes("GDPR")) {
+      status = "NON-COMPLIANT";
+    } else if (d.regulation.includes("Title VII") && di < 0.8) {
+      status = "NON-COMPLIANT";
+    } else if (d.regulation.includes("NYC Local Law")) {
+      status = "NON-COMPLIANT";
+    } else if (d.regulation.includes("ECOA") && d.formatted.includes("redlining")) {
+      status = "NON-COMPLIANT";
+    } else if (d.regulation.includes("DPDP") && severityMultiplier > 0.1) {
+      status = "NON-COMPLIANT";
+    }
+
+    return {
+      name: d.regulation,
+      status,
+      exposure: d.formatted,
+      description: d.category || d.violation_type || d.requirement || d.cfpb_guidance || d.note,
+    };
+  });
+
   return {
     debts,
+    regulations,
+    total_exposure: {
+      inr: totalInr,
+      usd: totalUsd,
+      eur: totalEur,
+    },
     severity_multiplier: Math.round(severityMultiplier * 1000) / 1000,
     di_ratio_used: Math.round(di * 10000) / 10000,
     affected_people_estimate: affectedEstimate,
@@ -938,12 +990,17 @@ export function computeHumanCost(analysisResults) {
   const incomeLossUsd = Math.round(peopleHarmed * extraWeeks * BLS_WEEKLY_EARNINGS_USD);
   const incomeLossInr = Math.round(incomeLossUsd * 83); // approx 1 USD = ₹83 (2024)
 
+  const careerDelayYears = Math.round((extraWeeks / 52) * 100) / 100;
+  const totalCareerYearsLost = Math.round(peopleHarmed * careerDelayYears * 10) / 10;
+
   const headline = `${peopleHarmed.toLocaleString()} people estimated to face ${extraWeeks} extra weeks in job search due to this bias`;
 
   return {
     people_harmed: peopleHarmed,
     bias_attributable_fraction_pct: Math.round(biasAttributableFraction * 100),
     extra_job_search_weeks: extraWeeks,
+    career_delay_years: careerDelayYears,
+    total_career_years_lost: totalCareerYearsLost,
     extra_job_search_source: "BLS CPS Table 32, 2024 Annual Averages (median unemployment duration: 9.6 weeks)",
     income_loss_usd: incomeLossUsd,
     income_loss_inr: incomeLossInr,
