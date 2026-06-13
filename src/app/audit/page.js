@@ -34,6 +34,8 @@ import MetricCard from "@/components/metric-card";
 import HumanCostCard from "@/components/human-cost-card";
 import CertificateCard from "@/components/certificate-card";
 import RegulationPanel from "@/components/regulation-panel";
+import RemediationCode from "@/components/remediation-code";
+import RegulatoryNews from "@/components/regulatory-news";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -374,6 +376,11 @@ export default function AuditPage() {
   const [results, setResults] = useState(null);
   const [explanation, setExplanation] = useState(null);
   const [compliance, setCompliance] = useState(null);
+  const [remediationCode, setRemediationCode] = useState(null);
+  const [remediationLoading, setRemediationLoading] = useState(false);
+  const [regulatoryNews, setRegulatoryNews] = useState(null);
+  const [newsLoading, setNewsLoading] = useState(false);
+  const [registryInfo, setRegistryInfo] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -496,7 +503,7 @@ export default function AuditPage() {
       setResults(json.results);
       setStep(3);
 
-      const faf = (url, body, cb) =>
+      const faf = (url, body, cb, errCb) =>
         fetch(url, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -504,7 +511,9 @@ export default function AuditPage() {
         })
           .then((r) => r.json())
           .then(cb)
-          .catch(() => {});
+          .catch((err) => {
+            if (errCb) errCb(err);
+          });
 
       faf("/api/audit/explain", { metrics: json.results }, (r) =>
         setExplanation(r.explanation)
@@ -512,6 +521,53 @@ export default function AuditPage() {
       faf("/api/audit/compliance", { metrics: json.results }, (r) =>
         setCompliance(r.compliance)
       );
+
+      // Fetch Remediation Code & Regulatory News
+      setRemediationLoading(true);
+      setNewsLoading(true);
+
+      faf(
+        "/api/audit/remediate",
+        { metrics: json.results },
+        (r) => {
+          if (r && r.code) setRemediationCode(r.code);
+          setRemediationLoading(false);
+        },
+        () => setRemediationLoading(false)
+      );
+
+      faf(
+        "/api/audit/regulatory-news",
+        {
+          domain: json.results.domain?.label || "General",
+          regulations: json.results.domain?.compliance || [],
+        },
+        (r) => {
+          setRegulatoryNews(r);
+          setNewsLoading(false);
+        },
+        () => setNewsLoading(false)
+      );
+
+      // Register model in Vertex AI Model Registry
+      fetch("/api/audit/register-model", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          domain: json.results.domain?.label || "General",
+          fairnessScore: json.results.fairness_score?.score || 0,
+        }),
+      })
+        .then((r) => r.json())
+        .then((r) => {
+          console.log("Vertex AI Model Registry registration:", r);
+          setRegistryInfo(r);
+        })
+        .catch((e) => {
+          console.error("Vertex AI Model Registry registration error:", e);
+          setRegistryInfo({ status: "error", error: e.message });
+        });
+
       faf("/api/history/save", { results: json.results }, () => {});
     } catch (e) {
       setError(`Analysis failed: ${e.message}`);
@@ -529,6 +585,11 @@ export default function AuditPage() {
     setResults(null);
     setExplanation(null);
     setCompliance(null);
+    setRemediationCode(null);
+    setRemediationLoading(false);
+    setRegulatoryNews(null);
+    setNewsLoading(false);
+    setRegistryInfo(null);
     setError(null);
     setDomainInfo(null);
     setConfig({
@@ -971,21 +1032,41 @@ export default function AuditPage() {
                 className="space-y-5"
               >
 
-                {/* ── Domain tag ──────────────────────────────────── */}
-                {results.domain && (
-                  <motion.div
-                    variants={staggerChild}
-                    className="flex items-center gap-2"
-                  >
+                {/* ── Domain tag & Vertex AI Registry ──────────────── */}
+                <motion.div
+                  variants={staggerChild}
+                  className="flex flex-wrap items-center gap-2"
+                >
+                  {results.domain && (
                     <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-muted border border-border text-xs font-medium text-muted-foreground">
                       <span className="w-1.5 h-1.5 rounded-full bg-[#caff3d]" />
                       {results.domain.icon} {results.domain.label}
+                      <span className="text-[10px] text-muted-foreground/80 ml-1">
+                        (Auto-detected Domain)
+                      </span>
                     </span>
-                    <span className="text-xs text-muted-foreground">
-                      Domain auto-detected from column names
+                  )}
+
+                  {registryInfo && (
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-muted border border-border text-xs font-medium text-muted-foreground">
+                      <Database className="w-3 h-3 text-[#a3cc2e]" />
+                      <span>Vertex AI Registry: </span>
+                      {registryInfo.status === "success" ? (
+                        <span className="text-emerald-400 font-semibold flex items-center gap-0.5">
+                          Registered (ID: {registryInfo.modelId?.split("/").pop() || "v1"})
+                        </span>
+                      ) : registryInfo.status === "skipped" ? (
+                        <span className="text-amber-400 font-semibold" title={registryInfo.reason}>
+                          Demo Mode
+                        </span>
+                      ) : (
+                        <span className="text-red-400 font-semibold">
+                          Failed
+                        </span>
+                      )}
                     </span>
-                  </motion.div>
-                )}
+                  )}
+                </motion.div>
 
                 {/* ── Row 1: Score gauge + 4 metric cards ─────────── */}
                 <motion.div
@@ -1256,6 +1337,20 @@ export default function AuditPage() {
                     </div>
                   </div>
                 </motion.div>
+
+                {/* ── Row 5a: Regulatory News ────────────────────────── */}
+                {(regulatoryNews || newsLoading) && (
+                  <motion.div variants={staggerChild}>
+                    <RegulatoryNews news={regulatoryNews} loading={newsLoading} />
+                  </motion.div>
+                )}
+
+                {/* ── Row 5b: Remediation Code ────────────────────────── */}
+                {(remediationCode || remediationLoading) && (
+                  <motion.div variants={staggerChild}>
+                    <RemediationCode code={remediationCode} loading={remediationLoading} />
+                  </motion.div>
+                )}
 
                 {/* ── Row 6: Bias Certificate ────────────────────── */}
                 <motion.div variants={staggerChild}>

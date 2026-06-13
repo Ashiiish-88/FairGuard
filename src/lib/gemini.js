@@ -645,6 +645,172 @@ export async function warmGenomeCache(decisionType = "hiring") {
   }
 }
 
+// ─── Gemini Remediation Code Generation ───
+// Generates actual Python and SQL code to fix detected bias
+export async function generateRemediationCode(metrics) {
+  const m = await getModel();
+  if (!m) {
+    return {
+      python_preprocessing: "# AI unavailable — review bias metrics manually",
+      python_model_fix: "# AI unavailable",
+      sql_query_fix: "-- AI unavailable",
+      monitoring_script: "# AI unavailable",
+      summary: "Remediation code generation requires an active AI model.",
+    };
+  }
+
+  const domainLabel = metrics.domain?.label || "decision-making";
+  const domainKey = metrics.domain?.domain || "general";
+  const biasFindings = [];
+
+  if (metrics.disparate_impact?.ratio < 0.8) {
+    biasFindings.push(`Disparate Impact Ratio: ${metrics.disparate_impact.ratio} (below 0.8 threshold)`);
+  }
+  if (metrics.demographic_parity?.gap > 0.1) {
+    biasFindings.push(`Demographic Parity Gap: ${(metrics.demographic_parity.gap * 100).toFixed(1)}%`);
+  }
+  if (metrics.proxy_detection?.proxies?.length > 0) {
+    biasFindings.push(`Proxy variables detected: ${metrics.proxy_detection.proxies.map(p => p.feature || p.name).join(", ")}`);
+  }
+  if (metrics.intersectional?.worst_group) {
+    biasFindings.push(`Worst intersectional group: ${metrics.intersectional.worst_group}`);
+  }
+
+  const protectedAttrs = metrics.config?.protected || metrics.protected_columns || ["gender", "age"];
+
+  const prompt = `You are FairGuard, an AI bias remediation expert. Given these bias analysis results for a "${domainLabel}" system, generate ACTUAL WORKING CODE to fix the detected bias.
+
+BIAS FINDINGS:
+${biasFindings.join("\n")}
+
+PROTECTED ATTRIBUTES: ${protectedAttrs.join(", ")}
+OUTCOME COLUMN: ${metrics.config?.outcome || "decision"}
+DOMAIN: ${domainLabel}
+
+Generate four code blocks:
+
+1. **Python Data Preprocessing** — Code to remove/mitigate bias in the training data (e.g., removing proxy features, resampling, applying fairness-aware preprocessing). Use pandas, sklearn, or aif360 patterns.
+
+2. **Python Model Fix** — Code to retrain or adjust the model with fairness constraints (e.g., equalized odds post-processing, threshold adjustment per group, fairness-aware training).
+
+3. **SQL Query Fix** — SQL query modifications to exclude proxy variables, add fairness-aware scoring, or create balanced cohorts for retraining.
+
+4. **Monitoring Script** — Python script to continuously monitor the model for bias drift after the fix is deployed.
+
+Return ONLY valid JSON:
+{
+  "python_preprocessing": "full python code as a string",
+  "python_model_fix": "full python code as a string",
+  "sql_query_fix": "full SQL code as a string",
+  "monitoring_script": "full python code as a string",
+  "summary": "one paragraph explaining what each fix does"
+}`;
+
+  try {
+    const result = await m.generateContent(prompt);
+    return extractJSON(getResponseText(result));
+  } catch (e) {
+    gcpLog.error("GeminiAPI", "generateRemediationCode", e, { domain: domainKey });
+    return {
+      python_preprocessing: `# Error generating code: ${e.message}`,
+      python_model_fix: `# Error generating code: ${e.message}`,
+      sql_query_fix: `-- Error generating code: ${e.message}`,
+      monitoring_script: `# Error generating code: ${e.message}`,
+      summary: `Code generation failed: ${e.message}. Please review bias metrics manually.`,
+    };
+  }
+}
+
+// ─── Gemini Grounded Compliance News (Google Search) ───
+// Uses Gemini with Google Search grounding to fetch latest AI regulation news
+export async function getGroundedComplianceNews(domain, regulations = []) {
+  // Build a client specifically for grounding — needs direct or vertex client
+  let client = null;
+  if (_usingVertex && _vertexClient && !_vertexAuthFailed) {
+    client = _vertexClient;
+  } else if (_directClient) {
+    client = _directClient;
+  }
+
+  if (!client) {
+    return {
+      news: [],
+      summary: "Regulatory news unavailable — no AI model configured.",
+      grounded: false,
+    };
+  }
+
+  const domainLabels = {
+    hiring: "AI hiring and employment",
+    lending: "AI lending and credit scoring",
+    content_moderation: "AI content moderation",
+    pricing: "AI algorithmic pricing",
+    insurance: "AI insurance underwriting",
+    healthcare: "AI healthcare decisions",
+    education: "AI education and admissions",
+  };
+
+  const domainContext = domainLabels[domain] || "AI decision-making";
+  const regList = regulations.length > 0
+    ? regulations.join(", ")
+    : "EU AI Act, EEOC, India DPDP Act 2023";
+
+  const prompt = `Find the latest news, enforcement actions, and regulatory updates about ${domainContext} bias and fairness regulations. Focus on: ${regList}.
+
+Include:
+- Recent enforcement actions or fines
+- New regulatory guidance or amendments
+- Court cases related to AI bias
+- Government investigations into algorithmic discrimination
+
+For each item, provide the source, date, and relevance to AI fairness auditing.
+
+Return as JSON:
+{
+  "news": [
+    {
+      "headline": "headline text",
+      "summary": "2-3 sentence summary",
+      "source": "source name",
+      "date": "approximate date",
+      "regulation": "which regulation this relates to",
+      "relevance": "why this matters for AI bias auditing"
+    }
+  ],
+  "summary": "one paragraph overview of current regulatory landscape"
+}`;
+
+  try {
+    const res = await client.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: prompt,
+      config: {
+        tools: [{ googleSearch: {} }],
+      },
+    });
+
+    const textVal = res.text || "";
+    const parsed = extractJSON(textVal);
+    return { ...parsed, grounded: true };
+  } catch (e) {
+    gcpLog.error("GeminiAPI", "getGroundedComplianceNews", e, { domain });
+    // Fallback: try without grounding
+    try {
+      const m = await getModel();
+      if (!m) throw new Error("No model");
+      const result = await m.generateContent(prompt);
+      const parsed = extractJSON(getResponseText(result));
+      return { ...parsed, grounded: false };
+    } catch (e2) {
+      return {
+        news: [],
+        summary: `Regulatory news unavailable: ${e.message}`,
+        grounded: false,
+      };
+    }
+  }
+}
+
 // ─── Model Labels (for UI display) ───
 export const MODEL_LABELS = {
   gemini: "Gemini 2.5 Flash",

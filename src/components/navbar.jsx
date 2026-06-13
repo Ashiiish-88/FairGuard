@@ -15,6 +15,7 @@ import {
   X,
   Dna,
   GitCompare,
+  BarChart3,
 } from "lucide-react";
 
 // ─── Nav link definitions ─────────────────────────────────────────────────────
@@ -44,6 +45,11 @@ const NAV_LINKS = [
     href:   "/compare",
     label:  "COMPARE",
     icon:   <GitCompare className="w-3 h-3" />,
+  },
+  {
+    href:   "/impact",
+    label:  "IMPACT",
+    icon:   <BarChart3 className="w-3 h-3" />,
   },
   {
     href:   "/history",
