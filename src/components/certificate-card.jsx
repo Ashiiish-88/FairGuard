@@ -24,6 +24,7 @@ export default function CertificateCard({ auditResults }) {
   const [state, setState] = useState("form"); // "form" | "loading" | "issued" | "ineligible"
   const [cert, setCert] = useState(null);
   const [copied, setCopied] = useState(false);
+  const [hashRevealed, setHashRevealed] = useState(false);
   const [form, setForm] = useState({
     organization_name: "",
     system_name: "",
@@ -84,6 +85,94 @@ export default function CertificateCard({ auditResults }) {
     } catch {
       setState("form");
     }
+  };
+
+  const handleDownload = () => {
+    const issuedDate = cert.issued_at ? new Date(cert.issued_at).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }) : "—";
+    const validDate  = cert.valid_until ? new Date(cert.valid_until).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" }) : "—";
+    const score      = cert.fairness_score ?? 0;
+    const grade      = cert.letter_grade ?? "—";
+
+    const complianceRows = cert.legal_compliance_mapping
+      ? Object.values(cert.legal_compliance_mapping).map(item => {
+          const ok = item.satisfied || item.satisfied_label?.includes("✓");
+          return `<tr>
+            <td style="padding:6px 10px;border-bottom:1px solid #eee;font-size:11px;font-weight:600;">${item.regulation}</td>
+            <td style="padding:6px 10px;border-bottom:1px solid #eee;font-size:11px;color:${ok ? "#15803d" : "#dc2626"};font-weight:700;">${item.satisfied_label ?? ""}</td>
+          </tr>`;
+        }).join("")
+      : "";
+
+    const html = `<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8" />
+<title>FairGuard Certificate — ${cert.certificate_id}</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: "Helvetica Neue", Arial, sans-serif; background: #fff; color: #111; }
+  .page { max-width: 720px; margin: 0 auto; padding: 48px 40px; }
+  .header { display: flex; align-items: center; gap: 16px; margin-bottom: 32px; padding-bottom: 24px; border-bottom: 3px solid #caff3d; }
+  .header img { height: 100px; }
+  .header-text { }
+  .header-text h1 { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; }
+  .header-text p { font-size: 11px; color: #666; margin-top: 2px; text-transform: uppercase; letter-spacing: 1px; }
+  .status-badge { display: inline-flex; align-items: center; gap: 8px; padding: 8px 20px; border-radius: 100px; background: #f0fdf4; border: 2px solid #86efac; color: #15803d; font-size: 13px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 28px; }
+  .section { border-left: 4px solid #caff3d; padding: 16px 20px; margin-bottom: 20px; background: #fafafa; }
+  .section h2 { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: #888; margin-bottom: 12px; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .field label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #aaa; display: block; margin-bottom: 3px; }
+  .field p { font-size: 13px; font-weight: 600; color: #111; }
+  .score-badge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; background: #caff3d; border-radius: 6px; font-size: 18px; font-weight: 900; }
+  table { width: 100%; border-collapse: collapse; margin-top: 4px; }
+  .footer { margin-top: 36px; padding-top: 20px; border-top: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; }
+  .footer p { font-size: 10px; color: #aaa; }
+  .hash-row { font-family: monospace; font-size: 9px; color: #aaa; margin-top: 8px; word-break: break-all; }
+  @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
+</style>
+</head><body>
+<div class="page">
+  <div class="header">
+    <img src="${window.location.origin}/Navbar_Logo.svg" alt="FairGuard" />
+    <div class="header-text">
+      <h1>FairGuard Certificate of AI Fairness</h1>
+      <p>Fair AI Certification · Independent Bias Audit</p>
+    </div>
+  </div>
+
+  <div class="status-badge">✓ CERTIFIED FAIR AI</div>
+
+  <div class="section">
+    <h2>Certificate Details</h2>
+    <div class="grid">
+      <div class="field"><label>Certificate ID</label><p>${cert.certificate_id}</p></div>
+      <div class="field"><label>Fairness Score</label><p><span class="score-badge">${score}/100</span> &nbsp; Grade ${grade}</p></div>
+      <div class="field"><label>Organization</label><p>${cert.organization_name ?? "—"}</p></div>
+      <div class="field"><label>AI System</label><p>${cert.system_name ?? "—"}</p></div>
+      <div class="field"><label>Deployment Context</label><p>${cert.deployment_context ?? "—"}</p></div>
+      <div class="field"><label>Auditor</label><p>${cert.auditor_name ?? "—"}</p></div>
+      <div class="field"><label>Issued</label><p>${issuedDate}</p></div>
+      <div class="field"><label>Valid Until</label><p>${validDate}</p></div>
+    </div>
+  </div>
+
+  ${complianceRows ? `<div class="section">
+    <h2>Legal Compliance</h2>
+    <table>${complianceRows}</table>
+  </div>` : ""}
+
+  <div class="footer">
+    <p>Verified at ${window.location.origin}/verify/${cert.certificate_id}</p>
+    <p>AI Audit Model: ${cert.model_used ?? "Gemini 2.5 Flash"}</p>
+  </div>
+  <div class="hash-row">Verification fingerprint (SHA-256): ${cert.results_hash ?? "—"}</div>
+</div>
+</body></html>`;
+
+    const win = window.open("", "_blank");
+    if (!win) return;
+    win.document.write(html);
+    win.document.close();
+    win.focus();
+    setTimeout(() => { win.print(); }, 500);
   };
 
   const copyVerifyUrl = () => {
@@ -199,12 +288,18 @@ export default function CertificateCard({ auditResults }) {
             animate={{ opacity: 1, y: 0 }}
           >
             {/* Certificate header */}
-            <div className="relative border-b border-[#caff3d]/20">
+            <div className="relative border-b border-[#caff3d]/20 certificate-printable">
               {/* Left green stripe */}
               <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-[#caff3d]" />
               <div className="pl-6 pr-6 py-6">
+                {/* FairGuard branding at top of cert */}
+                <div className="flex items-center gap-2 mb-4">
+                  <img src="/Navbar_Logo.svg" alt="FairGuard" className="h-24 w-auto" />
+                  <div>
+                    <p className="font-mono text-[9px] tracking-[0.2em] text-muted-foreground uppercase">Fair AI Certification</p>
+                  </div>
+                </div>
                 <div className="flex items-center gap-2 mb-2">
-                  <Shield className="w-5 h-5 text-[#65a30d]" />
                   <h3 className="text-lg font-bold text-foreground tracking-tight">
                     FairGuard Certified — Fair AI
                   </h3>
@@ -260,9 +355,19 @@ export default function CertificateCard({ auditResults }) {
               <div className="px-6 py-4 space-y-3">
                 <div className="flex items-center gap-2">
                   <Hash className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
-                  <code className="text-[10px] font-mono text-muted-foreground break-all">
-                    SHA-256: {cert.results_hash}
-                  </code>
+                  <span className="font-mono text-xs text-muted-foreground">
+                    Verification fingerprint:{" "}
+                    {hashRevealed
+                      ? <code className="break-all text-[10px]">{cert.results_hash}</code>
+                      : <span className="tracking-widest text-[10px]">████████████████████████████████</span>
+                    }
+                  </span>
+                  <button
+                    onClick={() => setHashRevealed(!hashRevealed)}
+                    className="ml-2 text-[#caff3d] hover:underline text-[10px] font-semibold flex-shrink-0"
+                  >
+                    {hashRevealed ? "Hide" : "Reveal"}
+                  </button>
                 </div>
 
                 {/* Legal compliance checklist */}
@@ -328,6 +433,15 @@ export default function CertificateCard({ auditResults }) {
                     <ExternalLink className="w-3 h-3" />
                     View public page
                   </a>
+                  <button
+                    onClick={handleDownload}
+                    className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold
+                               bg-black text-[#caff3d] hover:bg-[#1a1a1a]
+                               transition-all duration-150"
+                  >
+                    <FileText className="w-3 h-3" />
+                    Download PDF
+                  </button>
                 </div>
               </div>
             </div>

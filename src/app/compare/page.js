@@ -143,6 +143,40 @@ export default function ComparePage() {
         : [...prev.protected, col],
     }));
 
+  // Demo dataset loaders
+  const loadDemoA = useCallback(async () => {
+    setError(null);
+    const res = await fetch("/demo_hiring_data.csv");
+    const text = await res.text();
+    Papa.parse(text, {
+      header: true, skipEmptyLines: true,
+      complete: (r) => { setDataA(r.data); setLabelA("Model v1 — Jan 2026 (biased baseline)"); setStep(1); },
+    });
+  }, []);
+
+  const loadDemoB = useCallback(async () => {
+    setError(null);
+    const res = await fetch("/demo_hiring_data_v2.csv");
+    const text = await res.text();
+    Papa.parse(text, {
+      header: true, skipEmptyLines: true,
+      complete: (r) => {
+        const data = r.data;
+        setDataB(data);
+        setLabelB("Model v2 — Jul 2026 (improved version)");
+        if (dataA?.length > 0) {
+          const columns = Object.keys(dataA[0]);
+          const decisionKw = ["decision", "outcome", "result", "approved", "rejected", "hired", "selected", "label", "target"];
+          const protectedKw = ["gender", "sex", "race", "ethnicity", "age", "religion", "disability"];
+          const outcomeCol = columns.find(c => decisionKw.some(kw => c.toLowerCase().includes(kw))) || "";
+          const protCols = columns.filter(c => protectedKw.some(kw => c.toLowerCase().includes(kw)));
+          setConfig(p => ({ ...p, outcome: outcomeCol, protected: protCols }));
+        }
+        setStep(2);
+      },
+    });
+  }, [dataA]);
+
   const runCompare = async () => {
     if (!config.outcome || !config.protected.length) {
       setError("Select an outcome column and at least one protected attribute.");
@@ -189,13 +223,13 @@ export default function ComparePage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="max-w-5xl mx-auto px-6 py-10">
+      <div className="max-w-[1320px] mx-auto px-6 py-10">
 
         {/* ── Page header ───────────────────────────────────────── */}
         <div className="flex items-start justify-between mb-10">
           <div className="flex items-start gap-4">
             <div className="flex items-stretch rounded-md overflow-hidden flex-shrink-0 mt-0.5">
-              <div className="bg-[#04cfff] w-10 h-10 flex items-center justify-center">
+              <div className="bg-[#caff3d] w-10 h-10 flex items-center justify-center">
                 <GitCompare className="w-4.5 h-4.5 text-black" />
               </div>
               <div className="bg-black w-1" />
@@ -240,7 +274,7 @@ export default function ComparePage() {
               <div className="bg-card rounded-xl border border-border overflow-hidden">
                 <div className="flex items-center gap-3 px-5 py-4 border-b border-border">
                   <div className="flex items-stretch rounded-md overflow-hidden flex-shrink-0">
-                    <div className="bg-[#04cfff] w-7 h-7 flex items-center justify-center">
+                    <div className="bg-[#caff3d] w-7 h-7 flex items-center justify-center">
                       <span className="text-[10px] font-bold text-black">A</span>
                     </div>
                     <div className="bg-black w-0.5" />
@@ -262,6 +296,18 @@ export default function ComparePage() {
                     />
                   </div>
                   <CsvDropzone onFileLoaded={handleFileA} file={fileA} />
+                  {/* Demo dataset shortcut */}
+                  <div className="pt-3 border-t border-border">
+                    <p className="text-xs text-muted-foreground mb-2">Or try a demo dataset</p>
+                    <button
+                      onClick={loadDemoA}
+                      className="inline-flex items-center gap-2 px-3 py-2 rounded-md text-xs font-semibold
+                                 border border-border bg-muted/50 hover:bg-muted text-foreground transition-all"
+                    >
+                      <Database className="w-3.5 h-3.5 text-[#04cfff]" />
+                      📂 Load Model v1 (biased baseline)
+                    </button>
+                  </div>
                 </div>
               </div>
             </motion.div>
@@ -303,6 +349,18 @@ export default function ComparePage() {
                     />
                   </div>
                   <CsvDropzone onFileLoaded={handleFileB} file={fileB} />
+                  {/* Demo dataset shortcut */}
+                  <div className="pt-3 border-t border-border">
+                    <p className="text-xs text-muted-foreground mb-2">Or try a demo dataset</p>
+                    <button
+                      onClick={loadDemoB}
+                      className="inline-flex items-center gap-2 px-3 py-2 rounded-md text-xs font-semibold
+                                 border border-border bg-muted/50 hover:bg-muted text-foreground transition-all"
+                    >
+                      <Database className="w-3.5 h-3.5 text-[#9a77f8]" />
+                      📂 Load Model v2 (improved version)
+                    </button>
+                  </div>
                 </div>
               </div>
             </motion.div>

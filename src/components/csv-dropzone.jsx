@@ -191,15 +191,10 @@ export default function CsvDropzone({
               : "Drag & drop a file, or click to browse"}
           </p>
           <p className="text-sm text-muted-foreground">
-            Supports{" "}
-            <code className="text-xs font-mono bg-muted px-1.5 py-0.5 rounded border border-border">
-              .csv
-            </code>{" "}
-            and{" "}
-            <code className="text-xs font-mono bg-muted px-1.5 py-0.5 rounded border border-border">
-              .json
-            </code>{" "}
-            · Up to 100,000 rows
+            Upload{" "}
+            <code className="text-xs font-mono bg-muted px-1.5 py-0.5 rounded border border-border">.csv</code>{" "}
+            or{" "}
+            <code className="text-xs font-mono bg-muted px-1.5 py-0.5 rounded border border-border">.json</code>
           </p>
         </div>
 

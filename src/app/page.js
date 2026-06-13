@@ -6,10 +6,6 @@ import HiwScroll from "@/components/hiw-scroll";
 import FingerprintToggle from "@/components/fingerprint-toggle";
 import { motion } from "framer-motion";
 
-/* ═══════════════════════════════════════════════════════════════════
-   LANDING PAGE — FairGuard v2
-   Design: Refold structure × ToDesktop panels × Amber/Teal palette
-   ═══════════════════════════════════════════════════════════════════ */
 
 const domains = [
   {
@@ -140,10 +136,14 @@ export default function LandingPage() {
               transition={{ duration: 0.6, delay: 0.1 }}
               className="heading-2 text-center text-balance max-w-[800px] text-black"
             >
-              Find the bias <span className="relative inline-block">
-                <span>hiding</span>
-                <span className="absolute bottom-1 left-0 right-0 h-1.5 bg-[#caff3d] opacity-40 rounded-sm -z-10" />
-              </span> in your AI
+              Find the bias{" "}
+              <span
+                style={{ fontFamily: "var(--font-script)" }}
+                className="inline-block transform -skew-x-12 rotate-[-1deg] font-bold tracking-wide px-3 py-0.5 bg-black text-[#caff3d] rounded-sm shadow-md"
+              >
+                hiding
+              </span>
+              {" "}in your AI
             </motion.h1>
 
             <motion.p
@@ -153,8 +153,9 @@ export default function LandingPage() {
               className="body-md text-center text-black max-w-[580px] text-balance"
             >
               FairGuard audits any AI decision system in 60 seconds.
-              Detect hidden bias, get plain-English explanations, and
-              estimate legal exposure — before your AI harms real people.
+              Detect hidden bias, get plain English explanations, and
+              estimate legal exposure before your AI harms real people.
+              <span className="block mt-1.5 text-[#4B5563] text-sm">Legal-grade accuracy. EU AI Act Article 9 compliance in 60 seconds.</span>
             </motion.p>
           </div>
 
@@ -721,6 +722,28 @@ names = [<span style="color:#04cfff">"Brian"</span>, <span style="color:#04cfff"
       </section>
 
 
+      {/* ═══ TRUST SIGNAL ROW ═══ */}
+      <div className="max-w-5xl mx-auto px-6 py-10 border-t border-b border-[#EAEAEA]">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+          <div>
+            <div className="text-3xl font-mono font-black text-[#000000]">7</div>
+            <div className="text-xs text-[#4B5563] mt-1">Domains detected</div>
+          </div>
+          <div>
+            <div className="text-3xl font-mono font-black text-[#000000]">3</div>
+            <div className="text-xs text-[#4B5563] mt-1">AI models compared</div>
+          </div>
+          <div>
+            <div className="text-3xl font-mono font-black text-[#000000]">60</div>
+            <div className="text-xs text-[#4B5563] mt-1">Demographic probes per genome</div>
+          </div>
+          <div>
+            <div className="text-3xl font-mono font-black text-[#1D5FDB]">60s</div>
+            <div className="text-xs text-[#4B5563] mt-1">From CSV to legal compliance</div>
+          </div>
+        </div>
+      </div>
+
       {/* ═══ SECTION 7: STRESS TEST FEATURES ═══ */}
       <section className="bg-white w-full" id="stress-test">
         <div className="w-full border-t border-[#EAEAEA]">
@@ -885,6 +908,8 @@ names = [<span style="color:#04cfff">"Brian"</span>, <span style="color:#04cfff"
               <Link href="/audit" className="text-[14px] text-[#d1d5db] hover:text-white transition-colors">Audit Mode</Link>
               <Link href="/shield" className="text-[14px] text-[#d1d5db] hover:text-white transition-colors">Shield Mode</Link>
               <Link href="/stress" className="text-[14px] text-[#d1d5db] hover:text-white transition-colors">Stress Test</Link>
+              <Link href="/genome" className="text-[14px] text-[#d1d5db] hover:text-white transition-colors">Bias Genome</Link>
+              <Link href="/compare" className="text-[14px] text-[#d1d5db] hover:text-white transition-colors">Compare Audits</Link>
               <Link href="/history" className="text-[14px] text-[#d1d5db] hover:text-white transition-colors">Audit History</Link>
             </div>
           </div>
@@ -925,11 +950,11 @@ names = [<span style="color:#04cfff">"Brian"</span>, <span style="color:#04cfff"
 
         {/* Bottom bar */}
         <div className="flex items-center justify-between px-10 py-6 flex-wrap gap-3">
-          <span className="text-[12px] text-[#64748b] font-mono">&copy; 2026 FairGuard. AI fairness, simplified.</span>
+          <span className="text-[12px] text-[#64748b] font-mono">© 2026 FairGuard </span>
           <div className="flex items-center gap-3">
             <span className="inline-flex items-center gap-1.5 text-[11px] font-mono text-[#64748b]">
-              Built for
-              <span className="text-[#caff3d] font-semibold">Google Solution Challenge 2026</span>
+              🏆
+              <span className="text-[#caff3d] font-semibold">Top 106 · Google Solution Challenge 2026</span>
             </span>
             <span className="w-1.5 h-1.5 rounded-full bg-[#caff3d] animate-pulse" />
           </div>

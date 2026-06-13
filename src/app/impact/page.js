@@ -7,7 +7,7 @@ import {
 } from "recharts";
 import {
   Globe, TrendingUp, Shield, Scale, AlertTriangle, Database,
-  Users, Sparkles, ArrowRight, ExternalLink,
+  Users, Sparkles, ArrowRight, ExternalLink, ChevronDown,
 } from "lucide-react";
 
 // ─── Pre-computed bias results from public datasets ───
@@ -108,6 +108,8 @@ function ScoreBadge({ score, grade }) {
 }
 
 function DatasetCard({ dataset, index }) {
+  const [open, setOpen] = useState(true); // default open
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -115,28 +117,30 @@ function DatasetCard({ dataset, index }) {
       transition={{ delay: index * 0.1 }}
       className="rounded-xl border border-border bg-card overflow-hidden"
     >
-      {/* Header */}
-      <div className="px-6 py-4 border-b border-border">
-        <div className="flex items-start justify-between">
-          <div className="flex-1">
-            <div className="flex items-center gap-2 mb-1">
-              <h3 className="text-base font-semibold text-foreground">{dataset.name}</h3>
-              <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
-                {dataset.domain}
-              </span>
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Source: {dataset.source} · {dataset.sampleSize.toLocaleString()} records
-              <a href={dataset.sourceUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-0.5 ml-1 text-[#0057ff] hover:underline">
-                <ExternalLink className="w-2.5 h-2.5" />
-              </a>
-            </p>
+      {/* ── Clickable Header ─────────────────────────────── */}
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className="w-full px-6 py-4 flex items-center justify-between border-b border-border hover:bg-muted/30 transition-colors text-left group"
+      >
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 mb-1">
+            <h3 className="text-base font-semibold text-foreground">{dataset.name}</h3>
+            <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-muted text-muted-foreground">{dataset.domain}</span>
           </div>
-          <ScoreBadge score={dataset.metrics.fairnessScore} grade={dataset.metrics.grade} />
+          <p className="text-xs text-muted-foreground">
+            Source: {dataset.source} · {dataset.sampleSize.toLocaleString()} records
+            <a href={dataset.sourceUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-0.5 ml-1 text-[#0057ff] hover:underline" onClick={e => e.stopPropagation()}>
+              <ExternalLink className="w-2.5 h-2.5" />
+            </a>
+          </p>
         </div>
-      </div>
+        <div className="flex items-center gap-3 flex-shrink-0 ml-4">
+          <ScoreBadge score={dataset.metrics.fairnessScore} grade={dataset.metrics.grade} />
+          <ChevronDown className={["w-4 h-4 text-muted-foreground transition-transform duration-200", open ? "rotate-180" : ""].join(" ")} />
+        </div>
+      </button>
 
-      {/* Key Finding */}
+      {/* ── Headline — always visible ─────────────────────── */}
       <div className="px-6 py-3 bg-[#ff6b7a]/5 border-b border-border">
         <div className="flex items-start gap-2">
           <AlertTriangle className="w-4 h-4 text-[#ff6b7a] flex-shrink-0 mt-0.5" />
@@ -144,57 +148,60 @@ function DatasetCard({ dataset, index }) {
         </div>
       </div>
 
-      {/* Description */}
-      <div className="px-6 py-3 border-b border-border">
-        <p className="text-xs text-muted-foreground leading-relaxed">{dataset.description}</p>
-      </div>
+      {/* ── Collapsible body ─────────────────────────────── */}
+      {open && (
+        <>
+          {/* Description */}
+          <div className="px-6 py-3 border-b border-border">
+            <p className="text-xs text-muted-foreground leading-relaxed">{dataset.description}</p>
+          </div>
 
-      {/* Metrics Row */}
-      <div className="grid grid-cols-3 divide-x divide-border border-b border-border">
-        <div className="px-4 py-3 text-center">
-          <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Disparate Impact</p>
-          <p className="text-lg font-bold text-[#ff6b7a]">{dataset.metrics.disparateImpactRatio}</p>
-          <p className="text-[10px] text-muted-foreground">threshold: 0.80</p>
-        </div>
-        <div className="px-4 py-3 text-center">
-          <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Parity Gap</p>
-          <p className="text-lg font-bold text-[#ff8c42]">{(dataset.metrics.demographicParityGap * 100).toFixed(1)}%</p>
-          <p className="text-[10px] text-muted-foreground">threshold: 10%</p>
-        </div>
-        <div className="px-4 py-3 text-center">
-          <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Protected Attr</p>
-          <p className="text-sm font-semibold text-foreground">{dataset.metrics.protectedAttribute}</p>
-        </div>
-      </div>
+          {/* Metrics Row */}
+          <div className="grid grid-cols-3 divide-x divide-border border-b border-border">
+            <div className="px-4 py-3 text-center">
+              <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Disparate Impact</p>
+              <p className="text-lg font-bold text-[#ff6b7a]">{dataset.metrics.disparateImpactRatio}</p>
+              <p className="text-[10px] text-muted-foreground">threshold: 0.80</p>
+            </div>
+            <div className="px-4 py-3 text-center">
+              <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Parity Gap</p>
+              <p className="text-lg font-bold text-[#ff8c42]">{(dataset.metrics.demographicParityGap * 100).toFixed(1)}%</p>
+              <p className="text-[10px] text-muted-foreground">threshold: 10%</p>
+            </div>
+            <div className="px-4 py-3 text-center">
+              <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Protected Attr</p>
+              <p className="text-sm font-semibold text-foreground">{dataset.metrics.protectedAttribute}</p>
+            </div>
+          </div>
 
-      {/* Chart */}
-      <div className="px-6 py-4 border-b border-border">
-        <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-3">Group Approval / Positive Rate</p>
-        <ResponsiveContainer width="100%" height={120}>
-          <BarChart data={dataset.groupRates} layout="vertical" margin={{ left: 0, right: 10 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" horizontal={false} />
-            <XAxis type="number" domain={[0, 1]} tickFormatter={(v) => `${(v * 100).toFixed(0)}%`} tick={{ fontSize: 10, fill: "var(--color-muted-foreground)" }} />
-            <YAxis dataKey="group" type="category" width={90} tick={{ fontSize: 11, fill: "var(--color-foreground)" }} />
-            <Tooltip formatter={(v) => `${(v * 100).toFixed(1)}%`} contentStyle={{ background: "var(--color-card)", border: "1px solid var(--color-border)", borderRadius: 8, fontSize: 12 }} />
-            <Bar dataKey="rate" radius={[0, 4, 4, 0]} barSize={16}>
-              {dataset.groupRates.map((entry, i) => (
-                <Cell key={i} fill={entry.color} />
-              ))}
-            </Bar>
-          </BarChart>
-        </ResponsiveContainer>
-      </div>
+          {/* Chart — only rendered when open to prevent black box */}
+          <div className="px-6 py-4 border-b border-border">
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-3">Group Approval / Positive Rate</p>
+            <ResponsiveContainer width="100%" height={120}>
+              <BarChart data={dataset.groupRates} layout="vertical" margin={{ left: 0, right: 10 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" horizontal={false} />
+                <XAxis type="number" domain={[0, 1]} tickFormatter={(v) => `${(v * 100).toFixed(0)}%`} tick={{ fontSize: 10, fill: "var(--color-muted-foreground)" }} />
+                <YAxis dataKey="group" type="category" width={90} tick={{ fontSize: 11, fill: "var(--color-foreground)" }} />
+                <Tooltip formatter={(v) => `${(v * 100).toFixed(1)}%`} contentStyle={{ background: "var(--color-card)", border: "1px solid var(--color-border)", borderRadius: 8, fontSize: 12 }} />
+                <Bar dataKey="rate" radius={[0, 4, 4, 0]} barSize={16}>
+                  {dataset.groupRates.map((entry, i) => (
+                    <Cell key={i} fill={entry.color} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
 
-      {/* Legal Exposure + SDG */}
-      <div className="px-6 py-3 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Scale className="w-3.5 h-3.5 text-muted-foreground" />
-          <span className="text-xs text-muted-foreground">{dataset.legalExposure}</span>
-        </div>
-        <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-[#0057ff]/8 text-[#0057ff]">
-          {dataset.sdg}
-        </span>
-      </div>
+          {/* Legal Exposure + SDG */}
+          <div className="px-6 py-3 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Scale className="w-3.5 h-3.5 text-muted-foreground" />
+              <span className="text-xs text-muted-foreground">{dataset.legalExposure}</span>
+            </div>
+            <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-[#0057ff]/8 text-[#0057ff]">{dataset.sdg}</span>
+          </div>
+        </>
+      )}
     </motion.div>
   );
 }
@@ -283,24 +290,53 @@ export default function ImpactPage() {
 
       {/* CTA */}
       <section className="max-w-6xl mx-auto px-6 pb-16">
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="rounded-xl border border-border bg-card p-8 text-center"
-        >
-          <h2 className="text-xl font-bold text-foreground mb-2">Try FairGuard on Your Own Data</h2>
-          <p className="text-sm text-muted-foreground mb-6 max-w-lg mx-auto">
-            Upload any CSV dataset where an AI makes decisions about people. FairGuard will detect bias in 60 seconds.
-          </p>
-          <a
-            href="/audit"
-            className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-foreground text-background text-sm font-semibold hover:opacity-90 transition-opacity"
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="relative rounded-2xl overflow-hidden"
+            style={{ background: "linear-gradient(135deg, #0a0a0a 0%, #111 60%, #0a1628 100%)" }}
           >
-            Start Audit
-            <ArrowRight className="w-4 h-4" />
-          </a>
-        </motion.div>
+            {/* Lime accent top bar */}
+            <div className="absolute top-0 left-0 right-0 h-1 bg-[#caff3d]" />
+
+            {/* Glow blob */}
+            <div className="absolute -top-24 -right-24 w-64 h-64 rounded-full opacity-10 pointer-events-none"
+              style={{ background: "radial-gradient(circle, #caff3d 0%, transparent 70%)" }} />
+
+            <div className="relative px-8 py-12 text-center">
+              {/* Badge */}
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#caff3d]/10 border border-[#caff3d]/20 mb-6">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#caff3d] animate-pulse" />
+                <span className="text-[10px] font-bold uppercase tracking-widest text-[#caff3d]">Live Bias Detection</span>
+              </div>
+
+              <h2 className="text-2xl md:text-3xl font-bold text-white mb-3 tracking-tight">
+                Test Your Own AI System
+              </h2>
+              <p className="text-sm text-white/50 mb-8 max-w-lg mx-auto leading-relaxed">
+                Upload any CSV dataset where an AI makes decisions about people.
+                FairGuard detects bias, checks legal compliance, and generates a certificate — in under 60 seconds.
+              </p>
+
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+                <a
+                  href="/audit"
+                  className="inline-flex items-center gap-2 px-7 py-3.5 rounded-lg bg-[#caff3d] text-black text-sm font-bold hover:bg-[#b8f020] transition-colors"
+                >
+                  Start Bias Audit
+                  <ArrowRight className="w-4 h-4" />
+                </a>
+                <a
+                  href="/stress"
+                  className="inline-flex items-center gap-2 px-7 py-3.5 rounded-lg border border-white/15 text-white text-sm font-semibold hover:bg-white/5 transition-colors"
+                >
+                  Run Stress Test
+                  <ArrowRight className="w-4 h-4" />
+                </a>
+              </div>
+            </div>
+          </motion.div>
       </section>
     </main>
   );

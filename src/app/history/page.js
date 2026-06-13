@@ -239,7 +239,7 @@ export default function HistoryPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="max-w-5xl mx-auto px-6 py-10">
+      <div className="max-w-[1320px] mx-auto px-6 py-10">
 
         {/* ── Page header ───────────────────────────────────────── */}
         <div className="flex items-start justify-between mb-10">
@@ -513,9 +513,9 @@ export default function HistoryPage() {
             )}
 
             {/* ── Audit list ─────────────────────────────────────── */}
-            <motion.div variants={staggerChild} className="space-y-2.5">
-              {/* List header */}
-              <div className="flex items-center gap-3 mb-1">
+            <motion.div variants={staggerChild}>
+              {/* Sticky list header */}
+              <div className="flex items-center gap-3 mb-3">
                 <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
                   All Audits
                 </p>
@@ -525,7 +525,11 @@ export default function HistoryPage() {
                 </p>
               </div>
 
-              {audits.map((audit, i) => {
+              {/* Scrollable audit list */}
+              <div className="relative">
+                <div className="overflow-y-auto max-h-[600px] pr-1 space-y-2.5 scrollbar-thin scrollbar-thumb-border scrollbar-track-transparent">
+                  {audits.map((audit, i) => {
+
                 const score   = audit.fairness_score ?? 0;
                 const hasRisk =
                   audit.debt_risk_level &&
@@ -645,6 +649,10 @@ export default function HistoryPage() {
                   </motion.div>
                 );
               })}
+                </div>
+                {/* Bottom fade gradient */}
+                <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-background to-transparent pointer-events-none rounded-b-xl" />
+              </div>
             </motion.div>
 
           </motion.div>

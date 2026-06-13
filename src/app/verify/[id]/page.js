@@ -47,7 +47,7 @@ export default function VerifyPage({ params }) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="flex items-center gap-3">
-          <Loader2 className="w-5 h-5 text-[#caff3d] animate-spin" />
+          <div className="w-5 h-5 border-2 border-[#caff3d]/30 border-t-[#caff3d] rounded-full animate-spin" />
           <span className="text-sm font-medium text-muted-foreground">Verifying certificate...</span>
         </div>
       </div>
@@ -86,29 +86,33 @@ export default function VerifyPage({ params }) {
 
         {/* Status banner */}
         <div className={[
-          "rounded-xl border-2 p-6 mb-8 text-center",
+          "rounded-2xl border-2 p-8 mb-8 text-center relative overflow-hidden",
           isValid
             ? "border-[#caff3d]/30 bg-[#caff3d]/5"
             : isExpired
             ? "border-[#ff8c42]/30 bg-[#ff8c42]/5"
             : "border-[#ff6b7a]/30 bg-[#ff6b7a]/5",
         ].join(" ")}>
+          {/* Logo — large & prominent */}
+          <div className="flex justify-center mb-4">
+            <img src="/Navbar_Logo.svg" alt="FairGuard" className="h-16 w-auto" />
+          </div>
           <div className="flex items-center justify-center gap-2 mb-2">
             {isValid ? (
-              <Shield className="w-8 h-8 text-[#65a30d]" />
+              <CheckCircle2 className="w-6 h-6 text-[#65a30d]" />
             ) : isExpired ? (
-              <Clock className="w-8 h-8 text-[#ff8c42]" />
+              <Clock className="w-6 h-6 text-[#ff8c42]" />
             ) : (
-              <XCircle className="w-8 h-8 text-[#ff6b7a]" />
+              <XCircle className="w-6 h-6 text-[#ff6b7a]" />
             )}
+            <h1 className={[
+              "text-xl font-bold tracking-tight",
+              isValid ? "text-[#65a30d]" : isExpired ? "text-[#ff8c42]" : "text-[#ff6b7a]",
+            ].join(" ")}>
+              {isValid ? "CERTIFIED FAIR AI" : isExpired ? "CERTIFICATE EXPIRED" : "CERTIFICATE INVALID"}
+            </h1>
           </div>
-          <h1 className={[
-            "text-2xl font-bold tracking-tight",
-            isValid ? "text-[#65a30d]" : isExpired ? "text-[#ff8c42]" : "text-[#ff6b7a]",
-          ].join(" ")}>
-            {isValid ? "CERTIFIED FAIR AI" : isExpired ? "CERTIFICATE EXPIRED" : "CERTIFICATE INVALID"}
-          </h1>
-          <p className="text-xs text-muted-foreground mt-1">
+          <p className="text-xs text-muted-foreground">
             {isValid ? "This AI system has been independently audited for fairness" : `Certificate status: ${cert.status}`}
           </p>
         </div>
@@ -201,27 +205,21 @@ export default function VerifyPage({ params }) {
                 )}
               </div>
 
-              {/* Hash */}
-              <div className="pt-4 border-t border-border">
-                <div className="flex items-center gap-2 mb-1">
-                  <Hash className="w-3.5 h-3.5 text-muted-foreground" />
-                  <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">Results Hash (SHA-256)</span>
-                </div>
-                <code className="text-[10px] font-mono text-muted-foreground break-all block bg-muted/50 px-3 py-2 rounded-md border border-border">
-                  {cert.results_hash}
-                </code>
-              </div>
-
-              {/* Audit chain */}
-              {cert.previous_audit_hash && (
+              {/* Verification fingerprint — collapsed, not showing raw hash */}
+              <div className="flex items-center gap-3 py-1">
                 <div className="flex items-center gap-2">
-                  <Link2 className="w-3.5 h-3.5 text-muted-foreground" />
-                  <span className="text-xs text-muted-foreground">
-                    Audit chain: previous hash{" "}
-                    <code className="font-mono text-[10px]">{cert.previous_audit_hash.slice(0, 16)}...</code>
-                  </span>
+                  <Hash className="w-3.5 h-3.5 text-muted-foreground" />
+                  <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">Verification</span>
                 </div>
-              )}
+                <span className="font-mono text-[10px] text-muted-foreground bg-muted/50 px-2 py-1 rounded border border-border">
+                  SHA-256 · {cert.results_hash ? `${cert.results_hash.slice(0, 8)}···${cert.results_hash.slice(-8)}` : "unavailable"}
+                </span>
+                {isValid && (
+                  <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#caff3d]/10 text-[#65a30d] border border-[#caff3d]/20">
+                    <CheckCircle2 className="w-2.5 h-2.5" /> Verified
+                  </span>
+                )}
+              </div>
 
               {/* Legal compliance checklist from mapping */}
               {cert.legal_compliance_mapping && Object.keys(cert.legal_compliance_mapping).length > 0 ? (
@@ -297,10 +295,11 @@ export default function VerifyPage({ params }) {
               )}
 
               {/* Model used */}
-              <div className="pt-3 border-t border-border">
-                <p className="text-xs text-muted-foreground">
-                  Audited using: <span className="font-medium text-foreground">{cert.model_used || "Gemini 2.5 Flash"}</span>
-                </p>
+              <div className="pt-3 border-t border-border flex items-center gap-2">
+                <span className="text-[10px] text-muted-foreground uppercase tracking-widest font-semibold">Audited with</span>
+                <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-md bg-[#0057ff]/8 text-[#0057ff] border border-[#0057ff]/20">
+                  {cert.model_used || "Gemini 2.5 Flash"}
+                </span>
               </div>
 
             </div>

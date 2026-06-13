@@ -82,35 +82,31 @@ export default function Navbar() {
   }, [pathname]);
 
   // Determine CTA state based on current page
-  const isOnApp      = NAV_LINKS.some((l) => pathname.startsWith(l.href));
-  const isOnLanding  = !isOnApp;
+  const isOnApp     = NAV_LINKS.some((l) => pathname.startsWith(l.href));
+  const isOnLanding = !isOnApp;
 
-  // CTA config
-  const ctaConfig = isOnApp
-    ? {
-        // Inside the app — contextual action
-        href:  "/audit",
-        icon:  <Search className="w-3.5 h-3.5" />,
-        label: "NEW AUDIT",
-      }
-    : {
-        // Landing page — primary acquisition CTA
-        href:  "/audit",
-        icon:  <Search className="w-3.5 h-3.5" />,
-        label: "RUN AUDIT",
-      };
+  // CTA only on landing page
+  const showCta = isOnLanding;
+
+  const ctaConfig = {
+    href:  "/audit",
+    icon:  <Search className="w-3.5 h-3.5" />,
+    label: "RUN AUDIT",
+  };
 
   return (
     <>
+      {/* 1px lime accent stripe — FairGuard signature */}
+      <div className="h-[2px] bg-[#caff3d] w-full sticky top-0 z-50" />
       <nav
         className={[
-          "sticky top-0 z-50 h-16 transition-all duration-200",
+          "sticky top-[2px] z-50 h-16 transition-all duration-200",
           scrolled
             ? "bg-white/85 backdrop-blur-2xl shadow-[0_1px_12px_rgba(0,0,0,0.06)]"
             : "bg-white border-b border-border",
         ].join(" ")}
       >
-        <div className="max-w-[1200px] mx-auto px-6 md:px-10 h-full flex items-center justify-between gap-6">
+        <div className="max-w-[1200px] mx-auto pl-2 pr-6 md:pl-4 md:pr-10 h-full flex items-center justify-between gap-6">
 
           {/* ── Logo ──────────────────────────────────────────── */}
           <Link
@@ -159,8 +155,8 @@ export default function Navbar() {
           {/* ── Right side: CTA + mobile menu ──────────────────── */}
           <div className="flex items-center gap-3 flex-shrink-0">
 
-            {/* CTA button — context-aware */}
-            {ctaConfig && (
+            {/* CTA button — only on landing */}
+            {showCta && (
               <Link
                 href={ctaConfig.href}
                 className="group hidden sm:inline-flex items-stretch rounded-md overflow-hidden
@@ -225,8 +221,8 @@ export default function Navbar() {
               );
             })}
 
-            {/* Mobile CTA */}
-            {ctaConfig && (
+            {/* Mobile CTA — only on landing */}
+            {showCta && (
               <div className="pt-3 border-t border-border mt-3">
                 <Link
                   href={ctaConfig.href}

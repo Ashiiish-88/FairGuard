@@ -367,6 +367,7 @@ export default function AuditPage() {
   const [data, setData] = useState(null);
   const [detected, setDetected] = useState(null);
   const [domainInfo, setDomainInfo] = useState(null);
+  const [activeTab, setActiveTab] = useState("overview"); // "overview" | "evidence" | "legal" | "fixit"
   const [config, setConfig] = useState({
     outcome: "",
     protected: [],
@@ -612,7 +613,7 @@ export default function AuditPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="max-w-5xl mx-auto px-6 py-10">
+      <div className="max-w-[1320px] mx-auto px-6 py-10">
 
         {/* ── Page header ─────────────────────────────────────────── */}
         <div className="flex items-start justify-between mb-10">
@@ -1032,330 +1033,230 @@ export default function AuditPage() {
                 className="space-y-5"
               >
 
-                {/* ── Domain tag & Vertex AI Registry ──────────────── */}
-                <motion.div
-                  variants={staggerChild}
-                  className="flex flex-wrap items-center gap-2"
-                >
-                  {results.domain && (
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-muted border border-border text-xs font-medium text-muted-foreground">
-                      <span className="w-1.5 h-1.5 rounded-full bg-[#caff3d]" />
-                      {results.domain.icon} {results.domain.label}
-                      <span className="text-[10px] text-muted-foreground/80 ml-1">
-                        (Auto-detected Domain)
-                      </span>
-                    </span>
-                  )}
+                {/* ── VERDICT CARD ─────────────────────────────────── */}
+                {(() => {
+                  const score = results.fairness_score?.score ?? 0;
+                  const label = results.fairness_score?.label ?? "Unknown";
+                  const biased = score < 70;
+                  const scoreColor = score >= 70 ? "#caff3d" : score >= 50 ? "#ff8c42" : "#ff6b7a";
+                  return (
+                    <motion.div variants={staggerChild}>
+                      <div className="bg-black rounded-xl overflow-hidden border border-white/8">
+                        <div className="flex items-center gap-6 px-6 py-5 flex-wrap">
+                          <div className="flex flex-col items-center gap-1 flex-shrink-0">
+                            <div className="w-16 h-16 rounded-full border-4 flex items-center justify-center" style={{ borderColor: scoreColor }}>
+                              <span className="text-xl font-black font-mono" style={{ color: scoreColor }}>{score}</span>
+                            </div>
+                            <span className="text-[10px] font-semibold text-white/40 uppercase tracking-widest">Score</span>
+                          </div>
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 flex-wrap mb-1">
+                              <span className="text-lg font-black tracking-tight" style={{ color: scoreColor }}>
+                                {biased ? "⚠ Bias Detected" : "✓ Passes Fairness Checks"}
+                              </span>
+                              <span className="text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full border" style={{ color: scoreColor, borderColor: `${scoreColor}40`, backgroundColor: `${scoreColor}12` }}>
+                                {label}
+                              </span>
+                            </div>
+                            <p className="text-sm text-white/50">
+                              {biased
+                                ? "Statistically significant disparate impact detected. Legal exposure under EU AI Act Art. 9 and EEOC 80% rule."
+                                : "No statistically significant bias detected across monitored protected attributes at current thresholds."}
+                            </p>
+                          </div>
+                          <div className="flex gap-5 flex-shrink-0">
+                            <div className="text-center">
+                              <p className="text-xl font-black font-mono text-white">{results.dataset_info?.total_rows?.toLocaleString()}</p>
+                              <p className="text-[10px] text-white/40 uppercase tracking-wider">Rows</p>
+                            </div>
+                            <div className="text-center">
+                              <p className="text-xl font-black font-mono text-white">{Object.keys(results.per_attribute || {}).length}</p>
+                              <p className="text-[10px] text-white/40 uppercase tracking-wider">Attributes</p>
+                            </div>
+                            <div className="text-center">
+                              <p className="text-xl font-black font-mono" style={{ color: scoreColor }}>
+                                {(Object.values(results.per_attribute || {})[0])?.disparate_impact?.ratio?.toFixed(2) ?? "N/A"}
+                              </p>
+                              <p className="text-[10px] text-white/40 uppercase tracking-wider">DI Ratio</p>
+                            </div>
+                          </div>
+                        </div>
+                        {/* Meta row */}
+                        <div className="flex items-center gap-4 px-6 py-2.5 border-t border-white/6 flex-wrap">
+                          {results.domain && (
+                            <span className="inline-flex items-center gap-1.5 text-[10px] font-medium text-white/40">
+                              <span className="w-1.5 h-1.5 rounded-full bg-[#caff3d]" />
+                              {results.domain.icon} {results.domain.label}
+                            </span>
+                          )}
+                          {registryInfo && (
+                            <span className="inline-flex items-center gap-1.5 text-[10px] font-medium text-white/40">
+                              <Database className="w-3 h-3 text-[#caff3d]" />
+                              {registryInfo.status === "success" ? `Vertex AI · ID: ${registryInfo.modelId?.split("/").pop()}` : registryInfo.status === "skipped" ? "Demo Mode" : "Registry Failed"}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </motion.div>
+                  );
+                })()}
 
-                  {registryInfo && (
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-muted border border-border text-xs font-medium text-muted-foreground">
-                      <Database className="w-3 h-3 text-[#a3cc2e]" />
-                      <span>Vertex AI Registry: </span>
-                      {registryInfo.status === "success" ? (
-                        <span className="text-emerald-400 font-semibold flex items-center gap-0.5">
-                          Registered (ID: {registryInfo.modelId?.split("/").pop() || "v1"})
-                        </span>
-                      ) : registryInfo.status === "skipped" ? (
-                        <span className="text-amber-400 font-semibold" title={registryInfo.reason}>
-                          Demo Mode
-                        </span>
-                      ) : (
-                        <span className="text-red-400 font-semibold">
-                          Failed
-                        </span>
-                      )}
-                    </span>
-                  )}
+                {/* ── 4-TAB NAV ────────────────────────────────────── */}
+                <motion.div variants={staggerChild}>
+                  <div className="flex items-center gap-0 border-b border-border">
+                    {[
+                      { id: "overview", label: "Overview",  icon: <BarChart3 className="w-3.5 h-3.5" /> },
+                      { id: "evidence", label: "Evidence",  icon: <Network className="w-3.5 h-3.5" /> },
+                      { id: "legal",    label: "Legal",     icon: <Scale className="w-3.5 h-3.5" /> },
+                      { id: "fixit",    label: "Fix It",    icon: <Sparkles className="w-3.5 h-3.5" />, highlight: (results?.fairness_score?.score ?? 100) < 75 },
+                    ].map((tab) => (
+                      <button
+                        key={tab.id}
+                        onClick={() => setActiveTab(tab.id)}
+                        className={[
+                          "flex items-center gap-2 px-5 py-3 text-sm font-semibold border-b-2 transition-all duration-150",
+                          activeTab === tab.id ? "border-[#caff3d] text-foreground" : "border-transparent text-muted-foreground hover:text-foreground hover:border-border",
+                          tab.highlight && activeTab !== tab.id ? "text-[#ff8c42]" : "",
+                        ].join(" ")}
+                      >
+                        {tab.icon}{tab.label}
+                        {tab.highlight && <span className="w-1.5 h-1.5 rounded-full bg-[#ff8c42]" />}
+                      </button>
+                    ))}
+                  </div>
                 </motion.div>
 
-                {/* ── Row 1: Score gauge + 4 metric cards ─────────── */}
-                <motion.div
-                  variants={staggerChild}
-                  className="grid grid-cols-1 md:grid-cols-4 gap-4"
-                >
-                  {/* Score */}
-                  <div className="bg-card rounded-xl border border-border p-6 flex flex-col items-center justify-center gap-3">
-                    <ScoreGauge
-                      score={results.fairness_score?.score || 0}
-                      label={results.fairness_score?.label}
-                    />
-                    <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">
-                      Fairness Score
-                    </p>
-                  </div>
-
-                  {/* 4 metric cards — 3 cols */}
-                  <div className="md:col-span-3 grid grid-cols-2 gap-4">
-                    <MetricCard
-                      icon={<Database className="w-4 h-4" />}
-                      title="Dataset Size"
-                      value={`${results.dataset_info?.total_rows?.toLocaleString()} rows`}
-                      subtitle={`${results.dataset_info?.total_columns} columns`}
-                    />
-                    <div className="space-y-1">
-                      <MetricCard
-                        icon={<Scale className="w-4 h-4" />}
-                        title="Disparate Impact"
-                        value={
-                          (Object.values(results.per_attribute || {})[0])
-                            ?.disparate_impact?.ratio?.toFixed(4) ?? "N/A"
-                        }
-                        severity={
-                          (Object.values(results.per_attribute || {})[0])
-                            ?.disparate_impact?.severity
-                        }
-                        subtitle="EEOC 80% Rule threshold"
-                      />
-                      {/* p-value display — the one line that ends every accuracy challenge */}
-                      {(() => {
-                        const sig = Object.values(results.per_attribute || {})[0]
-                          ?.disparate_impact?.statistical_significance;
-                        if (!sig) return null;
-                        return (
-                          <p className={`text-[10px] font-mono px-3 py-1 rounded border ${
-                            sig.is_highly_significant
-                              ? "text-red-400 bg-red-500/5 border-red-500/20"
-                              : sig.is_significant
-                              ? "text-orange-400 bg-orange-500/5 border-orange-500/20"
-                              : "text-muted-foreground bg-muted border-border"
-                          }`}>
-                            {sig.p_value_display} · Fisher&apos;s Exact · n={sig.sample_size}
-                          </p>
-                        );
-                      })()}
+                {/* ── TAB: OVERVIEW ─────────────────────────────────── */}
+                {activeTab === "overview" && (
+                  <motion.div key="tab-overview" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.18 }} className="space-y-5">
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                      <div className="bg-card rounded-xl border border-border p-6 flex flex-col items-center justify-center gap-3">
+                        <ScoreGauge score={results.fairness_score?.score || 0} label={results.fairness_score?.label} />
+                        <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">Fairness Score</p>
+                      </div>
+                      <div className="md:col-span-3 grid grid-cols-2 gap-4">
+                        <MetricCard icon={<Database className="w-4 h-4" />} title="Dataset Size" value={`${results.dataset_info?.total_rows?.toLocaleString()} rows`} subtitle={`${results.dataset_info?.total_columns} columns`} />
+                        <div className="space-y-1">
+                          <MetricCard icon={<Scale className="w-4 h-4" />} title="Disparate Impact" value={(Object.values(results.per_attribute || {})[0])?.disparate_impact?.ratio?.toFixed(4) ?? "N/A"} severity={(Object.values(results.per_attribute || {})[0])?.disparate_impact?.severity} subtitle="EEOC 80% Rule threshold" />
+                          {(() => { const sig = Object.values(results.per_attribute || {})[0]?.disparate_impact?.statistical_significance; if (!sig) return null; return (<p className={`text-[10px] font-mono px-3 py-1 rounded border ${sig.is_highly_significant ? "text-red-400 bg-red-500/5 border-red-500/20" : sig.is_significant ? "text-orange-400 bg-orange-500/5 border-orange-500/20" : "text-muted-foreground bg-muted border-border"}`}>{sig.p_value_display} · Fisher&apos;s Exact · n={sig.sample_size}</p>); })()}
+                        </div>
+                        <MetricCard icon={<BarChart3 className="w-4 h-4" />} title="Demographic Parity" value={(((Object.values(results.per_attribute || {})[0])?.demographic_parity?.difference || 0) * 100).toFixed(1) + "%"} severity={(Object.values(results.per_attribute || {})[0])?.demographic_parity?.severity} subtitle="Gap between group approval rates" />
+                        <MetricCard icon={<Network className="w-4 h-4" />} title="Proxy Variables" value={String(results.proxies?.length || 0)} valueClass={(results.proxies?.length || 0) > 0 ? "text-[#0057ff]" : undefined} severity={results.proxies?.length > 0 ? "WARNING" : "OK"} subtitle="Features encoding protected attrs" />
+                      </div>
                     </div>
-                    <MetricCard
-                      icon={<BarChart3 className="w-4 h-4" />}
-                      title="Demographic Parity"
-                      value={
-                        (
-                          ((Object.values(results.per_attribute || {})[0])
-                            ?.demographic_parity?.difference || 0) * 100
-                        ).toFixed(1) + "%"
-                      }
-                      severity={
-                        (Object.values(results.per_attribute || {})[0])
-                          ?.demographic_parity?.severity
-                      }
-                      subtitle="Gap between group approval rates"
-                    />
-                    <MetricCard
-                      icon={<Network className="w-4 h-4" />}
-                      title="Proxy Variables"
-                      value={String(results.proxies?.length || 0)}
-                      valueClass={(results.proxies?.length || 0) > 0 ? "text-[#0057ff]" : undefined}
-                      severity={
-                        results.proxies?.length > 0 ? "WARNING" : "OK"
-                      }
-                      subtitle="Features encoding protected attrs"
-                    />
-                  </div>
-                </motion.div>
+                    <div className="grid md:grid-cols-2 gap-4 items-start">
+                      <BiasFingerprint fingerprint={results.fingerprint} />
+                      {Object.entries(results.per_attribute || {}).map(([attr, metrics]) => {
+                        const diRates = metrics.disparate_impact?.rates || {};
+                        const dpdRates = metrics.demographic_parity?.rates || {};
+                        const ratesObj = Object.keys(diRates).length > 0 ? diRates : dpdRates;
+                        const chartData = Object.entries(ratesObj).map(([group, rate]) => ({ group, rate }));
+                        if (chartData.length === 0) return null;
+                        return <BiasChart key={attr} title={`Approval rates · ${attr}`} data={chartData} />;
+                      })}
+                    </div>
+                    <div className="bg-card rounded-xl border border-border overflow-hidden">
+                      <div className="flex items-center gap-3 px-6 py-4 border-b border-border bg-black">
+                        <div className="w-7 h-7 rounded-lg bg-[#caff3d] flex items-center justify-center flex-shrink-0"><Sparkles className="w-3.5 h-3.5 text-black" /></div>
+                        <div className="flex-1"><p className="text-sm font-semibold text-white">AI Explanation</p><p className="text-xs text-white/50 mt-0.5">Powered by Gemini</p></div>
+                        <div className="flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-[#9a77f8] animate-pulse" /><span className="text-xs text-white/40 font-medium">Live</span></div>
+                      </div>
+                      <div className="px-6 py-5">
+                        {explanation ? (
+                          <div className="space-y-4">
+                            <p className="text-base font-semibold text-foreground leading-snug whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: renderMarkdown(explanation.summary) }} />
+                            <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: renderMarkdown(explanation.explanation) }} />
+                            {explanation.legal_references?.length > 0 && (
+                              <div className="pt-4 border-t border-border">
+                                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-2.5">Legal references</p>
+                                <div className="flex flex-wrap gap-2">
+                                  {explanation.legal_references.map((r, i) => (<span key={i} className="inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-md bg-[#0057ff]/8 text-[#0057ff] border border-[#0057ff]/20"><Scale className="w-3 h-3" />{r}</span>))}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-4 py-4">
+                            <div className="relative w-8 h-8 flex-shrink-0"><div className="absolute inset-0 rounded-full border-2 border-muted" /><div className="absolute inset-0 rounded-full border-2 border-transparent border-t-[#9a77f8] animate-spin" /></div>
+                            <div><p className="text-sm font-medium text-foreground">Generating explanation</p><p className="text-xs text-muted-foreground mt-0.5">Gemini is analyzing your results...</p></div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
 
-                {/* ── Row 2: Fingerprint + Bar charts ─────────────── */}
-                <motion.div
-                  variants={staggerChild}
-                  className="grid md:grid-cols-2 gap-4 items-start"
-                >
-                  <BiasFingerprint fingerprint={results.fingerprint} />
-                  {Object.entries(results.per_attribute || {}).map(
-                    ([attr, metrics]) => {
-                      // Prefer DI rates; fall back to DPD rates (no 5-row minimum)
+                {/* ── TAB: EVIDENCE ─────────────────────────────────── */}
+                {activeTab === "evidence" && (
+                  <motion.div key="tab-evidence" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.18 }} className="space-y-5">
+                    <BiasFingerprint fingerprint={results.fingerprint} />
+                    {Object.entries(results.per_attribute || {}).map(([attr, metrics]) => {
                       const diRates = metrics.disparate_impact?.rates || {};
                       const dpdRates = metrics.demographic_parity?.rates || {};
                       const ratesObj = Object.keys(diRates).length > 0 ? diRates : dpdRates;
                       const chartData = Object.entries(ratesObj).map(([group, rate]) => ({ group, rate }));
                       if (chartData.length === 0) return null;
-                      return (
-                        <BiasChart
-                          key={attr}
-                          title={`Approval rates · ${attr}`}
-                          data={chartData}
-                        />
-                      );
-                    }
-                  )}
-                </motion.div>
-
-                {/* ── Row 3: Fairness Debt ─────────────────────────── */}
-                <motion.div variants={staggerChild}>
-                  <FairnessDebtCard debt={results.fairness_debt} />
-                </motion.div>
-
-                {/* ── Row 3a: Regulation Reference Panel ──────────── */}
-                <motion.div variants={staggerChild}>
-                  <RegulationPanel auditResults={results} />
-                </motion.div>
-
-                {/* ── Row 3b: Human Cost ──────────────────────────── */}
-                {results.human_cost && (
-                  <motion.div variants={staggerChild}>
-                    <HumanCostCard humanCost={results.human_cost} />
-                  </motion.div>
-                )}
-
-                {/* ── Row 4: Proxy variables ───────────────────────── */}
-                {results.proxies?.length > 0 && (
-                  <motion.div variants={staggerChild}>
-                    <div className="bg-card rounded-xl border border-border overflow-hidden">
-                      <CardHeader
-                        icon={<AlertTriangle className="w-3.5 h-3.5" />}
-                        title="Proxy Variables Detected"
-                        subtitle="These features may indirectly encode protected attributes"
-                        right={
-                          <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-[#ff8c42]/10 text-[#ff8c42] border border-[#ff8c42]/25">
-                            {results.proxies.length} found
-                          </span>
-                        }
-                      />
-
-                      <div className="divide-y divide-border">
-                        {results.proxies.map((p, i) => {
-                          const sev = getSev(
-                            p.score > 0.6 ? "HIGH" : "MODERATE"
-                          );
-                          return (
-                            <div
-                              key={i}
-                              className="flex items-center gap-4 px-6 py-4 hover:bg-muted/30 transition-colors"
-                            >
-                              {/* Feature → protected */}
-                              <div className="flex items-center gap-2 flex-1 min-w-0">
-                                <code className="text-sm font-semibold text-foreground bg-muted px-2 py-0.5 rounded">
-                                  {p.feature}
-                                </code>
-                                <ChevronRight className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
-                                <code
-                                  className={`text-sm font-medium px-2 py-0.5 rounded border ${sev.bg} ${sev.border} ${sev.text}`}
-                                >
-                                  {p.protected_attribute}
-                                </code>
-                              </div>
-
-                              {/* Score bar + badge */}
-                              <div className="flex items-center gap-3 flex-shrink-0">
-                                <div className="w-20 h-1.5 rounded-full bg-muted overflow-hidden">
-                                  <div
-                                    className={`h-full rounded-full ${sev.bar}`}
-                                    style={{ width: `${p.score * 100}%` }}
-                                  />
+                      return <BiasChart key={attr} title={`Approval rates · ${attr}`} data={chartData} />;
+                    })}
+                    {results.proxies?.length > 0 && (
+                      <div className="bg-card rounded-xl border border-border overflow-hidden">
+                        <CardHeader icon={<AlertTriangle className="w-3.5 h-3.5" />} title="Proxy Variables Detected" subtitle="These features may indirectly encode protected attributes" right={<span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-[#ff8c42]/10 text-[#ff8c42] border border-[#ff8c42]/25">{results.proxies.length} found</span>} />
+                        <div className="divide-y divide-border">
+                          {results.proxies.map((p, i) => {
+                            const sev = getSev(p.score > 0.6 ? "HIGH" : "MODERATE");
+                            return (
+                              <div key={i} className="flex items-center gap-4 px-6 py-4 hover:bg-muted/30 transition-colors">
+                                <div className="flex items-center gap-2 flex-1 min-w-0">
+                                  <code className="text-sm font-semibold text-foreground bg-muted px-2 py-0.5 rounded">{p.feature}</code>
+                                  <ChevronRight className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
+                                  <code className={`text-sm font-medium px-2 py-0.5 rounded border ${sev.bg} ${sev.border} ${sev.text}`}>{p.protected_attribute}</code>
                                 </div>
-                                <span
-                                  className={`text-xs font-mono font-semibold w-8 text-right ${sev.text}`}
-                                >
-                                  {p.score.toFixed(2)}
-                                </span>
-                                <span
-                                  className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full border ${sev.badge}`}
-                                >
-                                  {p.severity}
-                                </span>
+                                <div className="flex items-center gap-3 flex-shrink-0">
+                                  <div className="w-20 h-1.5 rounded-full bg-muted overflow-hidden"><div className={`h-full rounded-full ${sev.bar}`} style={{ width: `${p.score * 100}%` }} /></div>
+                                  <span className={`text-xs font-mono font-semibold w-8 text-right ${sev.text}`}>{p.score.toFixed(2)}</span>
+                                  <span className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full border ${sev.badge}`}>{p.severity}</span>
+                                </div>
                               </div>
-                            </div>
-                          );
-                        })}
+                            );
+                          })}
+                        </div>
                       </div>
-                    </div>
+                    )}
                   </motion.div>
                 )}
 
-                {/* ── Row 5: AI Explanation ────────────────────────── */}
-                <motion.div variants={staggerChild}>
-                  <div className="bg-card rounded-xl border border-border overflow-hidden">
-                    {/* Distinct header for AI section */}
-                    <div className="flex items-center gap-3 px-6 py-4 border-b border-border bg-black">
-                      <div className="w-7 h-7 rounded-lg bg-[#caff3d] flex items-center justify-center flex-shrink-0">
-                        <Sparkles className="w-3.5 h-3.5 text-black" />
-                      </div>
-                      <div className="flex-1">
-                        <p className="text-sm font-semibold text-white">
-                          AI Explanation
-                        </p>
-                        <p className="text-xs text-white/50 mt-0.5">
-                          Powered by Gemini
-                        </p>
-                      </div>
-                      {/* Purple dot — Gemini color */}
-                      <div className="flex items-center gap-1.5">
-                        <span className="w-1.5 h-1.5 rounded-full bg-[#9a77f8] animate-pulse" />
-                        <span className="text-xs text-white/40 font-medium">
-                          Live
-                        </span>
-                      </div>
-                    </div>
+                {/* ── TAB: LEGAL ────────────────────────────────────── */}
+                {activeTab === "legal" && (
+                  <motion.div key="tab-legal" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.18 }} className="space-y-5">
+                    <FairnessDebtCard debt={results.fairness_debt} />
+                    <RegulationPanel auditResults={results} />
+                    {results.human_cost && <HumanCostCard humanCost={results.human_cost} />}
+                    {(regulatoryNews || newsLoading) && <RegulatoryNews news={regulatoryNews} loading={newsLoading} />}
+                  </motion.div>
+                )}
 
-                    <div className="px-6 py-5">
-                      {explanation ? (
-                        <div className="space-y-4">
-                          <p 
-                            className="text-base font-semibold text-foreground leading-snug whitespace-pre-wrap"
-                            dangerouslySetInnerHTML={{ __html: renderMarkdown(explanation.summary) }}
-                          />
-                          <p 
-                            className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap"
-                            dangerouslySetInnerHTML={{ __html: renderMarkdown(explanation.explanation) }}
-                          />
-
-                          {explanation.legal_references?.length > 0 && (
-                            <div className="pt-4 border-t border-border">
-                              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-2.5">
-                                Legal references
-                              </p>
-                              <div className="flex flex-wrap gap-2">
-                                {explanation.legal_references.map(
-                                  (r, i) => (
-                                    <span
-                                      key={i}
-                                      className="inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-md bg-[#0057ff]/8 text-[#0057ff] border border-[#0057ff]/20"
-                                    >
-                                      <Scale className="w-3 h-3" />
-                                      {r}
-                                    </span>
-                                  )
-                                )}
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      ) : (
-                        /* Loading state */
-                        <div className="flex items-center gap-4 py-4">
-                          <div className="relative w-8 h-8 flex-shrink-0">
-                            <div className="absolute inset-0 rounded-full border-2 border-muted" />
-                            <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-[#9a77f8] animate-spin" />
-                          </div>
+                {/* ── TAB: FIX IT ───────────────────────────────────── */}
+                {activeTab === "fixit" && (
+                  <motion.div key="tab-fixit" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.18 }} className="space-y-5">
+                    {(results?.fairness_score?.score ?? 100) < 75 ? (
+                      <>
+                        {(remediationCode || remediationLoading) && <RemediationCode code={remediationCode} loading={remediationLoading} />}
+                        <CertificateCard auditResults={results} />
+                      </>
+                    ) : (
+                      <div className="space-y-5">
+                        <div className="flex items-center gap-3 px-5 py-4 rounded-xl bg-[#caff3d]/8 border border-[#caff3d]/20">
+                          <CheckCircle2 className="w-5 h-5 text-[#65a30d] flex-shrink-0" />
                           <div>
-                            <p className="text-sm font-medium text-foreground">
-                              Generating explanation
-                            </p>
-                            <p className="text-xs text-muted-foreground mt-0.5">
-                              Gemini is analyzing your results...
-                            </p>
+                            <p className="text-sm font-semibold text-foreground">System passes fairness thresholds</p>
+                            <p className="text-xs text-muted-foreground mt-0.5">Score ≥ 75 — no remediation code needed. Generate a compliance certificate below.</p>
                           </div>
                         </div>
-                      )}
-                    </div>
-                  </div>
-                </motion.div>
-
-                {/* ── Row 5a: Regulatory News ────────────────────────── */}
-                {(regulatoryNews || newsLoading) && (
-                  <motion.div variants={staggerChild}>
-                    <RegulatoryNews news={regulatoryNews} loading={newsLoading} />
+                        <CertificateCard auditResults={results} />
+                      </div>
+                    )}
                   </motion.div>
                 )}
-
-                {/* ── Row 5b: Remediation Code ────────────────────────── */}
-                {(remediationCode || remediationLoading) && (
-                  <motion.div variants={staggerChild}>
-                    <RemediationCode code={remediationCode} loading={remediationLoading} />
-                  </motion.div>
-                )}
-
-                {/* ── Row 6: Bias Certificate ────────────────────── */}
-                <motion.div variants={staggerChild}>
-                  <CertificateCard auditResults={results} />
-                </motion.div>
 
               </motion.div>
             </motion.div>

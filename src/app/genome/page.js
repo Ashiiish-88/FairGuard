@@ -84,14 +84,14 @@ export default function GenomePage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="max-w-5xl mx-auto px-6 py-10">
+      <div className="max-w-[1320px] mx-auto px-6 py-10">
 
         {/* ── Page header ───────────────────────────────────────── */}
         <div className="flex items-start justify-between mb-10">
           <div className="flex items-start gap-4">
             <div className="flex items-stretch rounded-md overflow-hidden flex-shrink-0 mt-0.5">
-              <div className="bg-[#9a77f8] w-10 h-10 flex items-center justify-center">
-                <Dna className="w-4.5 h-4.5 text-white" />
+              <div className="bg-[#caff3d] w-10 h-10 flex items-center justify-center">
+                <Dna className="w-4.5 h-4.5 text-black" />
               </div>
               <div className="bg-black w-1" />
             </div>
@@ -287,94 +287,49 @@ export default function GenomePage() {
             </motion.div>
           )}
 
-          {/* ═══ RESULTS ═══ */}
           {genomeData && genome && (
             <motion.div key="results" {...fadeUp}>
-              <motion.div
-                variants={staggerContainer}
-                initial="initial"
-                animate="animate"
-                className="space-y-5"
-              >
+              <motion.div variants={staggerContainer} initial="initial" animate="animate" className="space-y-5">
                 {/* Results header */}
                 <motion.div variants={staggerChild} className="flex items-center justify-between flex-wrap gap-3">
                   <div className="flex items-center gap-3 flex-wrap">
                     <h2 className="text-xl font-bold text-foreground tracking-tight">Genome Results</h2>
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[#9a77f8]/8 border border-[#9a77f8]/20 text-xs font-semibold text-[#9a77f8]">
-                      <Cpu className="w-3 h-3" />
-                      {genomeData.model_label}
-                    </span>
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-muted border border-border text-xs font-medium text-muted-foreground">
-                      {genomeData.total_probes} probes
-                    </span>
-                    {!genomeData.used_real_model && (
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[#ff8c42]/8 border border-[#ff8c42]/20 text-xs font-semibold text-[#ff8c42]">
-                        <AlertTriangle className="w-3 h-3" />
-                        Simulated — no API key
-                      </span>
-                    )}
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[#9a77f8]/8 border border-[#9a77f8]/20 text-xs font-semibold text-[#9a77f8]"><Cpu className="w-3 h-3" />{genomeData.model_label}</span>
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-muted border border-border text-xs font-medium text-muted-foreground">{genomeData.total_probes} probes</span>
+                    {!genomeData.used_real_model && (<span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[#ff8c42]/8 border border-[#ff8c42]/20 text-xs font-semibold text-[#ff8c42]"><AlertTriangle className="w-3 h-3" />Simulated — no API key</span>)}
                   </div>
                 </motion.div>
 
-                {/* Summary cards */}
-                <motion.div variants={staggerChild} className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <MetricCard
-                    icon={<Users className="w-4 h-4" />}
-                    title="Most discriminated"
-                    value={genome.worst_group?.name || genome.worst_group?.key}
-                    subtitle={`${genome.worst_group?.approval_pct}% approval`}
-                    severity="CRITICAL"
-                  />
-                  <MetricCard
-                    icon={<CheckCircle2 className="w-4 h-4" />}
-                    title="Most favored"
-                    value={genome.best_group?.name || genome.best_group?.key}
-                    subtitle={`${genome.best_group?.approval_pct}% approval`}
-                    severity="OK"
-                  />
-                  <MetricCard
-                    icon={<TrendingUp className="w-4 h-4" />}
-                    title="Bias spread"
-                    value={`${Math.round(genome.overall_bias_spread * 100)}%`}
-                    subtitle="Approval gap"
-                    severity={genome.genome_severity === "CRITICAL" ? "CRITICAL" : genome.genome_severity === "HIGH" ? "HIGH" : "MODERATE"}
-                  />
-                  <MetricCard
-                    icon={<Zap className="w-4 h-4" />}
-                    title="Borderline amplification"
-                    value={genome.borderline_amplification ? "YES" : "No"}
-                    subtitle={genome.borderline_amplification ? "Bias worse at borderline" : "Consistent across levels"}
-                    severity={genome.borderline_amplification ? "CRITICAL" : "OK"}
-                  />
-                </motion.div>
-
-                {/* Result statement */}
-                <motion.div variants={staggerChild}>
-                  <div className="bg-black rounded-xl p-6 text-center">
-                    <p className="text-white text-base leading-relaxed">
-                      <span className="font-bold text-[#caff3d]">{genomeData.model_label}</span> approves{" "}
-                      <span className="font-bold text-[#86efac]">
-                        {genome.best_group?.name || genome.best_group?.key}
-                      </span>{" "}
-                      at <span className="font-bold font-mono text-[#86efac]">{genome.best_group?.approval_pct}%</span>{" "}
-                      and{" "}
-                      <span className="font-bold text-[#fca5a5]">
-                        {genome.worst_group?.name || genome.worst_group?.key}
-                      </span>{" "}
-                      at <span className="font-bold font-mono text-[#fca5a5]">{genome.worst_group?.approval_pct}%</span>{" "}
-                      for identical qualifications.
-                    </p>
-                    <p className="text-white/60 text-sm mt-3 italic">
-                      {genome.borderline_amplification_note}
-                    </p>
+                {/* 2-column layout: stats left 35%, heatmap right 65% */}
+                <motion.div variants={staggerChild} className="grid grid-cols-1 lg:grid-cols-[35%_65%] gap-5 items-start">
+                  {/* Left column: metric cards + verdict statement */}
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-2 gap-3">
+                      <MetricCard icon={<Users className="w-4 h-4" />} title="Most discriminated" value={genome.worst_group?.name || genome.worst_group?.key} subtitle={`${genome.worst_group?.approval_pct}% approval`} severity="CRITICAL" />
+                      <MetricCard icon={<CheckCircle2 className="w-4 h-4" />} title="Most favored" value={genome.best_group?.name || genome.best_group?.key} subtitle={`${genome.best_group?.approval_pct}% approval`} severity="OK" />
+                      <MetricCard icon={<TrendingUp className="w-4 h-4" />} title="Bias spread" value={`${Math.round(genome.overall_bias_spread * 100)}%`} subtitle="Approval gap" severity={genome.genome_severity === "CRITICAL" ? "CRITICAL" : genome.genome_severity === "HIGH" ? "HIGH" : "MODERATE"} />
+                      <MetricCard icon={<Zap className="w-4 h-4" />} title="Borderline amplification" value={genome.borderline_amplification ? "YES" : "No"} subtitle={genome.borderline_amplification ? "Bias worse at borderline" : "Consistent across levels"} severity={genome.borderline_amplification ? "CRITICAL" : "OK"} />
+                    </div>
+                    <div className="bg-black rounded-xl p-5">
+                      <p className="text-white text-sm leading-relaxed">
+                        <span className="font-bold text-[#caff3d]">{genomeData.model_label}</span> approves{" "}
+                        <span className="font-bold text-[#86efac]">{genome.best_group?.name || genome.best_group?.key}</span>{" "}
+                        at <span className="font-bold font-mono text-[#86efac]">{genome.best_group?.approval_pct}%</span>{" "}
+                        and{" "}
+                        <span className="font-bold text-[#fca5a5]">{genome.worst_group?.name || genome.worst_group?.key}</span>{" "}
+                        at <span className="font-bold font-mono text-[#fca5a5]">{genome.worst_group?.approval_pct}%</span>{" "}
+                        for identical qualifications.
+                      </p>
+                      {genome.borderline_amplification_note && (
+                        <p className="text-white/50 text-xs mt-2 italic">{genome.borderline_amplification_note}</p>
+                      )}
+                    </div>
+                  </div>
+                  {/* Right column: genome heatmap */}
+                  <div>
+                    <GenomeMap genome={genome} />
                   </div>
                 </motion.div>
-
-                {/* Genome visualization */}
-                <motion.div variants={staggerChild}>
-                  <GenomeMap genome={genome} />
-                </motion.div>
-
               </motion.div>
             </motion.div>
           )}
