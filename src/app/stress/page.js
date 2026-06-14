@@ -1,4 +1,4 @@
-// app/stress/page.tsx
+// app/stress/page.js
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
@@ -19,6 +19,8 @@ import {
   XCircle,
   AlertTriangle,
   ChevronRight,
+  ChevronDown,
+  ChevronUp,
   Sparkles,
   Scale,
   ArrowRight,
@@ -27,6 +29,7 @@ import {
   FileText,
   Trash2,
   Info,
+  MessageSquare,
 } from "lucide-react";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -147,6 +150,8 @@ export default function StressTestPage() {
   const [results,        setResults]        = useState(null);
   const [error,          setError]          = useState(null);
   const [selectedModel,  setSelectedModel]  = useState("gemini");
+  const [expandedRaw,    setExpandedRaw]    = useState({}); // { "gi-pi": true }
+  const [tableExpanded,  setTableExpanded]  = useState(false); // collapse counterfactual table
 
   // ── Data source state ──────────────────────────────────────────────────────
   const [sourceDataInfo, setSourceDataInfo] = useState(null); // { rowCount, cols, from: "audit"|"upload" }
@@ -246,7 +251,7 @@ export default function StressTestPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="max-w-5xl mx-auto px-6 py-10">
+      <div className="max-w-[1320px] mx-auto px-6 py-10">
 
         {/* ── Page header ───────────────────────────────────────── */}
         <div className="flex items-start justify-between mb-10">
@@ -657,93 +662,57 @@ export default function StressTestPage() {
               animate="animate"
               className="space-y-5"
             >
-
               {/* ── Results header ──────────────────────────────── */}
               <motion.div variants={staggerChild} className="flex items-center justify-between flex-wrap gap-3">
                 <div className="flex items-center gap-3 flex-wrap">
-                  <h2 className="text-xl font-bold text-foreground tracking-tight">
-                    Probe Results
-                  </h2>
-
+                  <h2 className="text-xl font-bold text-foreground tracking-tight">Probe Results</h2>
                   {usedRealModel ? (
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md
-                                     bg-[#0057ff]/8 border border-[#0057ff]/20 text-xs font-semibold text-[#0057ff]">
-                      <Cpu className="w-3 h-3" />
-                      {modelLabel}
-                    </span>
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[#0057ff]/8 border border-[#0057ff]/20 text-xs font-semibold text-[#0057ff]"><Cpu className="w-3 h-3" />{modelLabel}</span>
                   ) : (
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md
-                                     bg-[#ff8c42]/8 border border-[#ff8c42]/20 text-xs font-semibold text-[#ff8c42]">
-                      <AlertTriangle className="w-3 h-3" />
-                      Simulated — no API key
-                    </span>
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[#ff8c42]/8 border border-[#ff8c42]/20 text-xs font-semibold text-[#ff8c42]"><AlertTriangle className="w-3 h-3" />Simulated — no API key</span>
                   )}
-
-                  {/* Data source badge */}
                   {results.analysis?.summary?.source === "counterfactual_from_csv" ? (
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md
-                                     bg-[#9a77f8]/8 border border-[#9a77f8]/20 text-xs font-semibold text-[#9a77f8]">
-                      <FileText className="w-3 h-3" />
-                      Real CSV profiles
-                    </span>
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[#9a77f8]/8 border border-[#9a77f8]/20 text-xs font-semibold text-[#9a77f8]"><FileText className="w-3 h-3" />Real CSV profiles</span>
                   ) : (
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md
-                                     bg-muted border border-border text-xs font-medium text-muted-foreground">
-                      <Database className="w-3 h-3" />
-                      Synthetic profiles
-                    </span>
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-muted border border-border text-xs font-medium text-muted-foreground"><Database className="w-3 h-3" />Synthetic profiles</span>
                   )}
                 </div>
-
-
-                <button
-                  onClick={() => setResults(null)}
-                  className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm
-                             font-medium text-muted-foreground border border-border bg-card
-                             hover:bg-muted hover:text-foreground transition-all duration-150"
-                >
-                  <RotateCcw className="w-3.5 h-3.5" />
-                  New test
+                <button onClick={() => setResults(null)} className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium text-muted-foreground border border-border bg-card hover:bg-muted hover:text-foreground transition-all duration-150">
+                  <RotateCcw className="w-3.5 h-3.5" />New test
                 </button>
               </motion.div>
 
+              {/* ── AI Analysis card — FIRST for judge impact ──── */}
+              {results.explanation && (
+                <motion.div variants={staggerChild}>
+                  <div className="bg-card rounded-xl border border-border overflow-hidden">
+                    <div className="flex items-center gap-3 px-5 py-4 border-b border-border bg-black">
+                      <div className="w-7 h-7 rounded-lg bg-[#0057ff] flex items-center justify-center flex-shrink-0"><Sparkles className="w-3.5 h-3.5 text-white" /></div>
+                      <div className="flex-1"><p className="text-sm font-semibold text-white">AI Analysis</p><p className="text-xs text-white/40 mt-0.5">{usedRealModel ? modelLabel : "Simulated"} interpretation</p></div>
+                      <div className="flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: AI_MODELS.find(m => m.id === selectedModel)?.accentColor ?? "#9a77f8" }} /><span className="text-xs text-white/60 font-medium">{usedRealModel ? modelLabel : "Simulated"}</span></div>
+                    </div>
+                    <div className="px-5 py-5 space-y-3">
+                      <p className="text-base font-semibold text-foreground leading-snug">{results.explanation.summary}</p>
+                      <p className="text-sm text-muted-foreground leading-relaxed">{results.explanation.explanation}</p>
+                      <div className="pt-3 border-t border-border flex items-center gap-3 flex-wrap">
+                        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Verdict</span>
+                        <span className={["inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider px-3 py-1.5 rounded-full border", results.analysis?.summary?.bias_detected ? "bg-[#ff6b7a]/10 text-[#ff6b7a] border-[#ff6b7a]/25" : "bg-[#caff3d]/12 text-black border-[#caff3d]/30"].join(" ")}>
+                          {results.analysis?.summary?.bias_detected ? <XCircle className="w-3 h-3" /> : <CheckCircle2 className="w-3 h-3" />}
+                          {results.analysis?.summary?.bias_detected ? "Bias detected" : "No significant bias"}
+                        </span>
+                        <span className="inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full bg-muted text-muted-foreground border border-border">{DECISION_TYPES.find((d) => d.id === decisionType)?.label}</span>
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+
               {/* ── Summary metric cards ─────────────────────────── */}
-              <motion.div
-                variants={staggerChild}
-                className="grid grid-cols-2 md:grid-cols-4 gap-4"
-              >
-                <MetricCard
-                  icon={<Users className="w-4 h-4" />}
-                  title="Profiles tested"
-                  value={String(results.analysis?.summary?.total_candidates ?? 0)}
-                  subtitle="Counterfactual pairs"
-                />
-                <MetricCard
-                  icon={<CheckCircle2 className="w-4 h-4" />}
-                  title="Overall approval"
-                  value={`${((results.analysis?.summary?.overall_approval_rate ?? 0) * 100).toFixed(1)}%`}
-                  subtitle="Across all groups"
-                />
-                <MetricCard
-                  icon={<AlertTriangle className="w-4 h-4" />}
-                  title="Bias status"
-                  value={results.analysis?.summary?.bias_detected ? "BIASED" : "FAIR"}
-                  severity={results.analysis?.summary?.bias_detected ? "CRITICAL" : "OK"}
-                  subtitle="EEOC 80% rule"
-                />
-                <MetricCard
-                  icon={<Scale className="w-4 h-4" />}
-                  title="Disparate impact"
-                  value={
-                    (Object.values(results.analysis?.per_demographic ?? {})[0])
-                      ?.disparate_impact?.ratio?.toFixed(4) ?? "N/A"
-                  }
-                  severity={
-                    (Object.values(results.analysis?.per_demographic ?? {})[0])
-                      ?.disparate_impact?.severity
-                  }
-                  subtitle="Minority ÷ majority rate"
-                />
+              <motion.div variants={staggerChild} className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <MetricCard icon={<Users className="w-4 h-4" />} title="Profiles tested" value={String(results.analysis?.summary?.total_candidates ?? 0)} subtitle="Counterfactual pairs" />
+                <MetricCard icon={<CheckCircle2 className="w-4 h-4" />} title="Overall approval" value={`${((results.analysis?.summary?.overall_approval_rate ?? 0) * 100).toFixed(1)}%`} subtitle="Across all groups" />
+                <MetricCard icon={<AlertTriangle className="w-4 h-4" />} title="Bias status" value={results.analysis?.summary?.bias_detected ? "BIASED" : "FAIR"} severity={results.analysis?.summary?.bias_detected ? "CRITICAL" : "OK"} subtitle="EEOC 80% rule" />
+                <MetricCard icon={<Scale className="w-4 h-4" />} title="Disparate impact" value={(Object.values(results.analysis?.per_demographic ?? {})[0])?.disparate_impact?.ratio?.toFixed(4) ?? "N/A"} severity={(Object.values(results.analysis?.per_demographic ?? {})[0])?.disparate_impact?.severity} subtitle="Minority ÷ majority rate" />
               </motion.div>
 
               {/* ── Counterfactual proof table ───────────────────── */}
@@ -751,33 +720,26 @@ export default function StressTestPage() {
                 <motion.div variants={staggerChild}>
                   <div className="bg-card rounded-xl border border-border overflow-hidden">
 
-                    {/* Card header — blue for evidence/data */}
                     <div className="flex items-center gap-3 px-5 py-4 border-b border-border bg-[#0057ff]/4">
                       <div className="flex items-stretch rounded-md overflow-hidden flex-shrink-0">
-                        <div className="bg-[#0057ff] w-7 h-7 flex items-center justify-center">
-                          <ChevronRight className="w-3.5 h-3.5 text-white" />
-                        </div>
+                        <div className="bg-[#0057ff] w-7 h-7 flex items-center justify-center"><ChevronRight className="w-3.5 h-3.5 text-white" /></div>
                         <div className="bg-black w-0.5" />
                       </div>
                       <div className="flex-1">
-                        <p className="text-sm font-semibold text-foreground">
-                          Counterfactual Proof
-                        </p>
-                        <p className="text-xs text-muted-foreground mt-0.5">
-                          Same CV, different name — sent to{" "}
-                          <span className="font-medium text-foreground">
-                            {usedRealModel ? modelLabel : "simulated model"}
-                          </span>
-                        </p>
+                        <p className="text-sm font-semibold text-foreground">Counterfactual Proof</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">Same CV, different name — sent to <span className="font-medium text-foreground">{usedRealModel ? modelLabel : "simulated model"}</span></p>
                       </div>
-                      <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-[#0057ff]/10 text-[#0057ff] border border-[#0057ff]/20">
-                        {results.analysis.counterfactual_pairs.length} profiles
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-[#0057ff]/10 text-[#0057ff] border border-[#0057ff]/20">{results.analysis.counterfactual_pairs.length} profiles</span>
+                        <button onClick={() => setTableExpanded(e => !e)} className="flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors px-2 py-1 rounded border border-border">
+                          {tableExpanded ? <><ChevronUp className="w-3 h-3" />Collapse</> : <><ChevronDown className="w-3 h-3" />Show all</>}
+                        </button>
+                      </div>
                     </div>
 
                     {/* Table */}
                     <div className="divide-y divide-border">
-                      {results.analysis.counterfactual_pairs.map(
+                      {(tableExpanded ? results.analysis.counterfactual_pairs : results.analysis.counterfactual_pairs.slice(0, 3)).map(
                         (group, gi) => (
                           <div key={gi} className="overflow-hidden">
                             {/* Group header */}
@@ -793,11 +755,14 @@ export default function StressTestPage() {
 
                             {/* Persons in this group */}
                             <div className="divide-y divide-border/50">
-                              {group.map((person, pi) => {
+                                {group.map((person, pi) => {
                                 const approved = person.decision === "Approved";
+                                const rawKey = `${gi}-${pi}`;
+                                const rawOpen = expandedRaw[rawKey];
+                                const hasRaw = person.raw_response && person.raw_response !== "fallback_model";
                                 return (
+                                  <div key={pi}>
                                   <div
-                                    key={pi}
                                     className={[
                                       "flex items-center gap-4 px-5 py-3.5 transition-colors",
                                       "hover:bg-muted/20",
@@ -851,6 +816,41 @@ export default function StressTestPage() {
                                       )}
                                       {person.decision}
                                     </span>
+
+                                    {/* Raw response toggle */}
+                                    {hasRaw && (
+                                      <button
+                                        onClick={() => setExpandedRaw(prev => ({ ...prev, [rawKey]: !rawOpen }))}
+                                        className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors flex-shrink-0"
+                                        title="See raw model response"
+                                      >
+                                        <MessageSquare className="w-3 h-3" />
+                                        {rawOpen ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                                      </button>
+                                    )}
+                                  </div>
+
+                                  {/* Raw response expanded */}
+                                  <AnimatePresence>
+                                    {rawOpen && hasRaw && (
+                                      <motion.div
+                                        initial={{ height: 0, opacity: 0 }}
+                                        animate={{ height: "auto", opacity: 1 }}
+                                        exit={{ height: 0, opacity: 0 }}
+                                        transition={{ duration: 0.15 }}
+                                        className="overflow-hidden"
+                                      >
+                                        <div className="mx-5 mb-3 px-4 py-3 rounded-lg bg-muted/40 border border-border">
+                                          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1.5">
+                                            Raw model response — {person.name}
+                                          </p>
+                                          <code className="text-xs font-mono text-foreground leading-relaxed whitespace-pre-wrap break-words">
+                                            {person.raw_response}
+                                          </code>
+                                        </div>
+                                      </motion.div>
+                                    )}
+                                  </AnimatePresence>
                                   </div>
                                 );
                               })}
@@ -858,6 +858,66 @@ export default function StressTestPage() {
                           </div>
                         )
                       )}
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+
+              {/* ── Model Comparison Summary Table ─────────────────── */}
+              {results.analysis?.model_comparison_summary?.length > 0 && (
+                <motion.div variants={staggerChild}>
+                  <div className="bg-card rounded-xl border border-border overflow-hidden">
+                    <div className="flex items-center gap-3 px-5 py-4 border-b border-border bg-[#9a77f8]/4">
+                      <div className="flex items-stretch rounded-md overflow-hidden flex-shrink-0">
+                        <div className="bg-[#9a77f8] w-7 h-7 flex items-center justify-center">
+                          <Cpu className="w-3.5 h-3.5 text-white" />
+                        </div>
+                        <div className="bg-black w-0.5" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-sm font-semibold text-foreground">Model Approval Rate by Group</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          Approval % for each demographic · model: {usedRealModel ? modelLabel : "simulated"}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-xs">
+                        <thead>
+                          <tr className="border-b border-border bg-muted/30">
+                            <th className="text-left px-5 py-2.5 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Name</th>
+                            <th className="text-left px-4 py-2.5 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Gender</th>
+                            <th className="text-left px-4 py-2.5 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Ethnicity</th>
+                            <th className="text-right px-5 py-2.5 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Approval %</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-border/50">
+                          {results.analysis.model_comparison_summary
+                            .sort((a, b) => b.approval_rate - a.approval_rate)
+                            .map((row, i) => {
+                              const pct = row.approval_rate;
+                              const color = pct >= 70 ? "text-emerald-400" : pct >= 50 ? "text-yellow-400" : "text-red-400";
+                              return (
+                                <tr key={i} className="hover:bg-muted/10 transition-colors">
+                                  <td className="px-5 py-2.5 font-semibold text-foreground">{row.name}</td>
+                                  <td className="px-4 py-2.5 text-muted-foreground">{row.gender}</td>
+                                  <td className="px-4 py-2.5 text-muted-foreground capitalize">{row.ethnicity}</td>
+                                  <td className="px-5 py-2.5 text-right">
+                                    <span className={`font-bold font-mono ${color}`}>{pct}%</span>
+                                    <div className="mt-1 h-1 rounded-full bg-muted overflow-hidden">
+                                      <div
+                                        className={`h-full rounded-full ${
+                                          pct >= 70 ? "bg-emerald-400" : pct >= 50 ? "bg-yellow-400" : "bg-red-400"
+                                        }`}
+                                        style={{ width: `${pct}%` }}
+                                      />
+                                    </div>
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                        </tbody>
+                      </table>
                     </div>
                   </div>
                 </motion.div>
@@ -883,77 +943,6 @@ export default function StressTestPage() {
                 </motion.div>
               )}
 
-              {/* ── AI Analysis card ─────────────────────────────── */}
-              {results.explanation && (
-                <motion.div variants={staggerChild}>
-                  <div className="bg-card rounded-xl border border-border overflow-hidden">
-
-                    {/* Header — dark with blue + sparkles */}
-                    <div className="flex items-center gap-3 px-5 py-4 border-b border-border bg-black">
-                      <div className="w-7 h-7 rounded-lg bg-[#0057ff] flex items-center justify-center flex-shrink-0">
-                        <Sparkles className="w-3.5 h-3.5 text-white" />
-                      </div>
-                      <div className="flex-1">
-                        <p className="text-sm font-semibold text-white">
-                          AI Analysis
-                        </p>
-                        <p className="text-xs text-white/40 mt-0.5">
-                          {usedRealModel ? modelLabel : "Simulated"} interpretation
-                        </p>
-                      </div>
-                      {/* Purple dot — Gemini AI color */}
-                      <div className="flex items-center gap-1.5">
-                        <span className="w-1.5 h-1.5 rounded-full bg-[#9a77f8] animate-pulse" />
-                        <span className="text-xs text-white/40 font-medium">
-                          Gemini
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="px-5 py-5 space-y-3">
-                      <p className="text-base font-semibold text-foreground leading-snug">
-                        {results.explanation.summary}
-                      </p>
-                      <p className="text-sm text-muted-foreground leading-relaxed">
-                        {results.explanation.explanation}
-                      </p>
-
-                      {/* Bias verdict pill */}
-                      <div className="pt-3 border-t border-border">
-                        <div className="flex items-center gap-3 flex-wrap">
-                          <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
-                            Verdict
-                          </span>
-                          <span
-                            className={[
-                              "inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider",
-                              "px-3 py-1.5 rounded-full border",
-                              results.analysis?.summary?.bias_detected
-                                ? "bg-[#ff6b7a]/10 text-[#ff6b7a] border-[#ff6b7a]/25"
-                                : "bg-[#caff3d]/12 text-black border-[#caff3d]/30",
-                            ].join(" ")}
-                          >
-                            {results.analysis?.summary?.bias_detected ? (
-                              <XCircle className="w-3 h-3" />
-                            ) : (
-                              <CheckCircle2 className="w-3 h-3" />
-                            )}
-                            {results.analysis?.summary?.bias_detected
-                              ? "Bias detected"
-                              : "No significant bias"}
-                          </span>
-
-                          {/* Tested domain badge */}
-                          <span className="inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full bg-muted text-muted-foreground border border-border">
-                            {DECISION_TYPES.find((d) => d.id === decisionType)?.icon}{" "}
-                            {DECISION_TYPES.find((d) => d.id === decisionType)?.label}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </motion.div>
-              )}
 
             </motion.div>
           )}

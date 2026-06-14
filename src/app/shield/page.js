@@ -8,6 +8,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   LineChart,
   Line,
+  BarChart,
+  Bar,
+  Cell,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -247,6 +250,7 @@ export default function ShieldPage() {
   const [alerts, setAlerts]                   = useState([]);
   const [totalAnalyzed, setTotalAnalyzed]     = useState(0);
   const [latestDecisions, setLatestDecisions] = useState([]);
+  const [diHistory, setDiHistory]             = useState([]); // disparate impact ratio trend
   const [selectedModel, setSelectedModel]     = useState("gemini");
   const abortControllerRef                    = useRef(null);
   const [data, setData]                       = useState(null);
@@ -325,6 +329,7 @@ export default function ShieldPage() {
     setIsStreaming(true);
     setFairnessHistory([]);
     setGroupHistory([]);
+    setDiHistory([]);
     setGroupNames([]);
     setAlerts([]);
     setTotalAnalyzed(0);
@@ -381,6 +386,15 @@ export default function ShieldPage() {
               return [...new Set([...prev, ...next])];
             });
 
+            // Track DI ratio over time
+            const diRatio = d.gender_metrics?.disparate_impact?.ratio;
+            if (diRatio != null) {
+              setDiHistory((prev) => [
+                ...prev.slice(-100),
+                { batch: d.total_analyzed, ratio: Math.round(diRatio * 1000) / 1000 },
+              ]);
+            }
+
             if (d.latest_decisions) setLatestDecisions(d.latest_decisions);
             if (d.alerts?.length) {
               setAlerts((prev) => [
@@ -424,7 +438,7 @@ export default function ShieldPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="max-w-6xl mx-auto px-6 py-10">
+      <div className="max-w-[1320px] mx-auto px-6 py-10">
 
         {/* ── Page header ───────────────────────────────────────── */}
         <div className="flex items-start justify-between mb-10">
@@ -900,7 +914,7 @@ export default function ShieldPage() {
               animate="animate"
               className="space-y-5"
             >
-              {/* ── Row 1: Metric cards ──────────────────────────── */}
+              {/* Metric cards row — always full width */}
               <motion.div
                 variants={staggerChild}
                 className="grid grid-cols-2 md:grid-cols-4 gap-4"
@@ -931,7 +945,12 @@ export default function ShieldPage() {
                 ))}
               </motion.div>
 
-              {/* ── Row 2: Charts ────────────────────────────────── */}
+              {/* ── 2-col layout: Charts left, Live Feed right ─── */}
+              <motion.div variants={staggerChild} className="grid grid-cols-1 lg:grid-cols-[65%_35%] gap-5 items-start">
+
+                {/* LEFT: Charts column */}
+                <div className="space-y-4">
+                  {/* ── Row 2: Charts ────────────────────────────────── */}
               <motion.div
                 variants={staggerChild}
                 className="grid md:grid-cols-2 gap-4"
@@ -1087,89 +1106,144 @@ export default function ShieldPage() {
                 </div>
               </motion.div>
 
-              {/* ── Row 3: Latest decisions ──────────────────────── */}
-              {latestDecisions.length > 0 && (
-                <motion.div variants={staggerChild}>
-                  <div className="bg-card rounded-xl border border-border overflow-hidden">
-                    <CardHeader
-                      icon={<BarChart3 className="w-3.5 h-3.5" />}
-                      title="Latest decisions"
-                      subtitle="Most recent entries processed by the stream"
-                      right={
-                        currentMetrics?.is_real_model ? (
-                          <span className="inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-md bg-[#9a77f8]/10 text-[#9a77f8] border border-[#9a77f8]/20">
-                            <Cpu className="w-3 h-3" />
-                            via {currentMetrics?.model_label || "AI"}
-                          </span>
-                        ) : undefined
-                      }
-                    />
+                  {/* ── Row 3: DI Ratio trend + Group snapshot ────── */}
+                  <div className="grid md:grid-cols-2 gap-4">
+                    {/* Disparate Impact trend */}
+                    <div className="bg-card rounded-xl border border-border overflow-hidden">
+                      <CardHeader
+                        icon={<Scale className="w-3.5 h-3.5" />}
+                        title="Disparate Impact ratio"
+                        subtitle="80% rule threshold — violation if below 0.80"
+                        right={
+                          currentMetrics?.gender_metrics?.disparate_impact?.violation ? (
+                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#ff6b7a]/10 text-[#ff6b7a] border border-[#ff6b7a]/25">VIOLATION</span>
+                          ) : (
+                            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#caff3d]/10 text-black border border-[#caff3d]/25">PASSING</span>
+                          )
+                        }
+                      />
+                      <div className="p-5 pt-4">
+                        <ResponsiveContainer width="100%" height={180}>
+                          <LineChart data={diHistory}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.06)" vertical={false} />
+                            <XAxis dataKey="batch" tick={{ fill: "#9ca3af", fontSize: 10 }} axisLine={false} tickLine={false} />
+                            <YAxis domain={[0, 1.2]} tick={{ fill: "#9ca3af", fontSize: 10 }} axisLine={false} tickLine={false} width={28} tickFormatter={(v) => v.toFixed(1)} />
+                            <ReferenceLine y={0.8} stroke="#ff8c42" strokeDasharray="5 3" strokeWidth={1.5} label={{ value: "0.80", position: "right", fill: "#ff8c42", fontSize: 10, fontWeight: 600 }} />
+                            <Tooltip content={<ChartTooltip />} cursor={{ stroke: "rgba(0,0,0,0.1)", strokeWidth: 1 }} />
+                            <Line type="monotone" dataKey="ratio" stroke="#9a77f8" strokeWidth={2} dot={false} name="DI ratio" activeDot={{ r: 4, fill: "#9a77f8", stroke: "rgba(154,119,248,0.3)", strokeWidth: 4 }} />
+                          </LineChart>
+                        </ResponsiveContainer>
+                      </div>
+                    </div>
 
-                    <div className="p-5">
-                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-2">
-                        {latestDecisions.map((d, i) => {
-                          const approved = d.decision === "APPROVED";
+                    {/* Current group snapshot bar */}
+                    <div className="bg-card rounded-xl border border-border overflow-hidden">
+                      <CardHeader
+                        icon={<Users className="w-3.5 h-3.5" />}
+                        title="Current approval snapshot"
+                        subtitle="Latest batch — approval rate by group"
+                      />
+                      <div className="p-5 pt-4">
+                        {currentMetrics?.rates ? (() => {
+                          const gRates = currentMetrics.rates.gender_rates || {};
+                          const aRates = currentMetrics.rates.age_rates || {};
+                          const bars = [
+                            ...Object.entries(gRates).map(([g, r], i) => ({ group: g, rate: Math.round(r * 1000) / 10, color: GROUP_COLORS[i % GROUP_COLORS.length] })),
+                            ...Object.entries(aRates).map(([g, r], i) => ({ group: g, rate: Math.round(r * 1000) / 10, color: GROUP_COLORS[(i + 2) % GROUP_COLORS.length] })),
+                          ];
                           return (
-                            <div
-                              key={i}
-                              className={[
-                                "flex items-center justify-between gap-2 px-3 py-2.5",
-                                "rounded-lg border text-sm transition-colors",
-                                approved
-                                  ? "bg-[#caff3d]/5 border-[#caff3d]/20"
-                                  : "bg-[#ff6b7a]/5 border-[#ff6b7a]/15",
-                              ].join(" ")}
-                            >
-                              <div className="min-w-0">
-                                <p className="font-semibold text-foreground text-xs truncate">
-                                  {d.name}
-                                </p>
-                                <p className="text-[10px] text-muted-foreground mt-0.5">
-                                  {d.gender}
-                                </p>
-                              </div>
-                              <span
-                                className={[
-                                  "text-[10px] font-bold uppercase tracking-wider px-2 py-0.5",
-                                  "rounded-full border flex-shrink-0",
-                                  approved
-                                    ? "bg-[#caff3d]/15 text-black border-[#caff3d]/30"
-                                    : "bg-[#ff6b7a]/10 text-[#ff6b7a] border-[#ff6b7a]/25",
-                                ].join(" ")}
-                              >
-                                {approved ? "✓" : "✗"}
-                              </span>
-                            </div>
+                            <ResponsiveContainer width="100%" height={180}>
+                              <BarChart data={bars} layout="vertical" margin={{ left: 0, right: 14 }}>
+                                <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.06)" horizontal={false} />
+                                <XAxis type="number" domain={[0, 100]} tick={{ fill: "#9ca3af", fontSize: 10 }} axisLine={false} tickLine={false} tickFormatter={(v) => `${v}%`} />
+                                <YAxis dataKey="group" type="category" width={64} tick={{ fill: "var(--color-foreground)", fontSize: 10 }} axisLine={false} tickLine={false} />
+                                <Tooltip formatter={(v) => `${v}%`} contentStyle={{ background: "var(--color-card)", border: "1px solid var(--color-border)", borderRadius: 8, fontSize: 12 }} />
+                                <Bar dataKey="rate" radius={[0, 4, 4, 0]} barSize={14}>
+                                  {bars.map((b, i) => <Cell key={i} fill={b.color} />)}
+                                </Bar>
+                              </BarChart>
+                            </ResponsiveContainer>
                           );
-                        })}
+                        })() : (
+                          <div className="flex items-center justify-center h-[180px]">
+                            <p className="text-xs text-muted-foreground">Waiting for data...</p>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
-                </motion.div>
-              )}
+                </div>
 
-              {/* ── Row 4: Alert feed ────────────────────────────── */}
-              <motion.div variants={staggerChild}>
-                <div className="bg-card rounded-xl border border-border overflow-hidden">
-                  <CardHeader
-                    icon={<Bell className="w-3.5 h-3.5" />}
-                    title="Alert feed"
-                    subtitle="Bias events detected in the live stream"
-                    right={
-                      alerts.length > 0 ? (
-                        <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-[#ff6b7a]/10 text-[#ff6b7a] border border-[#ff6b7a]/25">
-                          {alerts.length} alert{alerts.length !== 1 ? "s" : ""}
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
-                          <CheckCircle2 className="w-3.5 h-3.5 text-[#caff3d]" />
-                          No alerts
-                        </span>
-                      )
-                    }
-                  />
-                  <div className="p-5">
-                    <AlertFeed alerts={alerts} maxItems={10} />
+                {/* RIGHT: Live Decision Feed panel */}
+                <div className="space-y-4 lg:sticky lg:top-6">
+                  {/* Live decision ticker */}
+                  <div className="bg-card rounded-xl border border-border overflow-hidden">
+                    <div className="flex items-center gap-3 px-4 py-3.5 border-b border-border bg-black">
+                      <div className="flex items-center gap-1.5">
+                        {isStreaming ? <LiveDot /> : <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground" />}
+                        <span className="text-xs font-bold text-white uppercase tracking-wider">Live Feed</span>
+                      </div>
+                      {latestDecisions.length > 0 && (
+                        <span className="ml-auto text-[10px] font-semibold text-white/40">{latestDecisions.length} recent</span>
+                      )}
+                    </div>
+                    <div className="divide-y divide-border/60 max-h-[480px] overflow-y-auto">
+                      {latestDecisions.length > 0 ? latestDecisions.map((d, i) => {
+                        const approved = d.decision === "APPROVED";
+                        return (
+                          <div
+                            key={i}
+                            className={["flex items-center gap-2.5 px-4 py-2.5 transition-colors", approved ? "hover:bg-[#caff3d]/4" : "hover:bg-[#ff6b7a]/4"].join(" ")}
+                          >
+                            <span className={["w-1 h-6 rounded-full flex-shrink-0", approved ? "bg-[#caff3d]" : "bg-[#ff6b7a]"].join(" ")} />
+                            <div className="min-w-0 flex-1">
+                              <p className="text-xs font-semibold text-foreground truncate">{d.name}</p>
+                              <p className="text-[10px] text-muted-foreground">{d.gender}</p>
+                            </div>
+                            <span className={["text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded border flex-shrink-0", approved ? "bg-[#caff3d]/15 text-black border-[#caff3d]/30" : "bg-[#ff6b7a]/10 text-[#ff6b7a] border-[#ff6b7a]/25"].join(" ")}>
+                              {approved ? "✓ APPR" : "✗ REJ"}
+                            </span>
+                          </div>
+                        );
+                      }) : (
+                        <div className="flex items-center gap-3 px-4 py-8 text-center justify-center">
+                          <div className="text-center">
+                            <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center mx-auto mb-2">
+                              <Radio className="w-4 h-4 text-muted-foreground/50" />
+                            </div>
+                            <p className="text-xs text-muted-foreground">Waiting for decisions...</p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                    {currentMetrics?.is_real_model && (
+                      <div className="px-4 py-2 border-t border-border bg-muted/30">
+                        <p className="text-[10px] text-muted-foreground flex items-center gap-1"><Cpu className="w-3 h-3" />via {currentMetrics.model_label || "AI"}</p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Alert feed */}
+                  <div className="bg-card rounded-xl border border-border overflow-hidden">
+                    <CardHeader
+                      icon={<Bell className="w-3.5 h-3.5" />}
+                      title="Alert feed"
+                      subtitle="Bias events in live stream"
+                      right={
+                        alerts.length > 0 ? (
+                          <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-[#ff6b7a]/10 text-[#ff6b7a] border border-[#ff6b7a]/25">
+                            {alerts.length} alert{alerts.length !== 1 ? "s" : ""}
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+                            <CheckCircle2 className="w-3.5 h-3.5 text-[#caff3d]" />No alerts
+                          </span>
+                        )
+                      }
+                    />
+                    <div className="p-4">
+                      <AlertFeed alerts={alerts} maxItems={6} />
+                    </div>
                   </div>
                 </div>
               </motion.div>

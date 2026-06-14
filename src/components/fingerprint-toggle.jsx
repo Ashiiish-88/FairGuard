@@ -41,8 +41,8 @@ export default function FingerprintToggle() {
           onClick={() => setShowAfter(false)}
           className={`px-5 py-2 text-[12px] font-semibold rounded transition-all duration-200 ${
             !showAfter
-              ? "bg-white shadow-sm border border-[#E5E7EB] text-[#000000]"
-              : "text-[#4B5563] hover:text-[#000000]"
+              ? "bg-[#ff6b7a] text-white shadow-sm border border-[#ff6b7a]"
+              : "text-[#4B5563] hover:text-[#ff6b7a]"
           }`}
         >
           Before Fix
@@ -51,8 +51,8 @@ export default function FingerprintToggle() {
           onClick={() => setShowAfter(true)}
           className={`px-5 py-2 text-[12px] font-semibold rounded transition-all duration-200 ${
             showAfter
-              ? "bg-white shadow-sm border border-[#E5E7EB] text-[#000000]"
-              : "text-[#4B5563] hover:text-[#000000]"
+              ? "bg-[#0057ff] text-white shadow-sm border border-[#0057ff]"
+              : "text-[#4B5563] hover:text-[#0057ff]"
           }`}
         >
           After Fix

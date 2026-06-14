@@ -6,10 +6,6 @@ import HiwScroll from "@/components/hiw-scroll";
 import FingerprintToggle from "@/components/fingerprint-toggle";
 import { motion } from "framer-motion";
 
-/* ═══════════════════════════════════════════════════════════════════
-   LANDING PAGE — FairGuard v2
-   Design: Refold structure × ToDesktop panels × Amber/Teal palette
-   ═══════════════════════════════════════════════════════════════════ */
 
 const domains = [
   {
@@ -140,10 +136,14 @@ export default function LandingPage() {
               transition={{ duration: 0.6, delay: 0.1 }}
               className="heading-2 text-center text-balance max-w-[800px] text-black"
             >
-              Find the bias <span className="relative inline-block">
-                <span>hiding</span>
-                <span className="absolute bottom-1 left-0 right-0 h-1.5 bg-[#caff3d] opacity-40 rounded-sm -z-10" />
-              </span> in your AI
+              Find the bias{" "}
+              <span
+                style={{ fontFamily: "var(--font-script)" }}
+                className="inline-block transform -skew-x-12 rotate-[-1deg] font-bold tracking-wide px-3 py-0.5 bg-black text-[#caff3d] rounded-sm shadow-md"
+              >
+                hiding
+              </span>
+              {" "}in your AI
             </motion.h1>
 
             <motion.p
@@ -153,8 +153,9 @@ export default function LandingPage() {
               className="body-md text-center text-black max-w-[580px] text-balance"
             >
               FairGuard audits any AI decision system in 60 seconds.
-              Detect hidden bias, get plain-English explanations, and
-              estimate legal exposure — before your AI harms real people.
+              Detect hidden bias, get plain English explanations, and
+              estimate legal exposure before your AI harms real people.
+              <span className="block mt-1.5 text-[#4B5563] text-sm">Legal-grade accuracy. EU AI Act Article 9 compliance in 60 seconds.</span>
             </motion.p>
           </div>
 
@@ -354,16 +355,16 @@ export default function LandingPage() {
 
         {/* Main grid row */}
         <div className="w-full border-b border-[#EAEAEA]">
-          <div className="max-w-[1200px] mx-auto w-full grid grid-cols-1 xl:grid-cols-[41%_59%] relative border-l border-r border-[#EAEAEA]">
+          <div className="max-w-[1200px] mx-auto w-full grid grid-cols-1 lg:grid-cols-[41%_59%] relative border-l border-r border-[#EAEAEA]">
 
             {/* LEFT — Continuous stacked steps (no gap) */}
             <div>
               {/* Step 1: Upload */}
               <div
-                className="hiw-step flex xl:h-[500px] flex-col sm:px-8 sm:py-4 p-0 gap-4 transition-all duration-700 ease-in-out bg-white border-[#EAEAEA] border-b"
+                className="hiw-step flex lg:h-[500px] flex-col sm:px-8 sm:py-4 p-0 gap-4 transition-all duration-700 ease-in-out bg-white border-[#EAEAEA] border-b"
                 data-step="0"
               >
-                <div className="flex flex-col sm:p-0 p-6 xl:gap-0 gap-10 sm:items-start items-center justify-between h-full py-8">
+                <div className="flex flex-col sm:p-0 p-6 lg:gap-0 gap-10 sm:items-start items-center justify-between h-full py-8">
                   <div className="flex flex-col gap-6 w-full">
                     <div className="flex items-center gap-3">
                       <div className="w-[44px] h-[44px] bg-white border border-[#E5E7EB] rounded-lg flex items-center justify-center text-[#000000] shadow-sm flex-shrink-0">
@@ -385,12 +386,37 @@ export default function LandingPage() {
                       </div>
                     </div>
                   </div>
-                  {/* Mobile gradient strip */}
-                  <div className="h-[300px] relative w-full block xl:hidden mt-4 overflow-hidden">
+                  {/* Mobile gradient strip with overlay card */}
+                  <div className="h-[300px] relative w-full block lg:hidden mt-4 overflow-hidden rounded-xl border border-[#EAEAEA]">
                     <div className="h-full flex flex-row">
                       {[15, 25, 35, 45, 55, 65].map((stop, i) => (
                         <div key={i} className="flex-1 h-full" style={{ background: `linear-gradient(rgb(202,255,61) 0%, rgb(4,207,255) ${stop}%, rgb(4,207,255) ${stop + 10}%, rgb(202,255,61) 100%)` }} />
                       ))}
+                    </div>
+                    {/* Mockup Overlay */}
+                    <div className="absolute inset-0 flex items-center justify-center p-4 z-10 scale-[0.85] sm:scale-100 origin-center">
+                      <div className="w-full max-w-[420px] bg-white rounded-2xl overflow-hidden border border-[#E5E7EB] shadow-[0_15px_45px_rgba(0,0,0,0.12)]">
+                        <div className="bg-[#F9FAFB] border-b border-[#E5E7EB] px-5 py-3 flex items-center gap-3">
+                          <div className="flex gap-1.5">
+                            <span className="w-[10px] h-[10px] rounded-full bg-[#FF5F57]" />
+                            <span className="w-[10px] h-[10px] rounded-full bg-[#FFBD2E]" />
+                            <span className="w-[10px] h-[10px] rounded-full bg-[#28C840]" />
+                          </div>
+                          <span className="flex-1 text-center text-[11px] text-[#4B5563]" style={{ fontFamily: "var(--font-geist-mono)" }}>fairguard.ai/audit</span>
+                        </div>
+                        <div className="p-5">
+                          <div className="flex items-center gap-2 mb-3">
+                            <Shield className="w-4 h-4 text-[#caff3d]" />
+                            <span className="text-[14px] font-bold text-[#000000] text-left block">Audit Mode</span>
+                          </div>
+                          <div className="text-[11px] text-[#4B5563] mb-4 text-left">Upload any dataset → detect bias → understand legal risk</div>
+                          <div className="border-2 border-dashed border-[#E5E7EB] rounded-xl py-7 text-center bg-[#FAFAFA]">
+                            <Upload className="w-7 h-7 text-[#D1D5DB] mx-auto mb-2" />
+                            <div className="text-[13px] font-semibold text-[#4B5563] mb-1">Drag & drop a CSV or JSON file</div>
+                            <div className="text-[10px] text-[#9CA3AF]">Up to 100,000 rows • Privacy-first</div>
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -398,10 +424,10 @@ export default function LandingPage() {
 
               {/* Step 2: Analyze */}
               <div
-                className="hiw-step flex xl:h-[500px] flex-col sm:px-8 sm:py-4 p-0 gap-4 transition-all duration-700 ease-in-out bg-white border-[#EAEAEA] border-b"
+                className="hiw-step flex lg:h-[500px] flex-col sm:px-8 sm:py-4 p-0 gap-4 transition-all duration-700 ease-in-out bg-white border-[#EAEAEA] border-b"
                 data-step="1"
               >
-                <div className="flex flex-col sm:p-0 p-6 xl:gap-0 gap-10 sm:items-start items-center justify-between h-full py-8">
+                <div className="flex flex-col sm:p-0 p-6 lg:gap-0 gap-10 sm:items-start items-center justify-between h-full py-8">
                   <div className="flex flex-col gap-6 w-full">
                     <div className="flex items-center gap-3">
                       <div className="w-[44px] h-[44px] bg-white border border-[#E5E7EB] rounded-lg flex items-center justify-center text-[#000000] shadow-sm flex-shrink-0">
@@ -427,12 +453,27 @@ export default function LandingPage() {
                       </div>
                     </div>
                   </div>
-                  {/* Mobile gradient strip */}
-                  <div className="h-[300px] relative w-full block xl:hidden mt-4 overflow-hidden">
+                  {/* Mobile gradient strip with overlay card */}
+                  <div className="h-[300px] relative w-full block lg:hidden mt-4 overflow-hidden rounded-xl border border-[#EAEAEA]">
                     <div className="h-full flex flex-row">
                       {[15, 25, 35, 45, 55, 65].map((stop, i) => (
                         <div key={i} className="flex-1 h-full" style={{ background: `linear-gradient(rgb(255,249,212) 0%, rgb(254,183,62) ${stop}%, rgb(254,183,62) ${stop + 10}%, rgb(255,249,212) 100%)` }} />
                       ))}
+                    </div>
+                    {/* Mockup Overlay */}
+                    <div className="absolute inset-0 flex items-center justify-center p-4 z-10 scale-[0.85] sm:scale-100 origin-center">
+                      <div className="w-full max-w-[380px] bg-[#0C0E12] rounded-2xl overflow-hidden border border-[#252932] shadow-[0_15px_45px_rgba(0,0,0,0.25)] text-left" style={{ fontFamily: "var(--font-geist-mono)" }}>
+                        <div className="bg-[#EF4444]/10 border-b border-[#EF4444]/20 px-5 py-3">
+                          <span className="text-[11px] font-bold tracking-[0.08em] text-[#FCA5A5] block">FAIRNESS DEBT REPORT</span>
+                        </div>
+                        <div className="px-5 py-4 border-b border-[#252932]">
+                          <span className="block text-[9px] tracking-[0.15em] text-[#64748b] mb-1">FAIRNESS SCORE</span>
+                          <span className="text-[32px] font-black text-[#ff6b7a] leading-none block">43<span className="text-[14px] text-[#64748b]">/100</span></span>
+                        </div>
+                        <div className="px-5 py-3 bg-[#04cfff]/10">
+                          <span className="text-[11px] text-[#04cfff] font-semibold block">Cost of fix = &lt;0.1% of legal risk</span>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -440,10 +481,10 @@ export default function LandingPage() {
 
               {/* Step 3: Act */}
               <div
-                className="hiw-step flex xl:h-[500px] flex-col sm:px-8 sm:py-4 p-0 gap-4 transition-all duration-700 ease-in-out bg-[#F7F7F9] border-[#EAEAEA]"
+                className="hiw-step flex lg:h-[500px] flex-col sm:px-8 sm:py-4 p-0 gap-4 transition-all duration-700 ease-in-out bg-[#F7F7F9] border-[#EAEAEA]"
                 data-step="2"
               >
-                <div className="flex flex-col sm:p-0 p-6 xl:gap-0 gap-10 sm:items-start items-center justify-between h-full py-8">
+                <div className="flex flex-col sm:p-0 p-6 lg:gap-0 gap-10 sm:items-start items-center justify-between h-full py-8">
                   <div className="flex flex-col gap-6 w-full">
                     <div className="flex items-center gap-3">
                       <div className="w-[44px] h-[44px] bg-white border border-[#E5E7EB] rounded-lg flex items-center justify-center text-[#000000] shadow-sm flex-shrink-0">
@@ -469,12 +510,30 @@ export default function LandingPage() {
                       </div>
                     </div>
                   </div>
-                  {/* Mobile gradient strip */}
-                  <div className="h-[300px] relative w-full block xl:hidden mt-4 overflow-hidden">
+                  {/* Mobile gradient strip with overlay card */}
+                  <div className="h-[300px] relative w-full block lg:hidden mt-4 overflow-hidden rounded-xl border border-[#EAEAEA]">
                     <div className="h-full flex flex-row">
                       {[15, 25, 35, 45, 55, 65].map((stop, i) => (
                         <div key={i} className="flex-1 h-full" style={{ background: `linear-gradient(rgb(4,207,255) 0%, rgb(0,87,255) ${stop}%, rgb(0,87,255) ${stop + 10}%, rgb(4,207,255) 100%)` }} />
                       ))}
+                    </div>
+                    {/* Mockup Overlay */}
+                    <div className="absolute inset-0 flex items-center justify-center p-4 z-10 scale-[0.85] sm:scale-100 origin-center">
+                      <div className="w-full max-w-[420px] bg-[#0C0E12] rounded-2xl overflow-hidden border border-[#252932] shadow-[0_15px_45px_rgba(0,0,0,0.25)] text-left">
+                        <div className="px-4 py-3 bg-[#1C2029] border-b border-[#252932] flex justify-between items-center">
+                          <span className="text-[11px] text-[#64748b]" style={{ fontFamily: "var(--font-geist-mono)" }}>llm_probe.py</span>
+                          <span className="flex items-center gap-1.5 text-[10px] text-[#64748b]">
+                            <span className="w-[6px] h-[6px] rounded-full bg-[#F59E0B] animate-pulse" /> Analyzing...
+                          </span>
+                        </div>
+                        <div className="px-4 py-4 text-[11px] leading-[1.7] overflow-x-auto whitespace-pre text-[#9CA3AF]" style={{ fontFamily: "var(--font-geist-mono)" }}
+                          dangerouslySetInnerHTML={{
+                            __html: `<span style="color:#64748b"># FairGuard LLM Probe</span>
+<span style="color:#0057ff">template</span> = <span style="color:#04cfff">"Write review for {name}"</span>
+names = [<span style="color:#04cfff">"Brian"</span>, <span style="color:#04cfff">"Anjali"</span>]
+
+<span style="display:block;background:rgba(4,207,255,0.1);padding:0 4px;margin:0 -4px;color:#0057ff">+ BIAS DETECTED: 2.4x gap</span>` }} />
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -482,7 +541,7 @@ export default function LandingPage() {
             </div>
 
             {/* RIGHT — driven by HiwScroll JS — ONE sticky wrapper, panels absolute inside */}
-            <div className="hidden xl:block relative border-l border-[#EAEAEA]" id="hiw-right-col">
+            <div className="hidden lg:block relative border-l border-[#EAEAEA]" id="hiw-right-col">
               <div className="sticky top-[calc(50vh-250px)] h-[500px] relative" id="hiw-sticky-panel">
                 {/* ── Panel 0: Upload — Lime→Cyan gradient + upload mockup ── */}
                 <div className="hiw-image absolute inset-0 overflow-hidden" data-panel="0">
@@ -663,6 +722,28 @@ names = [<span style="color:#04cfff">"Brian"</span>, <span style="color:#04cfff"
       </section>
 
 
+      {/* ═══ TRUST SIGNAL ROW ═══ */}
+      <div className="max-w-5xl mx-auto px-6 py-10 border-t border-b border-[#EAEAEA]">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+          <div>
+            <div className="text-3xl font-mono font-black text-[#000000]">7</div>
+            <div className="text-xs text-[#4B5563] mt-1">Domains detected</div>
+          </div>
+          <div>
+            <div className="text-3xl font-mono font-black text-[#000000]">3</div>
+            <div className="text-xs text-[#4B5563] mt-1">AI models compared</div>
+          </div>
+          <div>
+            <div className="text-3xl font-mono font-black text-[#000000]">60</div>
+            <div className="text-xs text-[#4B5563] mt-1">Demographic probes per genome</div>
+          </div>
+          <div>
+            <div className="text-3xl font-mono font-black text-[#1D5FDB]">60s</div>
+            <div className="text-xs text-[#4B5563] mt-1">From CSV to legal compliance</div>
+          </div>
+        </div>
+      </div>
+
       {/* ═══ SECTION 7: STRESS TEST FEATURES ═══ */}
       <section className="bg-white w-full" id="stress-test">
         <div className="w-full border-t border-[#EAEAEA]">
@@ -824,9 +905,11 @@ names = [<span style="color:#04cfff">"Brian"</span>, <span style="color:#04cfff"
           <div className="font-mono p-10 border-r border-[#3A3E49]">
             <h4 className="text-[11px] font-bold tracking-[0.18em] uppercase text-[#64748b] mb-6">TOOLS</h4>
             <div className="flex flex-col gap-4">
-              <Link href="/audit" className="text-[14px] text-[#d1d5db] hover:text-white transition-colors">Bias Audit</Link>
+              <Link href="/audit" className="text-[14px] text-[#d1d5db] hover:text-white transition-colors">Audit Mode</Link>
               <Link href="/shield" className="text-[14px] text-[#d1d5db] hover:text-white transition-colors">Shield Mode</Link>
               <Link href="/stress" className="text-[14px] text-[#d1d5db] hover:text-white transition-colors">Stress Test</Link>
+              <Link href="/genome" className="text-[14px] text-[#d1d5db] hover:text-white transition-colors">Bias Genome</Link>
+              <Link href="/compare" className="text-[14px] text-[#d1d5db] hover:text-white transition-colors">Compare Audits</Link>
               <Link href="/history" className="text-[14px] text-[#d1d5db] hover:text-white transition-colors">Audit History</Link>
             </div>
           </div>
@@ -867,11 +950,11 @@ names = [<span style="color:#04cfff">"Brian"</span>, <span style="color:#04cfff"
 
         {/* Bottom bar */}
         <div className="flex items-center justify-between px-10 py-6 flex-wrap gap-3">
-          <span className="text-[12px] text-[#64748b] font-mono">&copy; 2026 FairGuard. AI fairness, simplified.</span>
+          <span className="text-[12px] text-[#64748b] font-mono">© 2026 FairGuard </span>
           <div className="flex items-center gap-3">
             <span className="inline-flex items-center gap-1.5 text-[11px] font-mono text-[#64748b]">
-              Built for
-              <span className="text-[#caff3d] font-semibold">Google Solution Challenge 2026</span>
+              🏆
+              <span className="text-[#caff3d] font-semibold">Top 106 · Google Solution Challenge 2026</span>
             </span>
             <span className="w-1.5 h-1.5 rounded-full bg-[#caff3d] animate-pulse" />
           </div>

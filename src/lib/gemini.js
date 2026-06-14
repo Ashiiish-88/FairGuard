@@ -9,32 +9,235 @@
  * content moderation, pricing, lending, etc.).
  */
 
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleGenAI } from "@google/genai";
+import { gcpLog } from "@/lib/gcp-logger";
 
-let genAI = null;
-let model = null;
+let _vertexClient = null;
+let _directClient = null;
+let _usingVertex = false;
+let _vertexAuthFailed = false; // set permanently after first GoogleAuthError — prevents re-init spam
 
-function getModel() {
-  if (!model) {
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey || apiKey === "your_gemini_api_key") {
-      return null; // No API key configured
-    }
-    genAI = new GoogleGenerativeAI(apiKey);
-    model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+// Helper to safely clean keys and emails loaded from environment variables
+function cleanEnvValue(value) {
+  if (!value) return "";
+  let cleaned = value.trim();
+  if (cleaned.startsWith('"') && cleaned.endsWith('"')) {
+    cleaned = cleaned.slice(1, -1);
   }
-  return model;
+  if (cleaned.startsWith("'") && cleaned.endsWith("'")) {
+    cleaned = cleaned.slice(1, -1);
+  }
+  return cleaned;
+}
+
+function cleanPrivateKey(key) {
+  const cleaned = cleanEnvValue(key);
+  return cleaned.replace(/\\n/g, "\n");
+}
+
+// Check if Vertex AI is configured (requires project, location, client email, and private key)
+function isVertexConfigured() {
+  const project = cleanEnvValue(process.env.GOOGLE_CLOUD_PROJECT);
+  const email = cleanEnvValue(process.env.GCP_CLIENT_EMAIL);
+  const key = cleanEnvValue(process.env.GCP_PRIVATE_KEY);
+  return Boolean(project && email && key);
+}
+
+// Helper to create an object that can be called as a function text() OR accessed as a string text
+function createAdaptableString(str) {
+  const fn = () => str;
+  fn.toString = () => str;
+  fn.valueOf = () => str;
+  for (const key of Object.getOwnPropertyNames(String.prototype)) {
+    try {
+      if (typeof String.prototype[key] === "function" && key !== "constructor") {
+        fn[key] = String.prototype[key].bind(str);
+      }
+    } catch (_) {}
+  }
+  return fn;
+}
+
+export async function getModel() {
+  // Try Vertex AI first — skip if GCP project not configured OR auth already failed
+  if (isVertexConfigured() && !_vertexClient && !_vertexAuthFailed) {
+    try {
+      const project = cleanEnvValue(process.env.GOOGLE_CLOUD_PROJECT);
+      const location = cleanEnvValue(process.env.GOOGLE_CLOUD_LOCATION || "us-central1");
+      const clientEmail = cleanEnvValue(process.env.GCP_CLIENT_EMAIL);
+      const privateKey = cleanPrivateKey(process.env.GCP_PRIVATE_KEY);
+
+      _vertexClient = new GoogleGenAI({
+        vertexai: true,
+        project,
+        location,
+        googleAuthOptions: {
+          credentials: {
+            client_email: clientEmail,
+            private_key: privateKey,
+          },
+        },
+      });
+      _usingVertex = true;
+      gcpLog.info("VertexAI", "init", "Vertex AI initialized via unified @google/genai SDK", {
+        project,
+        location,
+        model: "gemini-2.5-flash",
+      });
+    } catch (e) {
+      _vertexAuthFailed = true;
+      _usingVertex = false;
+      gcpLog.error("VertexAI", "init", e, {
+        project: process.env.GOOGLE_CLOUD_PROJECT?.trim(),
+        fallback: "Gemini API SDK",
+      });
+      gcpLog.fallback("VertexAI", "Gemini API SDK", e.message);
+    }
+  }
+
+  // Ensure direct Gemini SDK is prepared as fallback or primary
+  if (!_directClient) {
+    const apiKey = cleanEnvValue(process.env.GEMINI_API_KEY);
+    if (apiKey && apiKey !== "your_gemini_api_key") {
+      _directClient = new GoogleGenAI({ apiKey });
+      if (!_usingVertex) {
+        gcpLog.info("GeminiAPI", "init", "Using direct Gemini API SDK (Vertex AI not active)", { model: "gemini-2.5-flash" });
+      }
+    } else {
+      gcpLog.warn("GeminiAPI", "init", "GEMINI_API_KEY not set — AI features unavailable");
+    }
+  }
+
+  // Return wrapper with robust error-catching fallback
+  return {
+    generateContent: async (prompt) => {
+      // 1. Try Vertex AI client
+      if (_usingVertex && _vertexClient && !_vertexAuthFailed) {
+        try {
+          const res = await _vertexClient.models.generateContent({
+            model: "gemini-2.5-flash",
+            contents: prompt,
+          });
+          const textVal = res.text || "";
+          return {
+            text: createAdaptableString(textVal),
+            response: {
+              text: createAdaptableString(textVal),
+            },
+            candidates: res.candidates || [
+              {
+                content: {
+                  parts: [{ text: textVal }],
+                },
+              },
+            ],
+          };
+        } catch (e) {
+          // Distinguish auth errors (permanent) from transient errors (retry-able)
+          const isAuthError =
+            e.message?.includes("GoogleAuthError") ||
+            e.message?.includes("authenticate") ||
+            e.constructor?.name === "GoogleAuthError" ||
+            e.status === 401 ||
+            e.status === 403;
+          if (isAuthError) {
+            _vertexAuthFailed = true;
+            _vertexClient = null;
+            gcpLog.error("VertexAI", "generateContent", e, {
+              permanent: true,
+              action: "vertex_ai_permanently_disabled_for_this_session",
+              fallback: "Gemini API SDK",
+            });
+            gcpLog.fallback("VertexAI", "Gemini API SDK", `Permanent error — Vertex AI disabled: ${e.message}`);
+          } else {
+            gcpLog.error("VertexAI", "generateContent", e, {
+              transient: true,
+              fallback: "Gemini API SDK",
+            });
+          }
+          _usingVertex = false;
+        }
+      }
+
+      // 2. Fall back to Direct client
+      if (_directClient) {
+        try {
+          const res = await _directClient.models.generateContent({
+            model: "gemini-2.5-flash",
+            contents: prompt,
+          });
+          const textVal = res.text || "";
+          return {
+            text: createAdaptableString(textVal),
+            response: {
+              text: createAdaptableString(textVal),
+            },
+            candidates: res.candidates || [
+              {
+                content: {
+                  parts: [{ text: textVal }],
+                },
+              },
+            ],
+          };
+        } catch (e) {
+          gcpLog.error("GeminiAPI", "generateContent", e, {
+            promptLength: typeof prompt === "string" ? prompt.length : JSON.stringify(prompt).length,
+          });
+          throw e;
+        }
+      }
+
+      gcpLog.critical("GeminiAPI", "generateContent", new Error("No active AI model provider"), {
+        vertexConfigured: isVertexConfigured(),
+        vertexAuthFailed: _vertexAuthFailed,
+        geminiKeySet: Boolean(process.env.GEMINI_API_KEY),
+      });
+      throw new Error("No active AI model provider configured or all failed.");
+    },
+  };
+}
+
+// Export so UI can show which provider is active.
+export function getAIProvider() {
+  if (_usingVertex && !_vertexAuthFailed) return "Vertex AI";
+  if (_vertexAuthFailed) return "Gemini API (Vertex AI auth failed — using direct SDK)";
+  return "Gemini API";
 }
 
 function extractJSON(text) {
   // Try to extract JSON from Gemini's response (may be wrapped in ```json blocks)
-  let cleaned = text.trim();
+  const str = String(text);
+  let cleaned = str.trim();
   if (cleaned.includes("```json")) {
     cleaned = cleaned.split("```json")[1].split("```")[0].trim();
   } else if (cleaned.includes("```")) {
     cleaned = cleaned.split("```")[1].split("```")[0].trim();
   }
   return JSON.parse(cleaned);
+}
+
+function getResponseText(result) {
+  if (!result) return "";
+  const response = result.response;
+  if (!response) return "";
+  if (typeof response.text === "function") {
+    try {
+      return response.text();
+    } catch (e) {
+      // Direct SDK can occasionally throw if safety blocks text
+      console.warn("[gemini.js] failed to call response.text():", e.message);
+    }
+  }
+  // Fallback for Vertex AI raw JSON structure
+  const candidates = response.candidates;
+  if (Array.isArray(candidates) && candidates.length > 0) {
+    const parts = candidates[0].content?.parts;
+    if (Array.isArray(parts) && parts.length > 0) {
+      return parts[0].text || "";
+    }
+  }
+  return "";
 }
 
 // ─── Domain-Aware Audience Label ───
@@ -121,7 +324,7 @@ function getDomainRecommendationContext(domain) {
 
 // ─── Explain Bias in Plain English ───
 export async function explainBias(metrics) {
-  const m = getModel();
+  const m = await getModel();
   if (!m) {
     return {
       summary: "Bias analysis complete — see metrics for details.",
@@ -164,7 +367,7 @@ Return ONLY valid JSON:
 
   try {
     const result = await m.generateContent(prompt);
-    return extractJSON(result.response.text());
+    return extractJSON(getResponseText(result));
   } catch (e) {
     return {
       summary: "Bias analysis complete — see metrics for details.",
@@ -178,7 +381,7 @@ Return ONLY valid JSON:
 
 // ─── Legal Compliance Check ───
 export async function checkCompliance(metrics) {
-  const m = getModel();
+  const m = await getModel();
   if (!m) {
     return { regulations: [], overall_risk: "UNKNOWN", error: "No API key" };
   }
@@ -214,7 +417,7 @@ Return ONLY valid JSON:
 
   try {
     const result = await m.generateContent(prompt);
-    return extractJSON(result.response.text());
+    return extractJSON(getResponseText(result));
   } catch (e) {
     return { regulations: [], overall_risk: "UNKNOWN", error: e.message };
   }
@@ -222,7 +425,7 @@ Return ONLY valid JSON:
 
 // ─── Fix Recommendations ───
 export async function getRecommendations(metrics) {
-  const m = getModel();
+  const m = await getModel();
   if (!m) {
     return [{ action: "Review and remove proxy features", feature: "detected proxies", expected_fairness_gain: 20, difficulty: "EASY", explanation: "No API key configured." }];
   }
@@ -246,7 +449,7 @@ Return ONLY valid JSON array:
 
   try {
     const result = await m.generateContent(prompt);
-    return extractJSON(result.response.text());
+    return extractJSON(getResponseText(result));
   } catch (e) {
     return [{ action: "Review proxy features", feature: "detected proxies", expected_fairness_gain: 20, difficulty: "EASY", explanation: `AI unavailable: ${e.message}` }];
   }
@@ -254,7 +457,7 @@ Return ONLY valid JSON array:
 
 // ─── Synthetic Candidate Generation ───
 export async function generateSyntheticCandidates(decisionType, count = 100, demographicAxes = ["gender", "age_group"]) {
-  const m = getModel();
+  const m = await getModel();
   if (!m) {
     return generateFallbackCandidates(decisionType, count, demographicAxes);
   }
@@ -274,7 +477,7 @@ Return ONLY a JSON array of objects. No other text.`;
 
   try {
     const result = await m.generateContent(prompt);
-    return extractJSON(result.response.text());
+    return extractJSON(getResponseText(result));
   } catch {
     return generateFallbackCandidates(decisionType, count, demographicAxes);
   }
@@ -384,7 +587,8 @@ export async function getGroqDecision(candidate, decisionType, modelId = "llama-
     const confidence = confMatch ? Math.min(1, Math.max(0, parseFloat(confMatch[0]))) : 0.5;
     return { decision: isApproved ? 1 : 0, confidence, raw_response: text, model: modelId };
   } catch (e) {
-    return { decision: 0, confidence: 0.5, raw_response: `Groq error: ${e.message}`, model: modelId };
+    gcpLog.error("GroqAPI", "getGroqDecision", e, { candidate, decisionType, modelId });
+    return null;
   }
 }
 
@@ -392,24 +596,219 @@ export async function getGroqDecision(candidate, decisionType, modelId = "llama-
 // Call this from stress/shield routes: getModelDecision("gemini", candidate, "hiring")
 export async function getModelDecision(provider, candidate, decisionType) {
   if (provider === "gemini") {
-    const m = getModel();
+    const m = await getModel();
     if (!m) return null;
     const prompt = buildDecisionPrompt(candidate, decisionType);
     try {
       const result = await m.generateContent(prompt);
-      const text = result.response.text().trim();
+      const text = getResponseText(result).trim();
       const isApproved = text.toUpperCase().startsWith("APPROVE");
       const confMatch = text.match(/[\d.]+/);
       const confidence = confMatch ? Math.min(1, Math.max(0, parseFloat(confMatch[0]))) : 0.5;
       return { decision: isApproved ? 1 : 0, confidence, raw_response: text, model: "gemini-2.5-flash" };
     } catch (e) {
-      return { decision: 0, confidence: 0.5, raw_response: `Gemini error: ${e.message}`, model: "gemini-2.5-flash" };
+      gcpLog.error("GeminiAPI", "getModelDecision", e, { candidate, decisionType });
+      return null;
     }
   }
   if (provider === "llama-8b")  return getGroqDecision(candidate, decisionType, "llama-3.1-8b-instant");
   if (provider === "llama-70b") return getGroqDecision(candidate, decisionType, "llama-3.3-70b-versatile");
   // Default: try Gemini
   return getModelDecision("gemini", candidate, decisionType);
+}
+
+// ─── Genome Cache Pre-Warm ───
+// Runs 5 test probes (one per qual level, male_western_young only)
+// to verify API key + warm the model before full 60-probe genome run.
+export async function warmGenomeCache(decisionType = "hiring") {
+  const m = await getModel();
+  if (!m) return { success: false, reason: "no_model" };
+
+  const testProfiles = [
+    { name: "Brian Thompson", gender: "Male", ethnicity: "western", age: 28, qualification_score: 60, experience_years: 2, education: "Bachelors" },
+    { name: "Brian Thompson", gender: "Male", ethnicity: "western", age: 28, qualification_score: 70, experience_years: 4, education: "Bachelors" },
+    { name: "Brian Thompson", gender: "Male", ethnicity: "western", age: 28, qualification_score: 80, experience_years: 8, education: "Masters" },
+    { name: "Brian Thompson", gender: "Male", ethnicity: "western", age: 28, qualification_score: 85, experience_years: 11, education: "Masters" },
+    { name: "Brian Thompson", gender: "Male", ethnicity: "western", age: 28, qualification_score: 90, experience_years: 15, education: "PhD" },
+  ];
+
+  try {
+    const results = [];
+    for (const profile of testProfiles) {
+      const result = await getModelDecision("gemini", profile, decisionType);
+      results.push(result);
+      await new Promise(r => setTimeout(r, 500));
+    }
+    return { success: true, probes: results.length, provider: getAIProvider() };
+  } catch (e) {
+    return { success: false, reason: e.message };
+  }
+}
+
+// ─── Gemini Remediation Code Generation ───
+// Generates actual Python and SQL code to fix detected bias
+export async function generateRemediationCode(metrics) {
+  const m = await getModel();
+  if (!m) {
+    return {
+      python_preprocessing: "# AI unavailable — review bias metrics manually",
+      python_model_fix: "# AI unavailable",
+      sql_query_fix: "-- AI unavailable",
+      monitoring_script: "# AI unavailable",
+      summary: "Remediation code generation requires an active AI model.",
+    };
+  }
+
+  const domainLabel = metrics.domain?.label || "decision-making";
+  const domainKey = metrics.domain?.domain || "general";
+  const biasFindings = [];
+
+  if (metrics.disparate_impact?.ratio < 0.8) {
+    biasFindings.push(`Disparate Impact Ratio: ${metrics.disparate_impact.ratio} (below 0.8 threshold)`);
+  }
+  if (metrics.demographic_parity?.gap > 0.1) {
+    biasFindings.push(`Demographic Parity Gap: ${(metrics.demographic_parity.gap * 100).toFixed(1)}%`);
+  }
+  if (metrics.proxy_detection?.proxies?.length > 0) {
+    biasFindings.push(`Proxy variables detected: ${metrics.proxy_detection.proxies.map(p => p.feature || p.name).join(", ")}`);
+  }
+  if (metrics.intersectional?.worst_group) {
+    biasFindings.push(`Worst intersectional group: ${metrics.intersectional.worst_group}`);
+  }
+
+  const protectedAttrs = metrics.config?.protected || metrics.protected_columns || ["gender", "age"];
+
+  const prompt = `You are FairGuard, an AI bias remediation expert. Given these bias analysis results for a "${domainLabel}" system, generate ACTUAL WORKING CODE to fix the detected bias.
+
+BIAS FINDINGS:
+${biasFindings.join("\n")}
+
+PROTECTED ATTRIBUTES: ${protectedAttrs.join(", ")}
+OUTCOME COLUMN: ${metrics.config?.outcome || "decision"}
+DOMAIN: ${domainLabel}
+
+Generate four code blocks:
+
+1. **Python Data Preprocessing** — Code to remove/mitigate bias in the training data (e.g., removing proxy features, resampling, applying fairness-aware preprocessing). Use pandas, sklearn, or aif360 patterns.
+
+2. **Python Model Fix** — Code to retrain or adjust the model with fairness constraints (e.g., equalized odds post-processing, threshold adjustment per group, fairness-aware training).
+
+3. **SQL Query Fix** — SQL query modifications to exclude proxy variables, add fairness-aware scoring, or create balanced cohorts for retraining.
+
+4. **Monitoring Script** — Python script to continuously monitor the model for bias drift after the fix is deployed.
+
+Return ONLY valid JSON:
+{
+  "python_preprocessing": "full python code as a string",
+  "python_model_fix": "full python code as a string",
+  "sql_query_fix": "full SQL code as a string",
+  "monitoring_script": "full python code as a string",
+  "summary": "one paragraph explaining what each fix does"
+}`;
+
+  try {
+    const result = await m.generateContent(prompt);
+    return extractJSON(getResponseText(result));
+  } catch (e) {
+    gcpLog.error("GeminiAPI", "generateRemediationCode", e, { domain: domainKey });
+    return {
+      python_preprocessing: `# Error generating code: ${e.message}`,
+      python_model_fix: `# Error generating code: ${e.message}`,
+      sql_query_fix: `-- Error generating code: ${e.message}`,
+      monitoring_script: `# Error generating code: ${e.message}`,
+      summary: `Code generation failed: ${e.message}. Please review bias metrics manually.`,
+    };
+  }
+}
+
+// ─── Gemini Grounded Compliance News (Google Search) ───
+// Uses Gemini with Google Search grounding to fetch latest AI regulation news
+export async function getGroundedComplianceNews(domain, regulations = []) {
+  // Build a client specifically for grounding — needs direct or vertex client
+  let client = null;
+  if (_usingVertex && _vertexClient && !_vertexAuthFailed) {
+    client = _vertexClient;
+  } else if (_directClient) {
+    client = _directClient;
+  }
+
+  if (!client) {
+    return {
+      news: [],
+      summary: "Regulatory news unavailable — no AI model configured.",
+      grounded: false,
+    };
+  }
+
+  const domainLabels = {
+    hiring: "AI hiring and employment",
+    lending: "AI lending and credit scoring",
+    content_moderation: "AI content moderation",
+    pricing: "AI algorithmic pricing",
+    insurance: "AI insurance underwriting",
+    healthcare: "AI healthcare decisions",
+    education: "AI education and admissions",
+  };
+
+  const domainContext = domainLabels[domain] || "AI decision-making";
+  const regList = regulations.length > 0
+    ? regulations.join(", ")
+    : "EU AI Act, EEOC, India DPDP Act 2023";
+
+  const prompt = `Find the latest news, enforcement actions, and regulatory updates about ${domainContext} bias and fairness regulations. Focus on: ${regList}.
+
+Include:
+- Recent enforcement actions or fines
+- New regulatory guidance or amendments
+- Court cases related to AI bias
+- Government investigations into algorithmic discrimination
+
+For each item, provide the source, date, and relevance to AI fairness auditing.
+
+Return as JSON:
+{
+  "news": [
+    {
+      "headline": "headline text",
+      "summary": "2-3 sentence summary",
+      "source": "source name",
+      "date": "approximate date",
+      "regulation": "which regulation this relates to",
+      "relevance": "why this matters for AI bias auditing"
+    }
+  ],
+  "summary": "one paragraph overview of current regulatory landscape"
+}`;
+
+  try {
+    const res = await client.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: prompt,
+      config: {
+        tools: [{ googleSearch: {} }],
+      },
+    });
+
+    const textVal = res.text || "";
+    const parsed = extractJSON(textVal);
+    return { ...parsed, grounded: true };
+  } catch (e) {
+    gcpLog.error("GeminiAPI", "getGroundedComplianceNews", e, { domain });
+    // Fallback: try without grounding
+    try {
+      const m = await getModel();
+      if (!m) throw new Error("No model");
+      const result = await m.generateContent(prompt);
+      const parsed = extractJSON(getResponseText(result));
+      return { ...parsed, grounded: false };
+    } catch (e2) {
+      return {
+        news: [],
+        summary: `Regulatory news unavailable: ${e.message}`,
+        grounded: false,
+      };
+    }
+  }
 }
 
 // ─── Model Labels (for UI display) ───

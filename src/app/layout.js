@@ -1,4 +1,4 @@
-import { DM_Sans, DM_Mono } from "next/font/google";
+import { DM_Sans, DM_Mono, Dancing_Script } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/navbar";
 
@@ -12,6 +12,13 @@ const dmMono = DM_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
   weight: ["400", "500"],
+});
+
+const dancingScript = Dancing_Script({
+  subsets: ["latin"],
+  weight: "700",
+  variable: "--font-script",
+  display: "swap",
 });
 
 export const metadata = {
@@ -40,9 +47,16 @@ export default function RootLayout({ children }) {
   return (
     <html
       lang="en"
-      className={`${dmSans.variable} ${dmMono.variable} h-full antialiased`}
+      className={`${dmSans.variable} ${dmMono.variable} ${dancingScript.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-white text-[#000000]">
+        <style>{`
+          @media print {
+            body > * { display: none !important; }
+            .certificate-printable { display: block !important; color: black !important; background: white !important; }
+            .certificate-printable * { color: black !important; background: white !important; border-color: #ccc !important; }
+          }
+        `}</style>
         <Navbar />
         <main className="flex-1">{children}</main>
       </body>
