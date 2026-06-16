@@ -1,5 +1,5 @@
 <p align="center">
-  <a href="[https://fair-guard.vercel.app](https://fairguard-8265436057.asia-south1.run.app)">
+  <a href="[https://fairguard-8265436057.asia-south1.run.app]">
     <img src="public/Readme_Logo.svg" alt="FairGuard" width="600" />
   </a>
 </p>
@@ -34,7 +34,7 @@ Upload any dataset where an AI makes decisions about people. FairGuard tells you
 
 ---
 
-**Live demo →** [https://fair-guard.vercel.app](https://fair-guard.vercel.app)
+**Live demo →** [https://fairguard-8265436057.asia-south1.run.app](https://fairguard-8265436057.asia-south1.run.app)
 
 ---
 
