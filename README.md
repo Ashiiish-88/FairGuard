@@ -1,5 +1,5 @@
 <p align="center">
-  <a href="https://fair-guard.vercel.app">
+  <a href="[https://fair-guard.vercel.app](https://fairguard-8265436057.asia-south1.run.app)">
     <img src="public/Readme_Logo.svg" alt="FairGuard" width="600" />
   </a>
 </p>
